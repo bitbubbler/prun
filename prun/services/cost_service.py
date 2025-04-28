@@ -312,6 +312,10 @@ class CostService:
             recipe, item_symbol, item_quantity
         )
 
+        # Calculate the proportion of target output to total recipe output
+        total_recipe_output = sum(output.quantity for output in recipe.outputs)
+        output_proportion = recipe_output.quantity / total_recipe_output if total_recipe_output > 0 else 1.0
+
         # Calculate final costs
         total_input_cost, total_workforce_cost, scaled_input_costs = (
             self._calculate_final_costs(
@@ -319,8 +323,22 @@ class CostService:
             )
         )
 
-        # Calculate total repair cost
-        total_repair_cost = cost_details.repair_cost * recipe_runs_needed
+        # Scale input costs by output proportion
+        scaled_input_costs = [
+            CalculatedRecipeInputCost(
+                item_symbol=input_cost.item_symbol,
+                quantity=input_cost.quantity * output_proportion,
+                price=input_cost.price,
+                total=input_cost.total * output_proportion,
+            )
+            for input_cost in scaled_input_costs
+        ]
+
+        # Scale workforce cost by output proportion
+        scaled_workforce_cost = total_workforce_cost * output_proportion
+
+        # Calculate total repair cost, scaled by the output proportion
+        total_repair_cost = cost_details.repair_cost * recipe_runs_needed * output_proportion
 
         # Calculate workforce needs
         workforce_needs = []
@@ -369,6 +387,9 @@ class CostService:
                                 )
                             )
 
+        # Calculate the final total cost as the sum of all scaled costs
+        final_total_cost = sum(input_cost.total for input_cost in scaled_input_costs) + scaled_workforce_cost + total_repair_cost
+
         return CalculatedCOGM(
             recipe_symbol=recipe.symbol,
             item=item_symbol,
@@ -378,9 +399,9 @@ class CostService:
             time_ms=recipe.time_ms,
             recipe_runs_needed=recipe_runs_needed,
             input_costs=scaled_input_costs,
-            workforce_cost=total_workforce_cost,
+            workforce_cost=scaled_workforce_cost,
             repair_cost=total_repair_cost,
-            total_cost=total_input_cost + total_workforce_cost + total_repair_cost,
+            total_cost=final_total_cost,
             recipe_outputs=[
                 RecipeOutput(
                     item=output.item_symbol,
