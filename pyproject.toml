@@ -1,0 +1,40 @@
+[project]
+name = "prun"
+version = "0.1.0"
+description = "Cost of Goods Manufactured calculator for Prosperous Universe"
+authors = []
+dependencies = [
+    "fastapi>=0.115.12",
+    "pydantic>=2.11.3",
+    "python-dotenv>=1.1.0",
+    "rich>=14.0.0",
+    "uvicorn>=0.27.1",
+    "sqlmodel>=0.0.24",
+    "pytest>=8.3.5",
+    "mypy>=1.15.0",
+    "requests>=2.31.0",
+    "dependency-injector>=4.46.0",
+    "types-requests>=2.32.0.20250328",
+    "black>=25.1.0",
+]
+
+[tool.ruff]
+line-length = 120
+target-version = "py312"
+
+[tool.mypy]
+python_version = "3.12"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+disallow_untyped_decorators = true
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+strict_optional = true
+exclude = [
+    # Add patterns of files to ignore here
+    # Example: "tests/.*\.py$"  # ignores all Python files in tests directory
+] 

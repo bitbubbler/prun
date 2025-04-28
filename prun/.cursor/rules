@@ -1,0 +1,15 @@
+- never create created_at or updated_at columns
+- never store user_submitted type columns
+- when importing modules from this package use prun.{module} not relative paths.
+- do not use relative imports
+- we use sqlmodel, not sqlalchemy
+
+# service
+- services are for business logic
+- services is where we interact with the fio client
+- the service should never access the repository's private session
+
+# repository
+- repository is for data access
+- repository is where we interact with the database
+- the session on the repository is private and should never be used outside the repository
