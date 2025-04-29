@@ -8,6 +8,7 @@ from .models import (
     FIOPrice,
     FIORecipe,
     FIOPlanet,
+    FIOPlanetFull,
     FIOSystem,
     FIOWorkforceNeeds,
     FIOComexExchange,
@@ -48,6 +49,11 @@ class FIOClientInterface(ABC):
     @abstractmethod
     def get_planets(self) -> List[FIOPlanet]:
         """Get all planets from the FIO API."""
+        pass
+
+    @abstractmethod
+    def get_planets_full(self) -> List[FIOPlanetFull]:
+        """Get full information for all planets from the FIO API."""
         pass
 
     @abstractmethod

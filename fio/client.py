@@ -11,6 +11,7 @@ from .models import (
     FIORecipe,
     FIOBuildingRecipeDetail,
     FIOPlanet,
+    FIOPlanetFull,
     FIOSystem,
     FIOWorkforceNeeds,
     FIOComexExchange,
@@ -316,3 +317,12 @@ class FIOClient:
         """
         data = self._get_json(f"sites/warehouses/{username}", authenticated=True)
         return [FIOWarehouse(**warehouse) for warehouse in data]
+
+    def get_planets_full(self) -> List[FIOPlanetFull]:
+        """Get full information for all planets from the FIO API.
+
+        Returns:
+            List of full planet information
+        """
+        data = self._get_json("planet/allplanets/full")
+        return [FIOPlanetFull(**planet) for planet in data]

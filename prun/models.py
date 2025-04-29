@@ -159,6 +159,48 @@ class Planet(SQLModel, table=True):
     natural_id: str = Field(primary_key=True)
     name: str
     system_id: str = Field(foreign_key="systems.system_id")
+    planet_id: str
+    gravity: float
+    magnetic_field: float
+    mass: float
+    mass_earth: float
+    orbit_semi_major_axis: int
+    orbit_eccentricity: float
+    orbit_inclination: float
+    orbit_right_ascension: int
+    orbit_periapsis: int
+    orbit_index: int
+    pressure: float
+    radiation: float
+    radius: float
+    sunlight: float
+    surface: bool
+    temperature: float
+    fertility: float
+    has_local_market: bool
+    has_chamber_of_commerce: bool
+    has_warehouse: bool
+    has_administration_center: bool
+    has_shipyard: bool
+    faction_code: Optional[str] = None
+    faction_name: Optional[str] = None
+    governor_id: Optional[str] = None
+    governor_user_name: Optional[str] = None
+    governor_corporation_id: Optional[str] = None
+    governor_corporation_name: Optional[str] = None
+    governor_corporation_code: Optional[str] = None
+    currency_name: Optional[str] = None
+    currency_code: Optional[str] = None
+    collector_id: Optional[str] = None
+    collector_name: Optional[str] = None
+    collector_code: Optional[str] = None
+    base_local_market_fee: int
+    local_market_fee_factor: int
+    warehouse_fee: int
+    population_id: Optional[str] = None
+    cogc_program_status: Optional[str] = None
+    planet_tier: int
+    timestamp: datetime
 
     # Relationships
     system: "System" = Relationship(back_populates="planets")

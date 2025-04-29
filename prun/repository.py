@@ -538,6 +538,20 @@ class SystemRepository(BaseRepository):
             Created planet
         """
         self.session.add(planet)
+        self.session.flush()
+        return planet
+
+    def update_planet(self, planet: Planet) -> Planet:
+        """Update an existing planet.
+
+        Args:
+            planet: Planet to update
+
+        Returns:
+            Updated planet
+        """
+        self.session.add(planet)
+        self.session.flush()
         return planet
 
     def get_system(self, system_id: str) -> Optional[System]:
@@ -576,6 +590,7 @@ class SystemRepository(BaseRepository):
             Created system
         """
         self.session.add(system)
+        self.session.flush()
         return system
 
 

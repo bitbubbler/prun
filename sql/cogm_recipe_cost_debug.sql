@@ -10,5 +10,6 @@ select
 from recipes as recipe
    join recipe_inputs as inputs on inputs.recipe_symbol = recipe.symbol
    join recipe_outputs as outputs on outputs.recipe_symbol = recipe.symbol
-where recipe.symbol = 'CHP:1xH2O-3xHAL=>1xCL-2xNA'
+-- where recipe.symbol = 'CHP:1xH2O-3xHAL=>1xCL-2xNA'
+where outputs.item_symbol = 'H2O'
 ;
