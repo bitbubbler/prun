@@ -16,16 +16,19 @@ logger = logging.getLogger(__name__)
 
 class CalculatedInputCost(BaseModel):
     """Calculated recipe input cost."""
-
     item_symbol: str = Field(description="The symbol of the item")
     quantity: float = Field(description="The quantity of the item needed for the recipe run")
     price: float = Field(description="The price of the item per unit")
     total: float = Field(description="The total cost of the item for the recipe run")
 
+class CalculatedWorkforceInputCost(CalculatedInputCost):
+    """Calculated workforce input cost."""
+    workforce_type: str = Field(description="The type of workforce")
+
 class CalculatedWorkforceCost(BaseModel):
     """Calculated workforce cost."""
-    input_costs: List[CalculatedInputCost]
-    total: float
+    input_costs: List[CalculatedWorkforceInputCost] = Field(description="The input costs for the workforce")
+    total: float = Field(description="The total cost of the workforce for the recipe run")
 
 class CalculatedRecipeCost(BaseModel):
     """Calculated recipe cost."""
@@ -233,7 +236,8 @@ class CostService:
                     price_per_recipe_run = price * need_per_recipe_run
                     
                     consumable_costs.append(
-                        CalculatedInputCost(
+                        CalculatedWorkforceInputCost(
+                            workforce_type=workforce_type,
                             item_symbol=need.item_symbol,
                             quantity=need_per_recipe_run,
                             price=price,
@@ -278,12 +282,13 @@ class CostService:
                 ) for input_cost in recipe_cost.input_costs
             ],
             workforce_cost=CalculatedWorkforceCost(
-                input_costs=[CalculatedInputCost(
-                    item_symbol=input_cost.item_symbol,
-                    quantity=input_cost.quantity / recipe_output.quantity,
-                    price=input_cost.price,
-                    total=input_cost.total / recipe_output.quantity,
-                ) for input_cost in recipe_cost.workforce_cost.input_costs],
+                input_costs=[CalculatedWorkforceInputCost(
+                    workforce_type=workforce_input_cost.workforce_type,
+                    item_symbol=workforce_input_cost.item_symbol,
+                    quantity=workforce_input_cost.quantity / recipe_output.quantity,
+                    price=workforce_input_cost.price,
+                    total=workforce_input_cost.total / recipe_output.quantity,
+                ) for workforce_input_cost in recipe_cost.workforce_cost.input_costs],
                 total=recipe_cost.workforce_cost.total / recipe_output.quantity,
             ),
             repair_cost=recipe_cost.repair_cost / recipe_output.quantity,
