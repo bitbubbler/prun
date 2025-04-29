@@ -34,13 +34,16 @@ def cli():
 
 @cli.command()
 @click.option("--username", "-u", required=True, help="FIO API username")
-@click.option("--password", "-p", required=True, help="FIO API password")
-def sync(username: str, password: str):
+@click.option("--password", "-p", required=False, help="FIO API password")
+@click.option("--apikey", "-k", required=False, help="FIO API password")
+def sync(username: str, password: str, apikey: str | None):
     """Sync data from the FIO API"""
     logger = logging.getLogger(__name__)
     fio_client = container.fio_client()
-
-    fio_client.authenticate(username=username, password=password)
+    if apikey:
+        fio_client.authenticate(apikey=apikey)
+    elif password:
+        fio_client.authenticate(username=username, password=password)
 
     logger.info("Starting sync operations")
     # Sync in order of dependencies
@@ -74,7 +77,7 @@ def sync(username: str, password: str):
     )  # Sites depend on planets and buildings
 
     logger.info("Syncing warehouses...")
-    container.warehouse_service().sync_warehouses()  # Warehouses must be synced before storage
+    container.warehouse_service().sync_warehouses(username)  # Warehouses must be synced before storage
 
     logger.info("Syncing storage...")
     container.storage_service().sync_storage(
