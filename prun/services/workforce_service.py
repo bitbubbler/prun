@@ -65,7 +65,7 @@ class WorkforceService:
                 )
                 self.workforce_repository.create_workforce_need(workforce_need)
 
-    def workforce_days(self, workforce_cost_daily: float, time_ms: int) -> float:
+    def workforce_days(self, time_ms: int) -> float:
         """Calculate workforce cost for given time.
 
         Args:
@@ -76,10 +76,7 @@ class WorkforceService:
             Workforce cost for given time
         """
         # Calculate the time needed as a fraction of a day
-        time_days = time_ms / (24 * 60 * 60 * 1000)  # Convert ms to days
-
-        # Calculate prorated workforce cost based on time needed
-        return workforce_cost_daily * time_days
+        return time_ms / (24 * 60 * 60 * 1000)  # Convert ms to days
 
 
 class CalculatedItemNeed(BaseModel):
