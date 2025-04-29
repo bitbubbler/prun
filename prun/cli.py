@@ -124,7 +124,7 @@ def print_cogm_analysis(result: CalculatedCOGM, item_symbol: str, quantity: int)
 
     # Show input costs per unit
     for input_cost in result.input_costs:
-        per_unit_cost = input_cost.price / output_quantity
+        per_unit_cost = input_cost.price * input_cost.quantity
         cost_table.add_row(f"Input: {input_cost.item_symbol}", f"{per_unit_cost:,.2f}")
 
     # Show workforce cost per unit
