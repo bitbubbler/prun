@@ -77,7 +77,9 @@ def sync(username: str, password: str, apikey: str | None):
     )  # Sites depend on planets and buildings
 
     logger.info("Syncing warehouses...")
-    container.warehouse_service().sync_warehouses(username)  # Warehouses must be synced before storage
+    container.warehouse_service().sync_warehouses(
+        username
+    )  # Warehouses must be synced before storage
 
     logger.info("Syncing storage...")
     container.storage_service().sync_storage(
@@ -115,14 +117,19 @@ def print_cogm_analysis(result: CalculatedCOGM, item_symbol: str):
 
     # Show input costs per unit
     for input_cost in result.input_costs.inputs:
-        cost_table.add_row(f"Input: {input_cost.item_symbol}", f"{input_cost.total:,.2f}")
-        
+        cost_table.add_row(
+            f"Input: {input_cost.item_symbol}", f"{input_cost.total:,.2f}"
+        )
+
     cost_table.add_row("Input Cost", f"{result.input_costs.total:,.2f}")
 
     # Show workforce cost per unit
     for input_cost in result.workforce_cost.inputs:
-        cost_table.add_row(f"Workforce {input_cost.workforce_type}: {input_cost.item_symbol}", f"{input_cost.total:,.2f}")
-        
+        cost_table.add_row(
+            f"Workforce {input_cost.workforce_type}: {input_cost.item_symbol}",
+            f"{input_cost.total:,.2f}",
+        )
+
     # show workforce cost per recipe run
     cost_table.add_row("Workforce Cost", f"{result.workforce_cost.total:,.2f}")
 
@@ -130,9 +137,7 @@ def print_cogm_analysis(result: CalculatedCOGM, item_symbol: str):
     cost_table.add_row("Repair Cost", f"{result.repair_cost:,.2f}")
 
     # Show total COGM per unit
-    cost_table.add_row(
-        "Total COGM", f"{result.total_cost:,.2f}", style="bold"
-    )
+    cost_table.add_row("Total COGM", f"{result.total_cost:,.2f}", style="bold")
 
     console.print(cost_table)
 
@@ -184,9 +189,7 @@ def cogm(item_symbol: str, quantity: int, recipe_symbol: str | None):
         # Print COGM analysis for each available recipe
         for recipe in e.available_recipes:
             console.print(f"\n[bold]Analysis for recipe: {recipe.symbol}[/bold]")
-            result = container.cost_service().calculate_cogm(
-                item_symbol, recipe.symbol
-            )
+            result = container.cost_service().calculate_cogm(item_symbol, recipe.symbol)
             print_cogm_analysis(result, item_symbol)
 
     except ValueError as e:

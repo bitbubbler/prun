@@ -230,7 +230,7 @@ class WorkforceNeed(SQLModel, table=True):
 
     # Relationships
     item: Item = Relationship(back_populates="workforce_needs")
-    
+
     @property
     def per_worker_per_day(self) -> float:
         """Get the amount of the item needed per worker per day. FIO gives us the amount per 100 workers per day."""

@@ -16,23 +16,38 @@ logger = logging.getLogger(__name__)
 
 class CalculatedInput(BaseModel):
     """Calculated recipe input cost."""
+
     item_symbol: str = Field(description="The symbol of the item")
-    quantity: float = Field(description="The quantity of the item needed for the recipe run")
+    quantity: float = Field(
+        description="The quantity of the item needed for the recipe run"
+    )
     price: float = Field(description="The price of the item per unit")
     total: float = Field(description="The total cost of the item for the recipe run")
 
+
 class CalculatedInputCosts(BaseModel):
-    inputs: List[CalculatedInput] = Field(description="The individualinput costs for the recipe run")
-    total: float = Field(description="The total cost of the inputs for the recipe run")
+    inputs: List[CalculatedInput] = Field(
+        description="The individual input costs for the recipe run"
+    )
+    total: float = Field(description="The total cost of all inputs for the recipe run")
+
 
 class CalculatedWorkforceInput(CalculatedInput):
     """Calculated workforce input cost."""
+
     workforce_type: str = Field(description="The type of workforce")
+
 
 class CalculatedWorkforceCosts(BaseModel):
     """Calculated workforce cost."""
-    inputs: List[CalculatedWorkforceInput] = Field(description="The individual input costs for the workforce")
-    total: float = Field(description="The total cost of the workforce for the recipe run")
+
+    inputs: List[CalculatedWorkforceInput] = Field(
+        description="The individual input costs for the workforce"
+    )
+    total: float = Field(
+        description="The total cost of all consumables for the workforce"
+    )
+
 
 class CalculatedRecipeCost(BaseModel):
     """Calculated recipe cost."""
@@ -44,15 +59,6 @@ class CalculatedRecipeCost(BaseModel):
     workforce_cost: CalculatedWorkforceCosts
     repair_cost: float
     total: float
-
-
-
-class WorkforceNeed(BaseModel):
-    """Daily need for a specific item by a workforce type."""
-
-    item: str
-    daily_amount: float
-    daily_cost: float
 
 
 class CalculatedCOGM(BaseModel):
@@ -91,28 +97,42 @@ class CostService:
         self.workforce_service = workforce_service
         self.amortization_days = 180  # Standard amortization period in days
 
-    def calculate_daily_repair_cost(self, total_material_cost: float, days_since_build: int = 89) -> float:
+    def calculate_daily_repair_cost(
+        self, total_material_cost: float, days_since_build: int = 89
+    ) -> float:
         """Calculate daily repair cost based on total material cost and days since build.
-        
+
         Args:
             total_material_cost: Total cost of materials used in construction
             days_since_build: Number of days since the building was constructed
-            
+
         Returns:
             Daily repair cost
         """
-        return (total_material_cost - math.floor(total_material_cost * ((self.amortization_days - min(days_since_build, self.amortization_days)) / self.amortization_days))) * (1/days_since_build)
+        return (
+            total_material_cost
+            - math.floor(
+                total_material_cost
+                * (
+                    (
+                        self.amortization_days
+                        - min(days_since_build, self.amortization_days)
+                    )
+                    / self.amortization_days
+                )
+            )
+        ) * (1 / days_since_build)
 
     def calculate_amortization_cost(self, total_material_cost: float) -> float:
         """Calculate daily amortization cost.
-        
+
         Args:
             total_material_cost: Total cost of materials used in construction
-            
+
         Returns:
             Daily amortization cost
         """
-        return total_material_cost * (1/self.amortization_days)
+        return total_material_cost * (1 / self.amortization_days)
 
     def calculate_recipe_cost(
         self, recipe: Recipe, input_prices: List[tuple[RecipeInput, ExchangePrice]]
@@ -151,8 +171,12 @@ class CostService:
             if building:
                 total_material_cost = sum(input_cost.total for input_cost in inputs)
                 repair_cost = self.calculate_daily_repair_cost(total_material_cost)
-                amortization_cost = self.calculate_amortization_cost(total_material_cost)
-                total_repair_cost = (repair_cost + amortization_cost) * (recipe.time_ms / (24 * 60 * 60 * 1000))  # Convert ms to days
+                amortization_cost = self.calculate_amortization_cost(
+                    total_material_cost
+                )
+                total_repair_cost = (repair_cost + amortization_cost) * (
+                    recipe.time_ms / (24 * 60 * 60 * 1000)
+                )  # Convert ms to days
                 total_cost += total_repair_cost
             else:
                 total_repair_cost = 0
@@ -187,8 +211,8 @@ class CostService:
             Tuple of (total_input_cost, total_workforce_cost, scaled_input_costs)
         """
         # Calculate input costs separately from workforce costs
-        total_input_cost = (
-            sum(input_cost.total for input_cost in recipe_cost.input_costs)
+        total_input_cost = sum(
+            input_cost.total for input_cost in recipe_cost.input_costs
         )
         total_workforce_cost = recipe_cost.workforce_cost.total
 
@@ -205,7 +229,9 @@ class CostService:
 
         return total_input_cost, total_workforce_cost, scaled_input_costs
 
-    def calculate_workforce_cost_for_recipe(self, recipe: Recipe) -> CalculatedWorkforceCosts:
+    def calculate_workforce_cost_for_recipe(
+        self, recipe: Recipe
+    ) -> CalculatedWorkforceCosts:
         """Calculate the workforce cost for a recipe.
 
         Args:
@@ -238,10 +264,15 @@ class CostService:
                             f"No price found for workforce need item {need.item_symbol}"
                         )
 
-                    need_per_workforce_per_day = need.per_worker_per_day * workforce_count
-                    need_per_recipe_run = need_per_workforce_per_day * self.workforce_service.workforce_days(recipe.time_ms)
+                    need_per_workforce_per_day = (
+                        need.per_worker_per_day * workforce_count
+                    )
+                    need_per_recipe_run = (
+                        need_per_workforce_per_day
+                        * self.workforce_service.workforce_days(recipe.time_ms)
+                    )
                     price_per_recipe_run = price * need_per_recipe_run
-                    
+
                     consumable_costs.append(
                         CalculatedWorkforceInput(
                             workforce_type=workforce_type,
@@ -287,18 +318,22 @@ class CostService:
                         quantity=input.quantity / recipe_output.quantity,
                         price=input.price,
                         total=input.total / recipe_output.quantity,
-                    ) for input in recipe_cost.input_costs.inputs
+                    )
+                    for input in recipe_cost.input_costs.inputs
                 ],
                 total=recipe_cost.input_costs.total / recipe_output.quantity,
             ),
             workforce_cost=CalculatedWorkforceCosts(
-                inputs=[CalculatedWorkforceInput(
-                    workforce_type=workforce_input_cost.workforce_type,
-                    item_symbol=workforce_input_cost.item_symbol,
-                    quantity=workforce_input_cost.quantity / recipe_output.quantity,
-                    price=workforce_input_cost.price,
-                    total=workforce_input_cost.total / recipe_output.quantity,
-                ) for workforce_input_cost in recipe_cost.workforce_cost.inputs],
+                inputs=[
+                    CalculatedWorkforceInput(
+                        workforce_type=workforce_input_cost.workforce_type,
+                        item_symbol=workforce_input_cost.item_symbol,
+                        quantity=workforce_input_cost.quantity / recipe_output.quantity,
+                        price=workforce_input_cost.price,
+                        total=workforce_input_cost.total / recipe_output.quantity,
+                    )
+                    for workforce_input_cost in recipe_cost.workforce_cost.inputs
+                ],
                 total=recipe_cost.workforce_cost.total / recipe_output.quantity,
             ),
             repair_cost=recipe_cost.repair_cost / recipe_output.quantity,

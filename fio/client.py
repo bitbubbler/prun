@@ -47,7 +47,12 @@ class FIOClient:
         """
         return self._auth_token is not None
 
-    def authenticate(self, username: str | None = None, password: str | None = None, apikey: str | None = None) -> str:
+    def authenticate(
+        self,
+        username: str | None = None,
+        password: str | None = None,
+        apikey: str | None = None,
+    ) -> str:
         """Authenticate with the FIO API.
 
         Args:

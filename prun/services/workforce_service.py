@@ -60,7 +60,8 @@ class WorkforceService:
                     {
                         "workforce_type": fio_workforce_need.workforce_type,
                         "item_symbol": fio_need.material_ticker,
-                        "amount": fio_need.amount / 100,  # Convert from per 100 workers to per worker
+                        "amount": fio_need.amount
+                        / 100,  # Convert from per 100 workers to per worker
                     }
                 )
                 self.workforce_repository.create_workforce_need(workforce_need)
