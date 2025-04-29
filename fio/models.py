@@ -7,6 +7,9 @@ from typing import Optional, List, Dict
 class FIOMaterial(BaseModel):
     """Material from the /csv/materials endpoint."""
 
+    material_id: str = Field(
+        ..., description="Material ID", alias="MaterialId"
+    )
     ticker: str = Field(
         ..., description="Material ticker symbol (e.g. 'H2O')", alias="Ticker"
     )

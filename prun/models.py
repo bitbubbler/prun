@@ -11,15 +11,12 @@ class Item(SQLModel, table=True):
 
     __tablename__ = "items"
 
+    material_id: str = Field(index=True)
     symbol: str = Field(primary_key=True)
     name: str
     category: str
     weight: float
     volume: float
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: datetime = Field(
-        default_factory=datetime.utcnow, sa_column_kwargs={"onupdate": datetime.utcnow}
-    )
 
     # Relationships
     prices: List["ExchangePrice"] = Relationship(back_populates="item")
@@ -205,6 +202,11 @@ class Planet(SQLModel, table=True):
     # Relationships
     system: "System" = Relationship(back_populates="planets")
     site: "Site" = Relationship(back_populates="planet")
+    resources: List["PlanetResource"] = Relationship(back_populates="planet")
+    building_requirements: List["PlanetBuildingRequirement"] = Relationship(back_populates="planet")
+    production_fees: List["PlanetProductionFee"] = Relationship(back_populates="planet")
+    cogc_programs: List["COGCProgram"] = Relationship(back_populates="planet")
+    cogc_votes: List["COGCVote"] = Relationship(back_populates="planet")
 
 
 class SystemConnection(SQLModel, table=True):
@@ -518,46 +520,82 @@ class ProjectionBucket(SQLModel, table=True):
         return self.balance_end - self.balance_start
 
 
-# Pydantic Models
-class RecipeInputModel(BaseModel):
-    """Pydantic model for recipe inputs."""
+class PlanetResource(SQLModel, table=True):
+    """Database model for planet resources."""
 
-    item_symbol: str
-    quantity: float
+    __tablename__ = "planet_resources"
 
+    id: Optional[int] = Field(default=None, primary_key=True)
+    planet_natural_id: str = Field(foreign_key="planets.natural_id")
+    material_id: str = Field(foreign_key="items.material_id")
+    resource_type: str
+    factor: float
 
-class RecipeOutputModel(BaseModel):
-    """Pydantic model for recipe outputs."""
-
-    item_symbol: str
-    quantity: float
-    is_target: bool = False
-
-
-class RecipeModel(BaseModel):
-    """Pydantic model for recipes."""
-
-    symbol: str
-    building_symbol: str
-    time_ms: int
-    inputs: List[RecipeInputModel]
-    outputs: List[RecipeOutputModel]
-    workforce_cost: Optional[float] = None
-    total_cost: Optional[float] = None
+    # Relationships
+    planet: Planet = Relationship(back_populates="resources")
+    item: Item = Relationship()
 
 
-class RecipeCostModel(BaseModel):
-    """Pydantic model for recipe costs."""
+class PlanetBuildingRequirement(SQLModel, table=True):
+    """Database model for planet building requirements."""
 
-    item: str
-    quantity: float
-    price: float
-    total: float
+    __tablename__ = "planet_building_requirements"
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+    planet_natural_id: str = Field(foreign_key="planets.natural_id")
+    item_symbol: str = Field(foreign_key="items.symbol")
+    amount: int
+    weight: float
+    volume: float
+
+    # Relationships
+    planet: Planet = Relationship(back_populates="building_requirements")
+    item: Item = Relationship()
 
 
-class WorkforceNeedModel(BaseModel):
-    """Pydantic model for workforce needs."""
+class PlanetProductionFee(SQLModel, table=True):
+    """Database model for planet production fees."""
 
-    type: str
-    workers: int
-    needs: List[Dict[str, Any]]
+    __tablename__ = "planet_production_fees"
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+    planet_natural_id: str = Field(foreign_key="planets.natural_id")
+    category: str
+    workforce_level: str
+    fee_amount: int
+    fee_currency: Optional[str] = None
+
+    # Relationships
+    planet: Planet = Relationship(back_populates="production_fees")
+
+
+class COGCProgram(SQLModel, table=True):
+    """Database model for COGC programs."""
+
+    __tablename__ = "cogc_programs"
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+    planet_natural_id: str = Field(foreign_key="planets.natural_id")
+    program_type: Optional[str] = None
+    start_epoch_ms: datetime
+    end_epoch_ms: datetime
+
+    # Relationships
+    planet: Planet = Relationship(back_populates="cogc_programs")
+
+
+class COGCVote(SQLModel, table=True):
+    """Database model for COGC votes."""
+
+    __tablename__ = "cogc_votes"
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+    planet_natural_id: str = Field(foreign_key="planets.natural_id")
+    company_name: str
+    company_code: Optional[str] = None
+    influence: float
+    vote_type: str
+    vote_time_epoch_ms: datetime
+
+    # Relationships
+    planet: Planet = Relationship(back_populates="cogc_votes")

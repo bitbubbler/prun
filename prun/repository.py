@@ -21,6 +21,11 @@ from prun.models import (
     Storage,
     StorageItem,
     Warehouse,
+    PlanetResource,
+    PlanetBuildingRequirement,
+    PlanetProductionFee,
+    COGCProgram,
+    COGCVote,
 )
 
 logger = logging.getLogger(__name__)
@@ -74,7 +79,6 @@ class BuildingRepository(BaseRepository):
             Created building
         """
         self.session.add(building)
-        self.session.flush()
         return building
 
     def get_building_costs_with_prices(
@@ -111,7 +115,6 @@ class ExchangeRepository(BaseRepository):
             Created exchange price
         """
         self.session.add(exchange_price)
-        self.session.flush()
         return exchange_price
 
     def delete_exchange_prices(self) -> None:
@@ -120,7 +123,6 @@ class ExchangeRepository(BaseRepository):
         prices = self.session.exec(statement).all()
         for price in prices:
             self.session.delete(price)
-        self.session.flush()
 
     def get_exchange_price(
         self, exchange_code: str, item_symbol: str
@@ -170,7 +172,6 @@ class ExchangeRepository(BaseRepository):
             Created commodity exchange
         """
         self.session.add(comex_exchange)
-        self.session.flush()
         return comex_exchange
 
     def delete_comex_exchanges(self) -> None:
@@ -179,7 +180,6 @@ class ExchangeRepository(BaseRepository):
         exchanges = self.session.exec(statement).all()
         for exchange in exchanges:
             self.session.delete(exchange)
-        self.session.flush()
 
 
 class ItemRepository(BaseRepository):
@@ -206,7 +206,6 @@ class ItemRepository(BaseRepository):
             Created item
         """
         self.session.add(item)
-        self.session.flush()
         return item
 
 
@@ -239,7 +238,6 @@ class RecipeRepository(BaseRepository):
             Created recipe
         """
         self.session.add(recipe)
-        self.session.flush()
         return recipe
 
     def get_recipe_with_prices(
@@ -515,7 +513,7 @@ class StorageRepository(BaseRepository):
 
 
 class SystemRepository(BaseRepository):
-    """Repository for system and planet-related operations."""
+    """Repository for system-related operations."""
 
     def get_planet(self, natural_id: str) -> Optional[Planet]:
         """Get a planet by natural ID.
@@ -532,13 +530,12 @@ class SystemRepository(BaseRepository):
         """Create a new planet.
 
         Args:
-            planet: Planet
+            planet: Planet to create
 
         Returns:
             Created planet
         """
         self.session.add(planet)
-        self.session.flush()
         return planet
 
     def update_planet(self, planet: Planet) -> Planet:
@@ -551,7 +548,6 @@ class SystemRepository(BaseRepository):
             Updated planet
         """
         self.session.add(planet)
-        self.session.flush()
         return planet
 
     def get_system(self, system_id: str) -> Optional[System]:
@@ -590,8 +586,122 @@ class SystemRepository(BaseRepository):
             Created system
         """
         self.session.add(system)
-        self.session.flush()
         return system
+
+    def delete_planet_resources(self, planet: Planet) -> None:
+        """Delete all resources for a planet.
+
+        Args:
+            planet: Planet
+        """
+        statement = select(PlanetResource).where(PlanetResource.planet_natural_id == planet.natural_id)
+        resources = self.session.exec(statement).all()
+        for resource in resources:
+            self.session.delete(resource)
+
+    def delete_planet_building_requirements(self, planet: Planet) -> None:
+        """Delete all building requirements for a planet.
+
+        Args:
+            planet: Planet
+        """
+        statement = select(PlanetBuildingRequirement).where(PlanetBuildingRequirement.planet_natural_id == planet.natural_id)
+        requirements = self.session.exec(statement).all()
+        for requirement in requirements:
+            self.session.delete(requirement)
+
+    def delete_planet_production_fees(self, planet: Planet) -> None:
+        """Delete all production fees for a planet.
+
+        Args:
+            planet: Planet
+        """
+        statement = select(PlanetProductionFee).where(PlanetProductionFee.planet_natural_id == planet.natural_id)
+        fees = self.session.exec(statement).all()
+        for fee in fees:
+            self.session.delete(fee)
+
+    def delete_planet_cogc_programs(self, planet: Planet) -> None:
+        """Delete all COGC programs for a planet.
+
+        Args:
+            planet: Planet
+        """
+        statement = select(COGCProgram).where(COGCProgram.planet_natural_id == planet.natural_id)
+        programs = self.session.exec(statement).all()
+        for program in programs:
+            self.session.delete(program)
+
+    def delete_planet_cogc_votes(self, planet: Planet) -> None:
+        """Delete all COGC votes for a planet.
+
+        Args:
+            planet: Planet
+        """
+        statement = select(COGCVote).where(COGCVote.planet_natural_id == planet.natural_id)
+        votes = self.session.exec(statement).all()
+        for vote in votes:
+            self.session.delete(vote)
+
+    def create_planet_resource(self, resource: PlanetResource) -> PlanetResource:
+        """Create a new planet resource.
+
+        Args:
+            resource: Planet resource to create
+
+        Returns:
+            Created planet resource
+        """
+        self.session.add(resource)
+        return resource
+
+    def create_planet_building_requirement(self, requirement: PlanetBuildingRequirement) -> PlanetBuildingRequirement:
+        """Create a new planet building requirement.
+
+        Args:
+            requirement: Planet building requirement to create
+
+        Returns:
+            Created planet building requirement
+        """
+        self.session.add(requirement)
+        return requirement
+
+    def create_planet_production_fee(self, fee: PlanetProductionFee) -> PlanetProductionFee:
+        """Create a new planet production fee.
+
+        Args:
+            fee: Planet production fee to create
+
+        Returns:
+            Created planet production fee
+        """
+        self.session.add(fee)
+        return fee
+
+    def create_cogc_program(self, program: COGCProgram) -> COGCProgram:
+        """Create a new COGC program.
+
+        Args:
+            program: COGC program to create
+
+        Returns:
+            Created COGC program
+        """
+        self.session.add(program)
+        return program
+
+    def create_cogc_vote(self, vote: COGCVote) -> COGCVote:
+        """Create a new COGC vote.
+
+        Args:
+            vote: COGC vote to create
+
+        Returns:
+            Created COGC vote
+        """
+        self.session.add(vote)
+        return vote
 
 
 class WarehouseRepository(BaseRepository):

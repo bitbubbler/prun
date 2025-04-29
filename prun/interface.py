@@ -17,6 +17,11 @@ from prun.models import (
     System,
     Warehouse,
     WorkforceNeed,
+    PlanetResource,
+    PlanetBuildingRequirement,
+    PlanetProductionFee,
+    COGCProgram,
+    COGCVote,
 )
 
 
@@ -225,6 +230,61 @@ class SystemRepositoryInterface(ABC):
     @abstractmethod
     def create_planet(self, planet: Planet) -> None:
         """Create a new planet."""
+        pass
+
+    @abstractmethod
+    def update_planet(self, planet: Planet) -> None:
+        """Update an existing planet."""
+        pass
+
+    @abstractmethod
+    def delete_planet_resources(self, planet: Planet) -> None:
+        """Delete all resources for a planet."""
+        pass
+
+    @abstractmethod
+    def delete_planet_building_requirements(self, planet: Planet) -> None:
+        """Delete all building requirements for a planet."""
+        pass
+
+    @abstractmethod
+    def delete_planet_production_fees(self, planet: Planet) -> None:
+        """Delete all production fees for a planet."""
+        pass
+
+    @abstractmethod
+    def delete_planet_cogc_programs(self, planet: Planet) -> None:
+        """Delete all COGC programs for a planet."""
+        pass
+
+    @abstractmethod
+    def delete_planet_cogc_votes(self, planet: Planet) -> None:
+        """Delete all COGC votes for a planet."""
+        pass
+
+    @abstractmethod
+    def create_planet_resource(self, resource: PlanetResource) -> None:
+        """Create a new planet resource."""
+        pass
+
+    @abstractmethod
+    def create_planet_building_requirement(self, requirement: PlanetBuildingRequirement) -> None:
+        """Create a new planet building requirement."""
+        pass
+
+    @abstractmethod
+    def create_planet_production_fee(self, fee: PlanetProductionFee) -> None:
+        """Create a new planet production fee."""
+        pass
+
+    @abstractmethod
+    def create_cogc_program(self, program: COGCProgram) -> None:
+        """Create a new COGC program."""
+        pass
+
+    @abstractmethod
+    def create_cogc_vote(self, vote: COGCVote) -> None:
+        """Create a new COGC vote."""
         pass
 
 

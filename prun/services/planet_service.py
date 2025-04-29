@@ -5,7 +5,7 @@ from typing import List, Dict, Any, Optional
 
 from fio import FIOClientInterface
 from prun.interface import SystemRepositoryInterface
-from prun.models import Planet
+from prun.models import Planet, PlanetResource, PlanetBuildingRequirement, PlanetProductionFee, COGCProgram, COGCVote
 
 logger = logging.getLogger(__name__)
 
@@ -29,8 +29,9 @@ class PlanetService:
     def sync_planets(self) -> None:
         """Sync planets from the FIO API to the database.
 
-        Args:
-            fio_client: FIO API client
+        This method syncs planet information and all related data (resources,
+        building requirements, production fees, COGC programs, and votes) in a single
+        call to the FIO API.
 
         Raises:
             ValueError: If a planet's system cannot be found in the database
@@ -100,11 +101,11 @@ class PlanetService:
                         "cogc_program_status": fio_planet.cogc_program_status,
                         "planet_tier": fio_planet.planet_tier,
                         "timestamp": fio_planet.timestamp,
-                        "distance_results": fio_planet.distance_results,
                     }
                 )
                 self.system_repository.create_planet(planet)
             else:
+                planet = existing_planet
                 # Update existing planet with new data
                 existing_planet.name = fio_planet.planet_name
                 existing_planet.system_id = system.system_id
@@ -150,5 +151,65 @@ class PlanetService:
                 existing_planet.cogc_program_status = fio_planet.cogc_program_status
                 existing_planet.planet_tier = fio_planet.planet_tier
                 existing_planet.timestamp = fio_planet.timestamp
-                existing_planet.distance_results = fio_planet.distance_results
                 self.system_repository.update_planet(existing_planet)
+
+            # Delete existing related data
+            self.system_repository.delete_planet_resources(planet)
+            self.system_repository.delete_planet_building_requirements(planet)
+            self.system_repository.delete_planet_production_fees(planet)
+            self.system_repository.delete_planet_cogc_programs(planet)
+            self.system_repository.delete_planet_cogc_votes(planet)
+
+            # Create new resources
+            for resource in fio_planet.resources:
+                planet_resource = PlanetResource(
+                    planet_natural_id=planet.natural_id,
+                    material_id=resource.material_id,
+                    resource_type=resource.resource_type,
+                    factor=resource.factor,
+                )
+                self.system_repository.create_planet_resource(planet_resource)
+
+            # Create new building requirements
+            for requirement in fio_planet.build_requirements:
+                planet_requirement = PlanetBuildingRequirement(
+                    planet_natural_id=planet.natural_id,
+                    item_symbol=requirement.material_id,
+                    amount=requirement.material_amount,
+                    weight=requirement.material_weight,
+                    volume=requirement.material_volume,
+                )
+                self.system_repository.create_planet_building_requirement(planet_requirement)
+
+            # Create new production fees
+            for fee in fio_planet.production_fees:
+                planet_fee = PlanetProductionFee(
+                    planet_natural_id=planet.natural_id,
+                    category=fee.category,
+                    workforce_level=fee.workforce_level,
+                    fee_amount=fee.fee_amount,
+                    fee_currency=fee.fee_currency,
+                )
+                self.system_repository.create_planet_production_fee(planet_fee)
+
+            # Create new COGC programs
+            for program in fio_planet.cogc_programs:
+                cogc_program = COGCProgram(
+                    planet_natural_id=planet.natural_id,
+                    program_type=program.program_type,
+                    start_epoch_ms=program.start_epoch_ms,
+                    end_epoch_ms=program.end_epoch_ms,
+                )
+                self.system_repository.create_cogc_program(cogc_program)
+
+            # Create new COGC votes
+            for vote in fio_planet.cogc_votes:
+                cogc_vote = COGCVote(
+                    planet_natural_id=planet.natural_id,
+                    company_name=vote.company_name,
+                    company_code=vote.company_code,
+                    influence=vote.influence,
+                    vote_type=vote.vote_type,
+                    vote_time_epoch_ms=vote.vote_time_epoch_ms,
+                )
+                self.system_repository.create_cogc_vote(cogc_vote)

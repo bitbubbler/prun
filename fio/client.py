@@ -322,7 +322,7 @@ class FIOClient:
         """Get full information for all planets from the FIO API.
 
         Returns:
-            List of full planet information
+            List of planets with full information
         """
         data = self._get_json("planet/allplanets/full")
         return [FIOPlanetFull(**planet) for planet in data]
