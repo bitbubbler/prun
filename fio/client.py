@@ -36,6 +36,7 @@ class FIOClient:
         self.headers = {"Accept": "text/csv"}
         self._auth_token: Optional[str] = None
         self._session = requests.Session()
+        self._useapitoken = False
 
     @property
     def is_authenticated(self) -> bool:
@@ -46,7 +47,7 @@ class FIOClient:
         """
         return self._auth_token is not None
 
-    def authenticate(self, username: str, password: str) -> str:
+    def authenticate(self, username: str | None = None, password: str | None = None, apikey: str | None = None) -> str:
         """Authenticate with the FIO API.
 
         Args:
@@ -59,8 +60,13 @@ class FIOClient:
         Raises:
             requests.RequestException: If the login request fails
         """
-        self._auth_token = self._get_auth_token(username, password)
-        self.headers["Authorization"] = f"Bearer {self._auth_token}"
+        if apikey:
+            self._auth_token = apikey
+            self.headers["Authorization"] = self._auth_token
+            self._useapitoken = True
+        elif password:
+            self._auth_token = self._get_auth_token(username, password)
+            self.headers["Authorization"] = f"Bearer {self._auth_token}"
         return self._auth_token
 
     def _get_auth_token(self, username: str, password: str) -> str:
@@ -115,7 +121,9 @@ class FIOClient:
         logger.debug("Fetching CSV from %s", url)
 
         headers = self.headers.copy()
-        if authenticated and self._auth_token:
+        if authenticated and self._useapitoken:
+            headers["Authorization"] = self._auth_token
+        elif authenticated and self._auth_token:
             headers["Authorization"] = f"Bearer {self._auth_token}"
 
         try:
@@ -146,7 +154,9 @@ class FIOClient:
         logger.debug("Fetching JSON from %s", url)
 
         headers = self.headers.copy()
-        if authenticated and self._auth_token:
+        if authenticated and self._useapitoken:
+            headers["Authorization"] = self._auth_token
+        elif authenticated and self._auth_token:
             headers["Authorization"] = f"{self._auth_token}"
 
         response = self._session.get(url, headers=headers)
