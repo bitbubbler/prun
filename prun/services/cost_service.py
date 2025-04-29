@@ -48,14 +48,6 @@ class WorkforceNeed(BaseModel):
     daily_cost: float
 
 
-class WorkforceTypeNeeds(BaseModel):
-    """Needs for a specific workforce type."""
-
-    type: str
-    workers: int
-    needs: List[WorkforceNeed]
-
-
 class CalculatedCOGM(BaseModel):
     """Calculated COGM."""
 
@@ -63,11 +55,10 @@ class CalculatedCOGM(BaseModel):
     item_symbol: str
     building_symbol: str
     time_ms: int
-    workforce_cost: float
+    workforce_cost: CalculatedWorkforceCost
     repair_cost: float
     total_cost: float
     input_costs: List[CalculatedInputCost]
-    workforce_needs: List[WorkforceTypeNeeds]
 
 
 class CostService:
@@ -146,6 +137,7 @@ class CostService:
 
             # Calculate workforce cost
             workforce_cost = self.calculate_workforce_cost_for_recipe(recipe)
+            total_cost += workforce_cost.total
 
             # Calculate repair cost
             building = self.building_service.get_building(recipe.building_symbol)
@@ -235,14 +227,10 @@ class CostService:
                         raise ValueError(
                             f"No price found for workforce need item {need.item_symbol}"
                         )
-                    print(f"item_symbol: {need.item_symbol}")
-                    print(f"workforce_count: {workforce_count}")
+
                     need_per_workforce_per_day = need.per_worker_per_day * workforce_count
-                    print(f"need_per_workforce_per_day: {need_per_workforce_per_day}")
                     need_per_recipe_run = need_per_workforce_per_day * self.workforce_service.workforce_days(recipe.time_ms)
-                    print(f"need_per_recipe_run: {need_per_recipe_run}")
                     price_per_recipe_run = price * need_per_recipe_run
-                    print(f"price_per_recipe_run: {price_per_recipe_run}")
                     
                     consumable_costs.append(
                         CalculatedInputCost(
@@ -279,39 +267,33 @@ class CostService:
         total_recipe_output = sum(output.quantity for output in recipe.outputs)
         output_proportion = recipe_output.quantity / total_recipe_output if total_recipe_output > 0 else 1.0
 
-        # Calculate final costs
-        total_input_cost, total_workforce_cost, scaled_input_costs = (
-            self._calculate_final_costs(
-                recipe_cost
-            )
-        )
+        scaled_recipe_cost = recipe_cost.total * output_proportion
 
-        # Scale input costs by output proportion
-        scaled_input_costs = [
-            CalculatedInputCost(
-                item_symbol=input_cost.item_symbol,
-                quantity=input_cost.quantity * output_proportion,
-                price=input_cost.price,
-                total=input_cost.total * output_proportion,
-            )
-            for input_cost in scaled_input_costs
-        ]
+        # # Scale input costs by output proportion
+        # scaled_input_costs = [
+        #     CalculatedInputCost(
+        #         item_symbol=input_cost.item_symbol,
+        #         quantity=input_cost.quantity * output_proportion,
+        #         price=input_cost.price,
+        #         total=input_cost.total * output_proportion,
+        #     )
+        #     for input_cost in scaled_input_costs
+        # ]
 
 
-        # Calculate total repair cost, scaled by the output proportion
-        total_repair_cost = recipe_cost.repair_cost * output_proportion
+        # # Calculate total repair cost, scaled by the output proportion
+        # total_repair_cost = recipe_cost.repair_cost * output_proportion
        
-        # Calculate the final total cost as the sum of all scaled costs
-        final_total_cost = sum(input_cost.total for input_cost in scaled_input_costs) + scaled_workforce_cost + total_repair_cost
+        # # Calculate the final total cost as the sum of all scaled costs
+        # final_total_cost = sum(input_cost.total for input_cost in scaled_input_costs) + scaled_workforce_cost + total_repair_cost
 
         return CalculatedCOGM(
             recipe_symbol=recipe.symbol,
             item_symbol=item_symbol,
             building_symbol=recipe.building_symbol,
             time_ms=recipe.time_ms,
-            input_costs=scaled_input_costs,
-            workforce_cost=scaled_workforce_cost,
-            repair_cost=total_repair_cost,
-            total_cost=final_total_cost,
-            workforce_needs=workforce_needs,
+            input_costs=recipe_cost.input_costs,
+            workforce_cost=recipe_cost.workforce_cost,
+            repair_cost=recipe_cost.repair_cost,
+            total_cost=scaled_recipe_cost,
         )

@@ -99,23 +99,14 @@ def sync_storage(username: str, password: str):
     container.storage_service().sync_storage(username)
 
 
-def print_cogm_analysis(result: CalculatedCOGM, item_symbol: str, quantity: int):
+def print_cogm_analysis(result: CalculatedCOGM, item_symbol: str):
     """Print COGM analysis in a formatted table.
 
     Args:
         result: The calculated COGM result
         item_symbol: The symbol of the item being analyzed
-        quantity: The quantity of items to calculate for
     """
     console = Console()
-
-    # Calculate output quantity to get per unit costs
-    output_quantity = next(
-        (output.quantity for output in result.recipe_outputs if output.is_target), 1
-    )
-
-    # Calculate per unit costs
-    total_cost_per_unit = result.total_cost / output_quantity
 
     # Create a simple table showing just the COGM
     cost_table = Table(title=f"COGM Analysis for {item_symbol}")
@@ -124,27 +115,17 @@ def print_cogm_analysis(result: CalculatedCOGM, item_symbol: str, quantity: int)
 
     # Show input costs per unit
     for input_cost in result.input_costs:
-        per_unit_cost = input_cost.price * input_cost.quantity
-        cost_table.add_row(f"Input: {input_cost.item_symbol}", f"{per_unit_cost:,.2f}")
+        cost_table.add_row(f"Input: {input_cost.item_symbol}", f"{input_cost.total:,.2f}")
 
     # Show workforce cost per unit
-    workforce_cost_per_unit = result.workforce_cost / output_quantity
-    cost_table.add_row("Workforce Cost", f"{workforce_cost_per_unit:,.2f}")
+    cost_table.add_row("Workforce Cost", f"{result.workforce_cost.total:,.2f}")
 
     # Show repair cost per unit
-    repair_cost_per_unit = result.repair_cost / output_quantity
-    cost_table.add_row("Repair Cost", f"{repair_cost_per_unit:,.2f}")
+    cost_table.add_row("Repair Cost", f"{result.repair_cost:,.2f}")
 
     # Show total COGM per unit
     cost_table.add_row(
-        "Total COGM per unit", f"{total_cost_per_unit:,.2f}", style="bold"
-    )
-
-    # Show total for requested quantity
-    cost_table.add_row(
-        f"Total for {quantity} units",
-        f"{total_cost_per_unit * quantity:,.2f}",
-        style="bold",
+        "Total COGM", f"{result.total_cost:,.2f}", style="bold"
     )
 
     console.print(cost_table)
@@ -168,9 +149,9 @@ def cogm(item_symbol: str, quantity: int, recipe_symbol: str | None):
     """
     try:
         result: CalculatedCOGM = container.cost_service().calculate_cogm(
-            item_symbol, quantity, recipe_symbol
+            item_symbol, recipe_symbol
         )
-        print_cogm_analysis(result, item_symbol, quantity)
+        print_cogm_analysis(result, item_symbol)
 
     except MultipleRecipesError as e:
         console = Console()
@@ -198,9 +179,9 @@ def cogm(item_symbol: str, quantity: int, recipe_symbol: str | None):
         for recipe in e.available_recipes:
             console.print(f"\n[bold]Analysis for recipe: {recipe.symbol}[/bold]")
             result = container.cost_service().calculate_cogm(
-                item_symbol, quantity, recipe.symbol
+                item_symbol, recipe.symbol
             )
-            print_cogm_analysis(result, item_symbol, quantity)
+            print_cogm_analysis(result, item_symbol)
 
     except ValueError as e:
         console = Console()
