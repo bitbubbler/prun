@@ -263,37 +263,29 @@ class CostService:
         # Calculate base recipe cost
         recipe_cost = self.calculate_recipe_cost(recipe, input_prices)
 
-        # Calculate the proportion of target output to total recipe output
-        total_recipe_output = sum(output.quantity for output in recipe.outputs)
-        output_proportion = recipe_output.quantity / total_recipe_output if total_recipe_output > 0 else 1.0
-
-        scaled_recipe_cost = recipe_cost.total * output_proportion
-
-        # # Scale input costs by output proportion
-        # scaled_input_costs = [
-        #     CalculatedInputCost(
-        #         item_symbol=input_cost.item_symbol,
-        #         quantity=input_cost.quantity * output_proportion,
-        #         price=input_cost.price,
-        #         total=input_cost.total * output_proportion,
-        #     )
-        #     for input_cost in scaled_input_costs
-        # ]
-
-
-        # # Calculate total repair cost, scaled by the output proportion
-        # total_repair_cost = recipe_cost.repair_cost * output_proportion
-       
-        # # Calculate the final total cost as the sum of all scaled costs
-        # final_total_cost = sum(input_cost.total for input_cost in scaled_input_costs) + scaled_workforce_cost + total_repair_cost
-
+        # Calculate scaled recipe cost
         return CalculatedCOGM(
             recipe_symbol=recipe.symbol,
             item_symbol=item_symbol,
             building_symbol=recipe.building_symbol,
             time_ms=recipe.time_ms,
-            input_costs=recipe_cost.input_costs,
-            workforce_cost=recipe_cost.workforce_cost,
-            repair_cost=recipe_cost.repair_cost,
-            total_cost=scaled_recipe_cost,
+            input_costs=[
+                CalculatedInputCost(
+                    item_symbol=input_cost.item_symbol,
+                    quantity=input_cost.quantity / recipe_output.quantity,
+                    price=input_cost.price,
+                    total=input_cost.total / recipe_output.quantity,
+                ) for input_cost in recipe_cost.input_costs
+            ],
+            workforce_cost=CalculatedWorkforceCost(
+                input_costs=[CalculatedInputCost(
+                    item_symbol=input_cost.item_symbol,
+                    quantity=input_cost.quantity / recipe_output.quantity,
+                    price=input_cost.price,
+                    total=input_cost.total / recipe_output.quantity,
+                ) for input_cost in recipe_cost.workforce_cost.input_costs],
+                total=recipe_cost.workforce_cost.total / recipe_output.quantity,
+            ),
+            repair_cost=recipe_cost.repair_cost / recipe_output.quantity,
+            total_cost=recipe_cost.total / recipe_output.quantity,
         )
