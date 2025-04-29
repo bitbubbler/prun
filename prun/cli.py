@@ -114,11 +114,13 @@ def print_cogm_analysis(result: CalculatedCOGM, item_symbol: str):
     cost_table.add_column("Value", justify="right", style="green")
 
     # Show input costs per unit
-    for input_cost in result.input_costs:
+    for input_cost in result.input_costs.inputs:
         cost_table.add_row(f"Input: {input_cost.item_symbol}", f"{input_cost.total:,.2f}")
+        
+    cost_table.add_row("Input Cost", f"{result.input_costs.total:,.2f}")
 
     # Show workforce cost per unit
-    for input_cost in result.workforce_cost.input_costs:
+    for input_cost in result.workforce_cost.inputs:
         cost_table.add_row(f"Workforce {input_cost.workforce_type}: {input_cost.item_symbol}", f"{input_cost.total:,.2f}")
         
     # show workforce cost per recipe run
