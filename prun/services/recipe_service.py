@@ -1,10 +1,13 @@
 import logging
 
-from pydantic import BaseModel
-from typing import List, Dict, Any, Optional
+from typing import List, Optional
 
 from fio import FIOClientInterface
-from prun.errors import MultipleRecipesError, RecipeNotFoundError
+from prun.errors import (
+    MultipleRecipesError,
+    RecipeNotFoundError,
+    PlanetResourceRequiredError,
+)
 from prun.interface import RecipeRepositoryInterface
 from prun.models import Recipe, RecipeInput, ExchangePrice, RecipeOutput, PlanetResource
 
@@ -47,16 +50,31 @@ class RecipeService:
         """
         return self.recipe_repository.get_recipes_for_item(item_symbol)
 
-    def get_recipe(self, symbol: str) -> Optional[Recipe]:
+    def get_recipe(
+        self, recipe_symbol: str, planet_resource: Optional[PlanetResource] = None
+    ) -> Optional[Recipe]:
         """Get a recipe by its symbol.
 
         Args:
             symbol: Recipe symbol
-
+            planet_resource: Planet resource to use for extraction recipes
         Returns:
             Recipe if found, None otherwise
         """
-        return self.recipe_repository.get_recipe(symbol)
+
+        if planet_resource:
+            recipe = self.recipe_from_resource(planet_resource)
+            return Recipe.extraction_recipe_from(recipe, planet_resource)
+        else:
+            recipe = self.recipe_repository.get_recipe(recipe_symbol)
+
+            if not recipe:
+                raise RecipeNotFoundError(recipe_symbol)
+
+            if recipe.is_resource_extraction_recipe and planet_resource is None:
+                raise PlanetResourceRequiredError(recipe_symbol, planet_resource)
+
+            return recipe
 
     def get_recipe_with_prices(
         self, symbol: str

@@ -1,0 +1,22 @@
+name: "AFC"
+# material_buy_prices:
+recipes:
+  - recipe_symbol: "RIG:=>"
+    item_symbol: "H2O"
+    planet_natural_id: "FK-794b"
+
+  - recipe_symbol: "HYF:16xH2O-2xNS=>12xALG"
+    planet_natural_id: "ZV-896c"
+
+  - recipe_symbol: "HYF:20xH2O-2xNS=>12xMAI"
+    planet_natural_id: "ZV-896c"
+
+  - recipe_symbol: "HYF:16xH2O-1xNS=>6xVEG"
+    planet_natural_id: "ZV-896c"
+
+  - recipe_symbol: "FP:1xALG-1xMAI-1xVEG=>10xRAT"
+    planet_natural_id: "YK-649b"
+
+  - recipe_symbol: "FRM:1xDDT-4xH2O=>4xHER"
+    planet_natural_id: "ZV-896b"
+  
