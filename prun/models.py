@@ -1,8 +1,10 @@
-from datetime import datetime
-from typing import List, Optional, Dict, Any
-from sqlmodel import SQLModel, Field, Relationship
-from pydantic import BaseModel
+import math
 from decimal import Decimal
+from datetime import datetime
+from typing import List, Optional, Dict, Any, Literal
+
+from sqlmodel import SQLModel, Field, Relationship
+from pydantic import BaseModel, computed_field
 
 
 # Database Models
@@ -112,6 +114,58 @@ class Recipe(SQLModel, table=True):
     outputs: List[RecipeOutput] = Relationship(back_populates="recipe")
     building: "Building" = Relationship(back_populates="recipes")
 
+    @property
+    def is_resource_extraction_recipe(self) -> bool:
+        """Check if the recipe is a resource extraction recipe."""
+        return self.building_symbol in ["COL", "RIG", "EXT"]
+
+    @staticmethod
+    def extraction_recipe_from(
+        recipe: "Recipe", planet_resource: "PlanetResource"
+    ) -> "Recipe":
+        """Create an extraction recipe from a normal recipe."""
+
+        if not recipe.is_resource_extraction_recipe:
+            raise ValueError("Recipe is not a resource extraction recipe")
+
+        recipe_hours_decimal = recipe.time_ms / 3600000.0
+        print(f"recipe_hours_decimal: {recipe_hours_decimal}")
+        daily_extraction = (
+            round(planet_resource.factor * 100 * 0.7, 1)
+            if recipe.building_symbol in ["RIG", "EXT"]
+            else round(planet_resource.factor * 100 * 0.6, 1)
+        )
+        print(f"daily_extraction: {daily_extraction}")
+
+        fractional_units_per_run = daily_extraction / (24 / recipe_hours_decimal)
+        print(f"fractional_units_per_run: {fractional_units_per_run}")
+
+        remainder_units_per_run = (
+            math.ceil(fractional_units_per_run) - fractional_units_per_run
+        )
+        print(f"remainder_units_per_run: {remainder_units_per_run}")
+
+        extraction_units_per_run = math.ceil(fractional_units_per_run)
+        print(f"extraction_units_per_run: {extraction_units_per_run}")
+
+        extraction_time_hours_decimal = recipe_hours_decimal + (
+            recipe_hours_decimal * (remainder_units_per_run / fractional_units_per_run)
+        )
+        print(f"extraction_time_hours_decimal: {extraction_time_hours_decimal}")
+
+        return Recipe(
+            symbol=recipe.symbol,
+            building_symbol=recipe.building_symbol,
+            time_ms=int(extraction_time_hours_decimal * 3600000),
+            inputs=[],
+            outputs=[
+                RecipeOutput(
+                    item_symbol=planet_resource.item.symbol,
+                    quantity=extraction_units_per_run,
+                )
+            ],
+        )
+
 
 class Building(SQLModel, table=True):
     """Database model for buildings in Prosperous Universe."""
@@ -203,7 +257,9 @@ class Planet(SQLModel, table=True):
     system: "System" = Relationship(back_populates="planets")
     site: "Site" = Relationship(back_populates="planet")
     resources: List["PlanetResource"] = Relationship(back_populates="planet")
-    building_requirements: List["PlanetBuildingRequirement"] = Relationship(back_populates="planet")
+    building_requirements: List["PlanetBuildingRequirement"] = Relationship(
+        back_populates="planet"
+    )
     production_fees: List["PlanetProductionFee"] = Relationship(back_populates="planet")
     cogc_programs: List["COGCProgram"] = Relationship(back_populates="planet")
     cogc_votes: List["COGCVote"] = Relationship(back_populates="planet")

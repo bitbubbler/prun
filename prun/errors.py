@@ -11,3 +11,9 @@ class MultipleRecipesError(ValueError):
             f"Multiple recipes found for item {item_symbol}. Please specify a recipe."
         )
         self.available_recipes = available_recipes
+
+class RecipeNotFoundError(ValueError):
+    """Raised when a recipe is not found."""
+
+    def __init__(self, item_symbol: str, recipe_symbol: str):
+        super().__init__(f"Recipe {recipe_symbol} not found for item {item_symbol}")

@@ -145,22 +145,33 @@ def print_cogm_analysis(result: CalculatedCOGM, item_symbol: str):
 @cli.command()
 @click.argument("item_symbol")
 @click.option(
-    "--quantity", "-q", default=1, help="Quantity of items to calculate COGM for"
-)
-@click.option(
     "--recipe",
     "-r",
     "recipe_symbol",
     help="Specific recipe to use (required if multiple recipes exist)",
 )
-def cogm(item_symbol: str, quantity: int, recipe_symbol: str | None):
+@click.option(
+    "--planet",
+    "-p",
+    "planet_natural_id",
+    help="Planet ID (required if item is a planet resource)",
+)
+def cogm(item_symbol: str, recipe_symbol: str | None, planet_natural_id: str):
     """Calculate Cost of Goods Manufactured (COGM) for an item.
 
     Example: cogm RAT -q 10 -r 'FP:1xALG-1xMAI-1xNUT=>10xRAT'
     """
     try:
+        if planet_natural_id:
+            planet = container.planet_service().get_planet(planet_natural_id)
+            planet_resource = next(
+                resource for resource in planet.resources if resource.item.symbol == item_symbol
+            )
+        else:
+            planet_resource = None
+
         result: CalculatedCOGM = container.cost_service().calculate_cogm(
-            item_symbol, recipe_symbol
+            item_symbol, recipe_symbol, planet_resource
         )
         print_cogm_analysis(result, item_symbol)
 

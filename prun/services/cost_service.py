@@ -2,10 +2,9 @@ import logging
 import math
 
 from pydantic import BaseModel, Field
-from typing import List, Dict, Any, Optional
+from typing import List, Optional
 
-from prun.errors import MultipleRecipesError
-from prun.models import Recipe, RecipeInput, ExchangePrice
+from prun.models import Recipe, PlanetResource
 from prun.services.building_service import BuildingService
 from prun.services.exchange_service import ExchangeService
 from prun.services.recipe_service import RecipeService
@@ -134,9 +133,7 @@ class CostService:
         """
         return total_material_cost * (1 / self.amortization_days)
 
-    def calculate_recipe_cost(
-        self, recipe: Recipe, input_prices: List[tuple[RecipeInput, ExchangePrice]]
-    ) -> CalculatedRecipeCost:
+    def calculate_recipe_cost(self, recipe: Recipe) -> CalculatedRecipeCost:
         """Calculate the cost of a recipe.
 
         Args:
@@ -150,14 +147,19 @@ class CostService:
             total_cost: float = 0
             inputs: List[CalculatedInput] = []
 
-            for input, price in input_prices:
-                input_cost = input.quantity * price.buy_price
+            for input in recipe.inputs:
+                price = self.exchange_service.get_buy_price(
+                    exchange_code="AI1", item_symbol=input.item_symbol
+                )
+                if not price:
+                    raise ValueError(f"No price found for item {input.item_symbol}")
+                input_cost = input.quantity * price
                 total_cost += input_cost
                 inputs.append(
                     CalculatedInput(
                         item_symbol=input.item_symbol,
                         quantity=input.quantity,
-                        price=price.buy_price,
+                        price=price,
                         total=input_cost,
                     )
                 )
@@ -292,18 +294,24 @@ class CostService:
         self,
         item_symbol: str,
         recipe_symbol: Optional[str] = None,
+        planet_resource: Optional[PlanetResource] = None,
     ) -> CalculatedCOGM:
-        # Get and validate the recipe
-        recipe: Recipe = self.recipe_service.find_recipe(item_symbol, recipe_symbol)
+        recipe: Recipe
+        
+        if planet_resource:
+            extractor_recipe = self.recipe_service.recipe_from_resource(planet_resource)
+            recipe = Recipe.extraction_recipe_from(extractor_recipe, planet_resource)
+        else:
+            recipe = self.recipe_service.find_recipe(item_symbol, recipe_symbol)
+        
         recipe_output = next(
             output for output in recipe.outputs if output.item_symbol == item_symbol
         )
 
-        # Get recipe with current prices
-        recipe, input_prices = self.recipe_service.get_recipe_with_prices(recipe.symbol)
-
         # Calculate base recipe cost
-        recipe_cost = self.calculate_recipe_cost(recipe, input_prices)
+        recipe_cost = self.calculate_recipe_cost(recipe)
+        
+        print(recipe_cost)
 
         # Calculate scaled recipe cost
         return CalculatedCOGM(

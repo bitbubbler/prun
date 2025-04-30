@@ -1,27 +1,27 @@
 -- SQLite
+with base_calculations as (
+    select 
+        planet.natural_id as planet,
+        item.symbol as item,
+        resource.factor as raw_concentration,
+        -- Calculate H2O production per day using RIG formula: (RawConcentration * 100) * 0.7
+        ((resource.factor * 100) * 0.6) as units_per_day,
+        -- Convert milliseconds to hours (divide by 3600000)
+        (cast(recipe.time_ms as float) / 3600000.0) as recipe_hours_decimal
+    from planets as planet
+        join planet_resources as resource on planet.natural_id = resource.planet_natural_id
+        join items as item on resource.material_id = item.material_id
+        join recipes as recipe on recipe.building_symbol = 'COL'
+    where
+        planet.natural_id in ('UV-351a')
+        and resource.factor > 0
+        and item.symbol = 'O'
+)
 select 
-    planet.natural_id as planet,
-    item.symbol as item,
-    resource.factor as factor,
-    (select recipe.time_ms from recipes as recipe where recipe.symbol = 'RIG:=>') as base_recipe_time_ms,
-    -- Calculate H2O production per cycle (15 * factor, floored)
-    floor(15 * resource.factor) as h2o_per_cycle,
-    -- Calculate cycle time with factor-based adjustment
-    printf('%dh %dm', 
-        (17280000 + (case 
-            when resource.factor > 0.6 then 300000  -- +5m for high factor
-            when resource.factor > 0.5 then 780000  -- +13m for medium factor
-            else -480000                            -- -8m for low factor
-        end)) / (1000 * 60 * 60),
-        ((17280000 + (case 
-            when resource.factor > 0.6 then 300000
-            when resource.factor > 0.5 then 780000
-            else -480000
-        end)) / (1000 * 60)) % 60
-    ) as cycle_time
-from planets as planet
-    join planet_resources as resource on planet.natural_id = resource.planet_natural_id
-    join items as item on resource.material_id = item.material_id
-WHERE
-    item.symbol = 'H2O'
-    and h2o_per_cycle > 10
+    planet,
+    item,
+    raw_concentration,
+    units_per_day,
+    recipe_hours_decimal,
+    (units_per_day / (24/recipe_hours_decimal)) as units_per_cycle
+from base_calculations;

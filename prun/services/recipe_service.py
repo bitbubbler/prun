@@ -4,9 +4,9 @@ from pydantic import BaseModel
 from typing import List, Dict, Any, Optional
 
 from fio import FIOClientInterface
-from prun.errors import MultipleRecipesError
+from prun.errors import MultipleRecipesError, RecipeNotFoundError
 from prun.interface import RecipeRepositoryInterface
-from prun.models import Recipe, RecipeInput, ExchangePrice, RecipeOutput
+from prun.models import Recipe, RecipeInput, ExchangePrice, RecipeOutput, PlanetResource
 
 logger = logging.getLogger(__name__)
 
@@ -123,8 +123,19 @@ class RecipeService:
             logger.error(f"Error syncing recipes: {str(e)}")
             raise
 
+    def recipe_from_resource(self, planet_resource: PlanetResource) -> Recipe:
+        """Get a recipe for a planet resource."""
+        if planet_resource.resource_type == "LIQUID":
+            return self.recipe_repository.get_recipe("RIG:=>")
+        elif planet_resource.resource_type == "SOLID":
+            return self.recipe_repository.get_recipe("EXT:=>")
+        elif planet_resource.resource_type == "GASEOUS":
+            return self.recipe_repository.get_recipe("COL:=>")
+        else:
+            raise ValueError(f"Unknown resource type: {planet_resource.resource_type}")
+
     def find_recipe(
-        self, item_symbol: str, recipe_symbol: Optional[str] = None
+        self, item_symbol: str | None, recipe_symbol: Optional[str] = None
     ) -> Recipe:
         """Find a recipe for an item.
 
@@ -143,13 +154,13 @@ class RecipeService:
             if recipe_symbol:
                 recipe = self.recipe_repository.get_recipe(recipe_symbol)
                 if not recipe:
-                    raise ValueError(f"Recipe {recipe_symbol} not found")
+                    raise RecipeNotFoundError(item_symbol, recipe_symbol)
                 return recipe
 
             recipes = self.recipe_repository.get_recipes_for_item(item_symbol)
 
             if not recipes:
-                raise ValueError(f"No recipes found for item {item_symbol}")
+                raise RecipeNotFoundError(item_symbol, recipe_symbol)
 
             if len(recipes) > 1:
                 raise MultipleRecipesError(

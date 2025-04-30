@@ -26,6 +26,10 @@ class PlanetService:
         self.fio_client = fio_client
         self.system_repository = system_repository
 
+    def get_planet(self, natural_id: str) -> Planet | None:
+        """Get a planet by natural ID."""
+        return self.system_repository.get_planet(natural_id)
+
     def sync_planets(self) -> None:
         """Sync planets from the FIO API to the database.
 
