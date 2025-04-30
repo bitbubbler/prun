@@ -118,6 +118,11 @@ class Recipe(SQLModel, table=True):
     def is_resource_extraction_recipe(self) -> bool:
         """Check if the recipe is a resource extraction recipe."""
         return self.building_symbol in ["COL", "RIG", "EXT"]
+    
+    @property
+    def hours_decimal(self) -> float:
+        """Get the recipe time_ms in hours, as a float."""
+        return self.time_ms / 3600000.0
 
     @staticmethod
     def extraction_recipe_from(
@@ -128,30 +133,24 @@ class Recipe(SQLModel, table=True):
         if not recipe.is_resource_extraction_recipe:
             raise ValueError("Recipe is not a resource extraction recipe")
 
-        recipe_hours_decimal = recipe.time_ms / 3600000.0
-        print(f"recipe_hours_decimal: {recipe_hours_decimal}")
         daily_extraction = (
             round(planet_resource.factor * 100 * 0.7, 1)
             if recipe.building_symbol in ["RIG", "EXT"]
             else round(planet_resource.factor * 100 * 0.6, 1)
         )
-        print(f"daily_extraction: {daily_extraction}")
 
-        fractional_units_per_run = daily_extraction / (24 / recipe_hours_decimal)
-        print(f"fractional_units_per_run: {fractional_units_per_run}")
+        fractional_units_per_run = daily_extraction / (24 / recipe.hours_decimal)
 
         remainder_units_per_run = (
             math.ceil(fractional_units_per_run) - fractional_units_per_run
         )
-        print(f"remainder_units_per_run: {remainder_units_per_run}")
+
 
         extraction_units_per_run = math.ceil(fractional_units_per_run)
-        print(f"extraction_units_per_run: {extraction_units_per_run}")
 
-        extraction_time_hours_decimal = recipe_hours_decimal + (
-            recipe_hours_decimal * (remainder_units_per_run / fractional_units_per_run)
+        extraction_time_hours_decimal = recipe.hours_decimal + (
+            recipe.hours_decimal * (remainder_units_per_run / fractional_units_per_run)
         )
-        print(f"extraction_time_hours_decimal: {extraction_time_hours_decimal}")
 
         return Recipe(
             symbol=recipe.symbol,
