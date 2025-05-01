@@ -171,7 +171,9 @@ class CostService:
                 )
 
             # Calculate workforce cost
-            workforce_cost = self.calculate_workforce_cost_for_recipe(recipe)
+            workforce_cost = self.calculate_workforce_cost_for_recipe(
+                recipe=recipe, get_buy_price=get_buy_price
+            )
             total_cost += workforce_cost.total
 
             # Calculate repair cost
@@ -238,7 +240,7 @@ class CostService:
         return total_input_cost, total_workforce_cost, scaled_input_costs
 
     def calculate_workforce_cost_for_recipe(
-        self, recipe: Recipe
+        self, recipe: Recipe, get_buy_price: Optional[Callable[[str], float]] = None
     ) -> CalculatedWorkforceCosts:
         """Calculate the workforce cost for a recipe.
 
@@ -264,8 +266,12 @@ class CostService:
             if workforce_count > 0:
                 needs = self.workforce_service.get_workforce_needs(workforce_type)
                 for need in needs:
-                    price = self.exchange_service.get_buy_price(
-                        exchange_code="AI1", item_symbol=need.item_symbol
+                    price = (
+                        get_buy_price(need.item_symbol)
+                        if get_buy_price
+                        else self.exchange_service.get_buy_price(
+                            exchange_code="AI1", item_symbol=need.item_symbol
+                        )
                     )
                     if not price:
                         raise ValueError(

@@ -270,79 +270,83 @@ def analyze_chain(config_file: str):
         if production_chain.material_buy_prices:
             for material, price in production_chain.material_buy_prices.items():
                 if material == item_symbol:
-                    print(f"Found chain buy price for {item_symbol}: {price}")
                     return price
 
         if item_symbol in cogm_price_cache:
-            print(
-                f"Found cogm price for {item_symbol}: {cogm_price_cache[item_symbol]}"
-            )
             return cogm_price_cache[item_symbol]
 
         exchange_price = container.exchange_service().get_buy_price(
             exchange_code="AI1", item_symbol=item_symbol
         )
-        print(f"Using exchange price for {item_symbol}: {exchange_price}")
         return exchange_price
 
     # Process each recipe in the chain
-    for i, production_recipe in enumerate(production_chain.recipes, 1):
-        try:
-            # Get the planet resources if planet is specified
-            planet: Planet | None = None
-            planet_resource: PlanetResource | None = None
-            if production_recipe.planet_natural_id:
-                print("natural id", production_recipe.planet_natural_id)
-                planet = container.planet_service().get_planet(
-                    production_recipe.planet_natural_id
-                )
-                planet_resource = next(
-                    (
-                        resource
-                        for resource in planet.resources
-                        if resource.item.symbol == production_recipe.item_symbol
-                    ),
-                    None,
-                )
+    def process_chain(do_print: bool = False):
+        for i, production_recipe in enumerate(production_chain.recipes, 1):
+            try:
+                # Get the planet resources if planet is specified
+                planet: Planet | None = None
+                planet_resource: PlanetResource | None = None
+                if production_recipe.planet_natural_id:
+                    print("natural id", production_recipe.planet_natural_id)
+                    planet = container.planet_service().get_planet(
+                        production_recipe.planet_natural_id
+                    )
+                    planet_resource = next(
+                        (
+                            resource
+                            for resource in planet.resources
+                            if resource.item.symbol == production_recipe.item_symbol
+                        ),
+                        None,
+                    )
 
-            recipe = container.recipe_service().get_recipe(
-                recipe_symbol=production_recipe.recipe_symbol,
-                planet_resource=planet_resource,
-            )
-
-            if not recipe:
-                raise RecipeNotFoundError(production_recipe.recipe_symbol)
-
-            for output in recipe.outputs:
-                # Calculate COGM for this output
-                output_cogm = container.cost_service().calculate_cogm(
-                    recipe=recipe,
-                    item_symbol=output.item_symbol,
-                    get_buy_price=get_buy_price,
+                recipe = container.recipe_service().get_recipe(
+                    recipe_symbol=production_recipe.recipe_symbol,
+                    planet_resource=planet_resource,
                 )
 
-                cogm_price_cache[output.item_symbol] = output_cogm.total_cost
+                if not recipe:
+                    raise RecipeNotFoundError(production_recipe.recipe_symbol)
 
-                # Add row to the table
-                chain_table.add_row(
-                    f"{planet.name} => {output.item_symbol}",
-                    production_recipe.planet_natural_id or "Any",
-                    recipe.symbol,
-                    output.item_symbol,
-                    f"{output_cogm.total_cost:,.2f}",
-                )
+                for output in recipe.outputs:
+                    # Calculate COGM for this output
+                    output_cogm = container.cost_service().calculate_cogm(
+                        recipe=recipe,
+                        item_symbol=output.item_symbol,
+                        get_buy_price=get_buy_price,
+                    )
 
-                # Print detailed analysis for this output
-                console.print(
-                    f"\n[bold]Detailed Analysis for Step {i} => {output.item_symbol}:[/bold]"
-                )
-                print_cogm_analysis(output_cogm, output.item_symbol)
+                    cogm_price_cache[output.item_symbol] = output_cogm.total_cost
 
-        except Exception as e:
-            # Print the error traceback
-            traceback.print_exc()
-            console.print(f"[red]Error processing recipe {i}:[/red] {str(e)}")
-            continue
+                    if not do_print:
+                        continue
+                        # Add row to the table
+                    chain_table.add_row(
+                        f"{planet.name} => {output.item_symbol}",
+                        production_recipe.planet_natural_id or "Any",
+                        recipe.symbol,
+                        output.item_symbol,
+                        f"{output_cogm.total_cost:,.2f}",
+                    )
+
+                    # Print detailed analysis for this output
+                    console.print(
+                        f"\n[bold]Detailed Analysis for Step {i} => {output.item_symbol}:[/bold]"
+                    )
+                    print_cogm_analysis(output_cogm, output.item_symbol)
+
+            except Exception as e:
+                # Print the error traceback
+                traceback.print_exc()
+                console.print(f"[red]Error processing recipe {i}:[/red] {str(e)}")
+                continue
+
+    # we do two passes
+    # the first pass fills the cogm cache
+    # the second pass calculates final values and prints the table
+    process_chain(do_print=False)
+    process_chain(do_print=True)
 
     # Print the summary table
     console.print("\n[bold]Production Chain Summary:[/bold]")
