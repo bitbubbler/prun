@@ -125,7 +125,7 @@ class BuildingService:
             if not self.building_repository.get_building(fio_building.ticker):
                 recipes: list[Recipe] = []
                 for fio_recipe in fio_building.recipes:
-                    recipe = self.recipe_service.get_recipe(
+                    recipe = self.recipe_service.get_recipe_unsafe(
                         fio_recipe.standard_recipe_name
                     )
                     if not recipe:

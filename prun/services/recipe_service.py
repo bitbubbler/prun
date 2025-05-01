@@ -50,6 +50,29 @@ class RecipeService:
         """
         return self.recipe_repository.get_recipes_for_item(item_symbol)
 
+    def get_recipe_unsafe(
+        self, recipe_symbol: str, planet_resource: Optional[PlanetResource] = None
+    ) -> Optional[Recipe]:
+        """Get a recipe by its symbol.
+
+        Args:
+            symbol: Recipe symbol
+            planet_resource: Planet resource to use for extraction recipes
+        Returns:
+            Recipe if found, None otherwise
+        """
+
+        if planet_resource:
+            recipe = self.recipe_from_resource(planet_resource)
+            return Recipe.extraction_recipe_from(recipe, planet_resource)
+        else:
+            recipe = self.recipe_repository.get_recipe(recipe_symbol)
+
+            if not recipe:
+                raise RecipeNotFoundError(recipe_symbol)
+
+            return recipe
+
     def get_recipe(
         self, recipe_symbol: str, planet_resource: Optional[PlanetResource] = None
     ) -> Optional[Recipe]:
