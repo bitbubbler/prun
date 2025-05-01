@@ -20,4 +20,9 @@ recipes:
 
   - recipe_symbol: "FRM:1xDDT-4xH2O=>4xHER"
     planet_natural_id: "ZV-896b"
-  
+
+  - recipe_symbol: "LAB:1xC-1xCL-1xH=>3xDDT"
+    planet_natural_id: ZV-307b
+
+  - recipe_symbol: "CHP:2xH2O-1xLST-2xN=>4xNS"
+    planet_natural_id: LS-300c

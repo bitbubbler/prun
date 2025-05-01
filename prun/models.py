@@ -192,6 +192,73 @@ class Building(SQLModel, table=True):
             0.67 / (1 + math.exp((1789 / 25000) * (days_since_last_repair - c))) + 0.33
         )
 
+    @classmethod
+    def building_from(cls, building: "Building", planet: "Planet") -> "Building":
+        """Create a building from a planet."""
+        building_costs = building.building_costs.copy()
+        if planet.surface:
+            building_costs.append(
+                BuildingCost(
+                    item_symbol="MCG",
+                    amount=building.area_cost * 4,
+                )
+            )
+        else:
+            building_costs.append(
+                BuildingCost(
+                    item_symbol="AEF",
+                    amount=building.area_cost / 3,
+                )
+            )
+        if planet.pressure < 0.25:
+            building_costs.append(
+                BuildingCost(
+                    item_symbol="SEA",
+                    amount=building.area_cost
+                )
+            )
+        elif planet.pressure > 2:
+            building_costs.append(
+                BuildingCost(
+                    item_symbol="HSE",
+                    amount=1
+                )
+            )
+        if planet.gravity < 0.25:
+            building_costs.append(
+                BuildingCost(
+                    item_symbol="MGC",
+                    amount=1
+                )
+            )
+        elif planet.gravity > 2.5:
+            building_costs.append(
+                BuildingCost(
+                    item_symbol="BL",
+                    amount=1
+                )
+            )
+        if planet.temperature < -25:
+            building_costs.append(
+                BuildingCost(
+                    item_symbol="INS",
+                    amount=building.area_cost * 10
+                )
+            )
+        elif planet.temperature > 75:
+            building_costs.append(
+                BuildingCost(
+                    item_symbol="TSH",
+                    amount=1
+                )
+            )
+        return Building(
+            symbol=building.symbol,
+            name=building.name,
+            recipes=building.recipes,
+            building_costs=building_costs,
+        )
+
 
 class BuildingCost(SQLModel, table=True):
     """Database model for building construction costs."""

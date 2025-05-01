@@ -98,19 +98,19 @@ class BuildingService:
                     )
                 )
 
-        return {
-            "building": symbol,
-            "name": building.name,
-            "expertise": building.expertise,
-            "pioneers": building.pioneers,
-            "settlers": building.settlers,
-            "technicians": building.technicians,
-            "engineers": building.engineers,
-            "scientists": building.scientists,
-            "area_cost": building.area_cost,
-            "total_cost": total_cost,
-            "costs": costs,
-        }
+        building = Building(
+            symbol=building.symbol,
+            name=building.name,
+            expertise=building.expertise,
+            pioneers=building.pioneers,
+            settlers=building.settlers,
+            technicians=building.technicians,
+            engineers=building.engineers,
+            scientists=building.scientists,
+            area_cost=building.area_cost,
+        )
+        # TODO: replace with a real planet
+        return Building.building_from(building, None)
 
     def sync_buildings(self) -> None:
         """Sync buildings from the FIO API to the database.
