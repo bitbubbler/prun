@@ -1,6 +1,6 @@
 name: "AFC"
-# material_buy_prices:
-#   RAT: 81
+material_buy_prices:
+  RAT: 81
 recipes:
   - recipe_symbol: "RIG:=>"
     item_symbol: "H2O"

@@ -115,7 +115,6 @@ class CostService:
         total_building_repair_cost: float = 0
 
         for buliding_cost in building.building_costs:
-            print(f"building_cost: {buliding_cost}")
             price = get_buy_price(buliding_cost.item_symbol)
             total_building_repair_cost += (
                 buliding_cost.repair_amount(days_since_last_repair) * price
@@ -168,11 +167,9 @@ class CostService:
                     days_since_last_repair=14,
                     get_buy_price=get_buy_price,
                 )
-                print(f"daily_repair_cost: {daily_repair_cost}")
                 recipe_repair_cost = daily_repair_cost * (
                     recipe.time_ms / (24 * 60 * 60 * 1000)
                 )  # Convert ms to days
-                print(f"recipe_repair_cost: {recipe_repair_cost}")
                 total_cost += recipe_repair_cost
 
             return CalculatedRecipeCost(
