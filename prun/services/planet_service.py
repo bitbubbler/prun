@@ -30,6 +30,10 @@ class PlanetService:
         """Get a planet by natural ID."""
         return self.system_repository.get_planet(natural_id)
 
+    def get_default_planet(self) -> Planet:
+        # Boucher (MCG and triple green)
+        return self.get_planet("FK-794b")
+
     def sync_planets(self) -> None:
         """Sync planets from the FIO API to the database.
 
