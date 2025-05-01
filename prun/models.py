@@ -1,10 +1,8 @@
 import math
-from decimal import Decimal
 from datetime import datetime
-from typing import List, Optional, Dict, Any, Literal
+from typing import List, Optional, Callable
 
 from sqlmodel import SQLModel, Field, Relationship
-from pydantic import BaseModel, computed_field
 
 
 # Database Models
@@ -118,7 +116,7 @@ class Recipe(SQLModel, table=True):
     def is_resource_extraction_recipe(self) -> bool:
         """Check if the recipe is a resource extraction recipe."""
         return self.building_symbol in ["COL", "RIG", "EXT"]
-    
+
     @property
     def hours_decimal(self) -> float:
         """Get the recipe time_ms in hours, as a float."""
@@ -144,7 +142,6 @@ class Recipe(SQLModel, table=True):
         remainder_units_per_run = (
             math.ceil(fractional_units_per_run) - fractional_units_per_run
         )
-
 
         extraction_units_per_run = math.ceil(fractional_units_per_run)
 
@@ -185,6 +182,16 @@ class Building(SQLModel, table=True):
     recipes: List[Recipe] = Relationship(back_populates="building")
     building_costs: List["BuildingCost"] = Relationship(back_populates="building")
 
+    def condition(self, days_since_last_repair: int) -> float:
+        """Get the condition of the building."""
+        c = 100.87
+        # There is speculation that the additional 7 days for C is a bug as it happens inconsistently.
+        # c = 107.87
+        # https://pct.fnar.net/building-degradation/index.html
+        return (
+            0.67 / (1 + math.exp((1789 / 25000) * (days_since_last_repair - c))) + 0.33
+        )
+
 
 class BuildingCost(SQLModel, table=True):
     """Database model for building construction costs."""
@@ -199,6 +206,18 @@ class BuildingCost(SQLModel, table=True):
     # Relationships
     building: Building = Relationship(back_populates="building_costs")
     item: Item = Relationship(back_populates="building_costs")
+
+    def reclaimable_amount(self, days_since_last_repair: int) -> float:
+        """Get the reclaimable cost of the building."""
+        # https://pct.fnar.net/building-degradation/index.html#repair-costs-and-reclaimables
+        return math.floor(
+            self.amount * ((180 - min(days_since_last_repair, 180)) / 180)
+        )
+
+    def repair_amount(self, days_since_last_repair: int) -> float:
+        """Get the repair cost of the building."""
+        # https://pct.fnar.net/building-degradation/index.html#repair-costs-and-reclaimables
+        return self.amount - self.reclaimable_amount(days_since_last_repair)
 
 
 class Planet(SQLModel, table=True):

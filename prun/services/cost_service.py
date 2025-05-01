@@ -4,7 +4,7 @@ from typing import List, Optional, Callable
 
 from pydantic import BaseModel, Field
 
-from prun.models import Recipe, PlanetResource
+from prun.models import Building, Recipe
 from prun.services.building_service import BuildingService
 from prun.services.exchange_service import ExchangeService
 from prun.services.recipe_service import RecipeService
@@ -96,45 +96,35 @@ class CostService:
         self.workforce_service = workforce_service
         self.amortization_days = 180  # Standard amortization period in days
 
-    def calculate_daily_repair_cost(
-        self, total_material_cost: float, days_since_build: int = 89
+    def calculate_daily_building_repair_cost(
+        self,
+        building: Building,
+        days_since_last_repair: int,
+        get_buy_price: Callable[[str], float],
     ) -> float:
-        """Calculate daily repair cost based on total material cost and days since build.
+        """
+        Calculate the daily repair cost of a building.
 
         Args:
-            total_material_cost: Total cost of materials used in construction
-            days_since_build: Number of days since the building was constructed
+            building: The building to calculate the repair cost for
+            days_since_last_repair: The number of days since the last repair
 
         Returns:
-            Daily repair cost
+            The daily repair cost of the building
         """
-        return (
-            total_material_cost
-            - math.floor(
-                total_material_cost
-                * (
-                    (
-                        self.amortization_days
-                        - min(days_since_build, self.amortization_days)
-                    )
-                    / self.amortization_days
-                )
+        total_building_repair_cost: float = 0
+
+        for buliding_cost in building.building_costs:
+            print(f"building_cost: {buliding_cost}")
+            price = get_buy_price(buliding_cost.item_symbol)
+            total_building_repair_cost += (
+                buliding_cost.repair_amount(days_since_last_repair) * price
             )
-        ) * (1 / days_since_build)
 
-    def calculate_amortization_cost(self, total_material_cost: float) -> float:
-        """Calculate daily amortization cost.
-
-        Args:
-            total_material_cost: Total cost of materials used in construction
-
-        Returns:
-            Daily amortization cost
-        """
-        return total_material_cost * (1 / self.amortization_days)
+        return total_building_repair_cost / days_since_last_repair
 
     def calculate_recipe_cost(
-        self, recipe: Recipe, get_buy_price: Optional[Callable[[str], float]] = None
+        self, recipe: Recipe, get_buy_price: Callable[[str], float]
     ) -> CalculatedRecipeCost:
         """Calculate the cost of a recipe.
 
@@ -150,13 +140,7 @@ class CostService:
             inputs: List[CalculatedInput] = []
 
             for input in recipe.inputs:
-                price = (
-                    get_buy_price(input.item_symbol)
-                    if get_buy_price
-                    else self.exchange_service.get_buy_price(
-                        exchange_code="AI1", item_symbol=input.item_symbol
-                    )
-                )
+                price = get_buy_price(input.item_symbol)
                 if not price:
                     raise ValueError(f"No price found for item {input.item_symbol}")
                 input_cost = input.quantity * price
@@ -179,17 +163,17 @@ class CostService:
             # Calculate repair cost
             building = self.building_service.get_building(recipe.building_symbol)
             if building:
-                total_material_cost = sum(input_cost.total for input_cost in inputs)
-                repair_cost = self.calculate_daily_repair_cost(total_material_cost)
-                amortization_cost = self.calculate_amortization_cost(
-                    total_material_cost
+                daily_repair_cost = self.calculate_daily_building_repair_cost(
+                    building=building,
+                    days_since_last_repair=14,
+                    get_buy_price=get_buy_price,
                 )
-                total_repair_cost = (repair_cost + amortization_cost) * (
+                print(f"daily_repair_cost: {daily_repair_cost}")
+                recipe_repair_cost = daily_repair_cost * (
                     recipe.time_ms / (24 * 60 * 60 * 1000)
                 )  # Convert ms to days
-                total_cost += total_repair_cost
-            else:
-                total_repair_cost = 0
+                print(f"recipe_repair_cost: {recipe_repair_cost}")
+                total_cost += recipe_repair_cost
 
             return CalculatedRecipeCost(
                 recipe_symbol=recipe.symbol,
@@ -200,47 +184,15 @@ class CostService:
                     total=sum(input.total for input in inputs),
                 ),
                 workforce_cost=workforce_cost,
-                repair_cost=total_repair_cost,
+                repair_cost=recipe_repair_cost,
                 total=total_cost,
             )
         except Exception as e:
             logger.error(f"Error calculating recipe cost for {recipe.symbol}: {str(e)}")
             raise
 
-    def _calculate_final_costs(
-        self,
-        recipe_cost: CalculatedRecipeCost,
-    ) -> tuple[float, float, List[CalculatedInput]]:
-        """Calculate the final costs based on the number of recipe runs needed.
-
-        Args:
-            cost_details: The base recipe cost details
-            recipe_runs_needed: Number of times the recipe needs to be run
-
-        Returns:
-            Tuple of (total_input_cost, total_workforce_cost, scaled_input_costs)
-        """
-        # Calculate input costs separately from workforce costs
-        total_input_cost = sum(
-            input_cost.total for input_cost in recipe_cost.input_costs
-        )
-        total_workforce_cost = recipe_cost.workforce_cost.total
-
-        # Scale the input costs for the total quantity
-        scaled_input_costs = [
-            CalculatedInput(
-                item_symbol=input_cost.item_symbol,
-                quantity=input_cost.quantity,
-                price=input_cost.price,
-                total=input_cost.total,
-            )
-            for input_cost in recipe_cost.input_costs
-        ]
-
-        return total_input_cost, total_workforce_cost, scaled_input_costs
-
     def calculate_workforce_cost_for_recipe(
-        self, recipe: Recipe, get_buy_price: Optional[Callable[[str], float]] = None
+        self, recipe: Recipe, get_buy_price: Callable[[str], float]
     ) -> CalculatedWorkforceCosts:
         """Calculate the workforce cost for a recipe.
 
@@ -266,13 +218,7 @@ class CostService:
             if workforce_count > 0:
                 needs = self.workforce_service.get_workforce_needs(workforce_type)
                 for need in needs:
-                    price = (
-                        get_buy_price(need.item_symbol)
-                        if get_buy_price
-                        else self.exchange_service.get_buy_price(
-                            exchange_code="AI1", item_symbol=need.item_symbol
-                        )
-                    )
+                    price = get_buy_price(need.item_symbol)
                     if not price:
                         raise ValueError(
                             f"No price found for workforce need item {need.item_symbol}"
@@ -308,7 +254,7 @@ class CostService:
         self,
         recipe: Recipe,
         item_symbol: str,
-        get_buy_price: Optional[Callable[[str], float]] = None,
+        get_buy_price: Callable[[str], float],
     ) -> CalculatedCOGM:
         # Calculate base recipe cost
         recipe_cost = self.calculate_recipe_cost(
@@ -351,3 +297,35 @@ class CostService:
             repair_cost=recipe_cost.repair_cost / recipe_output.quantity,
             total_cost=recipe_cost.total / recipe_output.quantity,
         )
+
+    def _calculate_final_costs(
+        self,
+        recipe_cost: CalculatedRecipeCost,
+    ) -> tuple[float, float, List[CalculatedInput]]:
+        """Calculate the final costs based on the number of recipe runs needed.
+
+        Args:
+            cost_details: The base recipe cost details
+            recipe_runs_needed: Number of times the recipe needs to be run
+
+        Returns:
+            Tuple of (total_input_cost, total_workforce_cost, scaled_input_costs)
+        """
+        # Calculate input costs separately from workforce costs
+        total_input_cost = sum(
+            input_cost.total for input_cost in recipe_cost.input_costs
+        )
+        total_workforce_cost = recipe_cost.workforce_cost.total
+
+        # Scale the input costs for the total quantity
+        scaled_input_costs = [
+            CalculatedInput(
+                item_symbol=input_cost.item_symbol,
+                quantity=input_cost.quantity,
+                price=input_cost.price,
+                total=input_cost.total,
+            )
+            for input_cost in recipe_cost.input_costs
+        ]
+
+        return total_input_cost, total_workforce_cost, scaled_input_costs

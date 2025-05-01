@@ -189,8 +189,13 @@ def cogm(item_symbol: str, recipe_symbol: str | None, planet_natural_id: str):
 
         print(f"recipe: {recipe}")
 
+        def get_buy_price(item_symbol: str) -> float:
+            return container.exchange_service().get_buy_price(
+                exchange_code="AI1", item_symbol=item_symbol
+            )
+
         result: CalculatedCOGM = container.cost_service().calculate_cogm(
-            recipe=recipe, item_symbol=item_symbol
+            recipe=recipe, item_symbol=item_symbol, get_buy_price=get_buy_price
         )
         print_cogm_analysis(result, item_symbol)
 
