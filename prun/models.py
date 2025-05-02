@@ -1,7 +1,8 @@
 import math
 from datetime import datetime
-from typing import List, Optional, Callable
+from typing import List, Optional
 
+from pydantic import BaseModel
 from sqlmodel import SQLModel, Field, Relationship
 
 
@@ -37,21 +38,21 @@ class ExchangePrice(SQLModel, table=True):
     timestamp: datetime = Field()
 
     # Market maker prices
-    mm_buy: Optional[float] = None
-    mm_sell: Optional[float] = None
+    mm_buy: Optional[float] = Field(default=None)
+    mm_sell: Optional[float] = Field(default=None)
 
     # Exchange data
-    average_price: float
+    average_price: float = Field(default=None)
 
     # Ask data
-    ask_amount: Optional[float] = None
+    ask_amount: Optional[int] = None
     ask_price: Optional[float] = None
-    ask_available: Optional[float] = None
+    ask_available: Optional[int] = None
 
     # Bid data
-    bid_amount: Optional[float] = None
+    bid_amount: Optional[int] = None
     bid_price: Optional[float] = None
-    bid_available: Optional[float] = None
+    bid_available: Optional[int] = None
 
     # Relationships
     item: Item = Relationship(back_populates="prices")
@@ -192,8 +193,16 @@ class Building(SQLModel, table=True):
             0.67 / (1 + math.exp((1789 / 25000) * (days_since_last_repair - c))) + 0.33
         )
 
+
+class PlanetBuilding(BaseModel):
+    building: "Building"
+    planet: "Planet"
+    building_costs: List["BuildingCost"]
+
     @classmethod
-    def building_from(cls, building: "Building", planet: "Planet") -> "Building":
+    def planet_building_from(
+        cls, building: "Building", planet: "Planet"
+    ) -> "PlanetBuilding":
         """Create a building from a planet."""
         building_costs = building.building_costs.copy()
         if planet.surface:
@@ -212,50 +221,23 @@ class Building(SQLModel, table=True):
             )
         if planet.pressure < 0.25:
             building_costs.append(
-                BuildingCost(
-                    item_symbol="SEA",
-                    amount=building.area_cost
-                )
+                BuildingCost(item_symbol="SEA", amount=building.area_cost)
             )
         elif planet.pressure > 2:
-            building_costs.append(
-                BuildingCost(
-                    item_symbol="HSE",
-                    amount=1
-                )
-            )
+            building_costs.append(BuildingCost(item_symbol="HSE", amount=1))
         if planet.gravity < 0.25:
-            building_costs.append(
-                BuildingCost(
-                    item_symbol="MGC",
-                    amount=1
-                )
-            )
+            building_costs.append(BuildingCost(item_symbol="MGC", amount=1))
         elif planet.gravity > 2.5:
-            building_costs.append(
-                BuildingCost(
-                    item_symbol="BL",
-                    amount=1
-                )
-            )
+            building_costs.append(BuildingCost(item_symbol="BL", amount=1))
         if planet.temperature < -25:
             building_costs.append(
-                BuildingCost(
-                    item_symbol="INS",
-                    amount=building.area_cost * 10
-                )
+                BuildingCost(item_symbol="INS", amount=building.area_cost * 10)
             )
         elif planet.temperature > 75:
-            building_costs.append(
-                BuildingCost(
-                    item_symbol="TSH",
-                    amount=1
-                )
-            )
-        return Building(
-            symbol=building.symbol,
-            name=building.name,
-            recipes=building.recipes,
+            building_costs.append(BuildingCost(item_symbol="TSH", amount=1))
+        return cls(
+            building=building,
+            planet=planet,
             building_costs=building_costs,
         )
 

@@ -4,9 +4,10 @@ from typing import List, Optional, Callable
 
 from pydantic import BaseModel, Field
 
-from prun.models import Building, Recipe
+from prun.models import Recipe, Planet, PlanetBuilding
 from prun.services.building_service import BuildingService
 from prun.services.exchange_service import ExchangeService
+from prun.services.planet_service import PlanetService
 from prun.services.recipe_service import RecipeService
 from prun.services.workforce_service import WorkforceService
 
@@ -80,6 +81,7 @@ class CostService:
         self,
         building_service: BuildingService,
         exchange_service: ExchangeService,
+        planet_service: PlanetService,
         recipe_service: RecipeService,
         workforce_service: WorkforceService,
     ):
@@ -92,13 +94,13 @@ class CostService:
         """
         self.building_service = building_service
         self.exchange_service = exchange_service
+        self.planet_service = planet_service
         self.recipe_service = recipe_service
         self.workforce_service = workforce_service
-        self.amortization_days = 180  # Standard amortization period in days
 
     def calculate_daily_building_repair_cost(
         self,
-        building: Building,
+        planet_building: PlanetBuilding,
         days_since_last_repair: int,
         get_buy_price: Callable[[str], float],
     ) -> float:
@@ -114,7 +116,7 @@ class CostService:
         """
         total_building_repair_cost: float = 0
 
-        for buliding_cost in building.building_costs:
+        for buliding_cost in planet_building.building_costs:
             price = get_buy_price(buliding_cost.item_symbol)
             total_building_repair_cost += (
                 buliding_cost.repair_amount(days_since_last_repair) * price
@@ -123,7 +125,7 @@ class CostService:
         return total_building_repair_cost / days_since_last_repair
 
     def calculate_recipe_cost(
-        self, recipe: Recipe, get_buy_price: Callable[[str], float]
+        self, recipe: Recipe, planet: Planet, get_buy_price: Callable[[str], float]
     ) -> CalculatedRecipeCost:
         """Calculate the cost of a recipe.
 
@@ -155,16 +157,18 @@ class CostService:
 
             # Calculate workforce cost
             workforce_cost = self.calculate_workforce_cost_for_recipe(
-                recipe=recipe, get_buy_price=get_buy_price
+                recipe=recipe, planet=planet, get_buy_price=get_buy_price
             )
             total_cost += workforce_cost.total
 
             # Calculate repair cost
-            building = self.building_service.get_building(recipe.building_symbol)
-            if building:
+            planet_building = self.planet_service.get_planet_building(
+                planet.natural_id, recipe.building
+            )
+            if planet_building:
                 daily_repair_cost = self.calculate_daily_building_repair_cost(
-                    building=building,
-                    days_since_last_repair=14,
+                    planet_building=planet_building,
+                    days_since_last_repair=30,
                     get_buy_price=get_buy_price,
                 )
                 recipe_repair_cost = daily_repair_cost * (
@@ -189,7 +193,7 @@ class CostService:
             raise
 
     def calculate_workforce_cost_for_recipe(
-        self, recipe: Recipe, get_buy_price: Callable[[str], float]
+        self, recipe: Recipe, planet: Planet, get_buy_price: Callable[[str], float]
     ) -> CalculatedWorkforceCosts:
         """Calculate the workforce cost for a recipe.
 
@@ -199,18 +203,20 @@ class CostService:
         Returns:
             Total workforce cost
         """
-        building = self.building_service.get_building(recipe.building_symbol)
-        if not building:
-            raise ValueError(f"Building {recipe.building_symbol} not found")
+        planet_building = self.planet_service.get_planet_building(
+            planet.natural_id, recipe.building
+        )
+        if not planet_building:
+            raise ValueError(f"Building {recipe.building.symbol} not found")
 
-        consumable_costs: List[CalculatedInput] = []
+        consumable_costs: List[CalculatedWorkforceInput] = []
         # Calculate consumables cost for each workforce type
         for workforce_type, workforce_count in [
-            ("PIONEER", building.pioneers),
-            ("SETTLER", building.settlers),
-            ("TECHNICIAN", building.technicians),
-            ("ENGINEER", building.engineers),
-            ("SCIENTIST", building.scientists),
+            ("PIONEER", planet_building.building.pioneers),
+            ("SETTLER", planet_building.building.settlers),
+            ("TECHNICIAN", planet_building.building.technicians),
+            ("ENGINEER", planet_building.building.engineers),
+            ("SCIENTIST", planet_building.building.scientists),
         ]:
             if workforce_count > 0:
                 needs = self.workforce_service.get_workforce_needs(workforce_type)
@@ -250,12 +256,13 @@ class CostService:
     def calculate_cogm(
         self,
         recipe: Recipe,
+        planet: Planet,
         item_symbol: str,
         get_buy_price: Callable[[str], float],
     ) -> CalculatedCOGM:
         # Calculate base recipe cost
         recipe_cost = self.calculate_recipe_cost(
-            recipe=recipe, get_buy_price=get_buy_price
+            recipe=recipe, planet=planet, get_buy_price=get_buy_price
         )
         recipe_output = next(
             output for output in recipe.outputs if output.item_symbol == item_symbol
@@ -310,7 +317,7 @@ class CostService:
         """
         # Calculate input costs separately from workforce costs
         total_input_cost = sum(
-            input_cost.total for input_cost in recipe_cost.input_costs
+            input_cost.total for input_cost in recipe_cost.input_costs.inputs
         )
         total_workforce_cost = recipe_cost.workforce_cost.total
 
@@ -322,7 +329,7 @@ class CostService:
                 price=input_cost.price,
                 total=input_cost.total,
             )
-            for input_cost in recipe_cost.input_costs
+            for input_cost in recipe_cost.input_costs.inputs
         ]
 
         return total_input_cost, total_workforce_cost, scaled_input_costs

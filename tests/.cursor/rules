@@ -1,0 +1,4 @@
+- all tests are to be written using pytest
+- all mocks are to be written using pytest-mock
+- use the method name to convey what you are testing eg. test_sync_buildings_creates_new_building
+- use `uv run pythom -m pytest ...` to run tests

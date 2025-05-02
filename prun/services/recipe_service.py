@@ -7,6 +7,7 @@ from prun.errors import (
     MultipleRecipesError,
     RecipeNotFoundError,
     PlanetResourceRequiredError,
+    ItemRecipeNotFoundError,
 )
 from prun.interface import RecipeRepositoryInterface
 from prun.models import Recipe, RecipeInput, ExchangePrice, RecipeOutput, PlanetResource
@@ -61,7 +62,7 @@ class RecipeService:
         Returns:
             Recipe if found, None otherwise
         """
-
+        recipe: Recipe | None = None
         if planet_resource:
             recipe = self.recipe_from_resource(planet_resource)
             return Recipe.extraction_recipe_from(recipe, planet_resource)
@@ -85,6 +86,7 @@ class RecipeService:
             Recipe if found, None otherwise
         """
 
+        recipe: Recipe | None = None
         if planet_resource:
             recipe = self.recipe_from_resource(planet_resource)
             return Recipe.extraction_recipe_from(recipe, planet_resource)
@@ -167,11 +169,20 @@ class RecipeService:
     def recipe_from_resource(self, planet_resource: PlanetResource) -> Recipe:
         """Get a recipe for a planet resource."""
         if planet_resource.resource_type == "LIQUID":
-            return self.recipe_repository.get_recipe("RIG:=>")
+            recipe = self.recipe_repository.get_recipe("RIG:=>")
+            if not recipe:
+                raise RecipeNotFoundError("RIG:=>")
+            return Recipe.extraction_recipe_from(recipe, planet_resource)
         elif planet_resource.resource_type == "SOLID":
-            return self.recipe_repository.get_recipe("EXT:=>")
+            recipe = self.recipe_repository.get_recipe("EXT:=>")
+            if not recipe:
+                raise RecipeNotFoundError("EXT:=>")
+            return Recipe.extraction_recipe_from(recipe, planet_resource)
         elif planet_resource.resource_type == "GASEOUS":
-            return self.recipe_repository.get_recipe("COL:=>")
+            recipe = self.recipe_repository.get_recipe("COL:=>")
+            if not recipe:
+                raise RecipeNotFoundError("COL:=>")
+            return Recipe.extraction_recipe_from(recipe, planet_resource)
         else:
             raise ValueError(f"Unknown resource type: {planet_resource.resource_type}")
 
@@ -195,13 +206,18 @@ class RecipeService:
             if recipe_symbol:
                 recipe = self.recipe_repository.get_recipe(recipe_symbol)
                 if not recipe:
-                    raise RecipeNotFoundError(item_symbol, recipe_symbol)
+                    raise RecipeNotFoundError(recipe_symbol)
                 return recipe
+
+            if not item_symbol:
+                raise ValueError(
+                    "Item symbol is required to find a recipe without a specific recipe symbol"
+                )
 
             recipes = self.recipe_repository.get_recipes_for_item(item_symbol)
 
             if not recipes:
-                raise RecipeNotFoundError(item_symbol, recipe_symbol)
+                raise ItemRecipeNotFoundError(item_symbol)
 
             if len(recipes) > 1:
                 raise MultipleRecipesError(

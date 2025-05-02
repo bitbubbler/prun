@@ -50,7 +50,7 @@ class ProductionChain(BaseModel):
     recipes: List[ProductionRecipe] = Field(
         ..., description="List of production recipes in order"
     )
-    material_buy_prices: dict[str, float] = Field(
+    material_buy_prices: Optional[Dict[str, float]] = Field(
         default=None, description="Optional material buy prices"
     )
 

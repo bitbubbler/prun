@@ -22,7 +22,6 @@ from .models import (
     FIOStorage,
     FIOWarehouse,
 )
-from decimal import Decimal
 from datetime import datetime, UTC
 
 logger = logging.getLogger(__name__)
@@ -71,8 +70,12 @@ class FIOClient:
             self.headers["Authorization"] = self._auth_token
             self._useapitoken = True
         elif password:
+            if not username:
+                raise ValueError("Username is required to authenticate with password")
             self._auth_token = self._get_auth_token(username, password)
             self.headers["Authorization"] = f"Bearer {self._auth_token}"
+        elif not self._auth_token:
+            raise ValueError("No authentication token provided")
         return self._auth_token
 
     def _get_auth_token(self, username: str, password: str) -> str:
@@ -126,8 +129,8 @@ class FIOClient:
         url = f"{self.base_url}/{endpoint}"
         logger.debug("Fetching CSV from %s", url)
 
-        headers = self.headers.copy()
-        if authenticated and self._useapitoken:
+        headers: Dict[str, str] = self.headers.copy()
+        if authenticated and self._useapitoken and self._auth_token:
             headers["Authorization"] = self._auth_token
         elif authenticated and self._auth_token:
             headers["Authorization"] = f"Bearer {self._auth_token}"
@@ -160,7 +163,7 @@ class FIOClient:
         logger.debug("Fetching JSON from %s", url)
 
         headers = self.headers.copy()
-        if authenticated and self._useapitoken:
+        if authenticated and self._useapitoken and self._auth_token:
             headers["Authorization"] = self._auth_token
         elif authenticated and self._auth_token:
             headers["Authorization"] = f"{self._auth_token}"

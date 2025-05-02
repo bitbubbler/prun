@@ -13,14 +13,19 @@ class MultipleRecipesError(ValueError):
         self.available_recipes = available_recipes
 
 
+class ItemRecipeNotFoundError(ValueError):
+    """Raised when an item recipe is not found."""
+
+    def __init__(self, item_symbol: str, recipe_symbol: Optional[str] = None):
+        message = f"Item {item_symbol} recipe {recipe_symbol} not found"
+        super().__init__(message)
+
+
 class RecipeNotFoundError(ValueError):
     """Raised when a recipe is not found."""
 
-    def __init__(self, recipe_symbol: str, item_symbol: Optional[str] = None):
-        message = f"Recipe {recipe_symbol} not found"
-        if item_symbol:
-            message += f" for item {item_symbol}"
-        super().__init__(message)
+    def __init__(self, recipe_symbol: str):
+        super().__init__(f"Recipe {recipe_symbol} not found")
 
 
 class PlanetResourceNotFoundError(ValueError):
@@ -39,3 +44,17 @@ class PlanetResourceRequiredError(ValueError):
         super().__init__(
             f"Planet resource required for recipe {recipe_symbol}. Planet resource: {planet_resource}"
         )
+
+
+class BuildingNotFoundError(ValueError):
+    """Raised when a building is not found."""
+
+    def __init__(self, building_symbol: str):
+        super().__init__(f"Building {building_symbol} not found")
+
+
+class PlanetNotFoundError(ValueError):
+    """Raised when a planet is not found."""
+
+    def __init__(self, natural_id: str):
+        super().__init__(f"Planet {natural_id} not found")

@@ -5,7 +5,7 @@ from typing import List, Dict, Any, Optional
 
 from fio import FIOClientInterface
 from prun.interface import BuildingRepositoryInterface
-from prun.models import Building, BuildingCost, Recipe
+from prun.models import Building, BuildingCost, Recipe, Planet
 from prun.services.exchange_service import ExchangeService
 from prun.services.recipe_service import RecipeService
 
@@ -52,66 +52,6 @@ class BuildingService:
         """
         return self.building_repository.get_building(symbol)
 
-    def get_building_costs(self, symbol: str) -> List[BuildingCost]:
-        """Get construction costs for a building.
-
-        Args:
-            symbol: Building symbol
-
-        Returns:
-            List of building costs
-        """
-        building = self.get_building(symbol)
-        if not building:
-            raise ValueError(f"Building {symbol} not found")
-        return building.building_costs
-
-    def calculate_building_cost(self, symbol: str) -> Dict[str, Any]:
-        """Calculate the total construction cost of a building.
-
-        Args:
-            symbol: Building symbol
-
-        Returns:
-            Dictionary containing building cost details
-        """
-        building = self.get_building(symbol)
-        if not building:
-            raise ValueError(f"Building {symbol} not found")
-
-        total_cost: float = 0
-        costs: List[CalculatedBuildingCost] = []
-
-        for cost in building.building_costs:
-            buy_price = self.exchange_service.get_buy_price(
-                exchange_code="AI1", item_symbol=cost.item_symbol
-            )
-            if buy_price:
-                cost_value = cost.amount * buy_price
-                total_cost += cost_value
-                costs.append(
-                    CalculatedBuildingCost(
-                        item_symbol=cost.item_symbol,
-                        amount=cost.amount,
-                        price=buy_price,
-                        total=cost_value,
-                    )
-                )
-
-        building = Building(
-            symbol=building.symbol,
-            name=building.name,
-            expertise=building.expertise,
-            pioneers=building.pioneers,
-            settlers=building.settlers,
-            technicians=building.technicians,
-            engineers=building.engineers,
-            scientists=building.scientists,
-            area_cost=building.area_cost,
-        )
-        # TODO: replace with a real planet
-        return Building.building_from(building, None)
-
     def sync_buildings(self) -> None:
         """Sync buildings from the FIO API to the database.
 
@@ -145,9 +85,9 @@ class BuildingService:
                         "engineers": fio_building.engineers,
                         "scientists": fio_building.scientists,
                         "area_cost": fio_building.area_cost,
-                        "recipes": recipes,
                     }
                 )
+                building.recipes = recipes
 
                 building.building_costs = [
                     BuildingCost.model_validate(

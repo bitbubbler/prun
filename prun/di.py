@@ -99,6 +99,7 @@ class Container(containers.DeclarativeContainer):
         planet_service.PlanetService,
         fio_client=fio_client,
         system_repository=system_repository,
+        building_service=building_service,
     )
 
     site_service = providers.Factory(
@@ -127,6 +128,7 @@ class Container(containers.DeclarativeContainer):
         cost_service.CostService,
         building_service=building_service,
         exchange_service=exchange_service,
+        planet_service=planet_service,
         recipe_service=recipe_service,
         workforce_service=workforce_service,
     )

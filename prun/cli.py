@@ -167,15 +167,17 @@ def cogm(item_symbol: str, recipe_symbol: str | None, planet_natural_id: str):
     """
     try:
         recipe_service = container.recipe_service()
-        planet_resource: PlanetResource | None = None
-        if planet_natural_id:
-            planet = container.planet_service().get_planet(planet_natural_id)
-            planet_resource = next(
+        planet = container.planet_service().get_planet(planet_natural_id)
+        planet_resource = next(
+            (
                 resource
                 for resource in planet.resources
                 if resource.item.symbol == item_symbol
-            )
+            ),
+            None,
+        )
 
+        print(f"Planet: {planet.name}")
         print(f"Planet resource: {planet_resource}")
         print(f"Item symbol: {item_symbol}")
 
@@ -195,7 +197,10 @@ def cogm(item_symbol: str, recipe_symbol: str | None, planet_natural_id: str):
             )
 
         result: CalculatedCOGM = container.cost_service().calculate_cogm(
-            recipe=recipe, item_symbol=item_symbol, get_buy_price=get_buy_price
+            recipe=recipe,
+            planet=planet,
+            item_symbol=item_symbol,
+            get_buy_price=get_buy_price,
         )
         print_cogm_analysis(result, item_symbol)
 

@@ -1,5 +1,4 @@
 from datetime import datetime
-from decimal import Decimal
 
 import pytest
 import requests
@@ -117,6 +116,7 @@ def example_recipe_data():
 def example_material_data():
     return [
         {
+            "MaterialId": "9788890100fd2191fb065cb0d5e624cb",
             "Ticker": "AAR",
             "Name": "antennaArray",
             "CategoryName": "electronic devices",
@@ -124,6 +124,7 @@ def example_material_data():
             "Volume": "0.5",
         },
         {
+            "MaterialId": "820d081096fd3e8fbd98b4344f6250ad",
             "Ticker": "H2O",
             "Name": "Water",
             "CategoryName": "Resources",
@@ -394,13 +395,13 @@ def test_parse_price_data(example_price_data):
         # Find AI1 exchange data
         ai1_price = next(p for p in prices if p.exchange == "AI1")
         assert ai1_price.material_ticker == "AAR"
-        assert ai1_price.average_price == Decimal("15100")
-        assert ai1_price.ask_amount == Decimal("58")
-        assert ai1_price.ask_price == Decimal("15000")
-        assert ai1_price.ask_available == Decimal("178")
+        assert ai1_price.average_price == 15100
+        assert ai1_price.ask_amount == 58
+        assert ai1_price.ask_price == 15000
+        assert ai1_price.ask_available == 178
         assert ai1_price.bid_amount is None
         assert ai1_price.bid_price is None
-        assert ai1_price.bid_available == Decimal("0")
+        assert ai1_price.bid_available == 0
 
         # Test ABH data
         prices = client.get_prices(material_ticker="ABH")
@@ -409,13 +410,13 @@ def test_parse_price_data(example_price_data):
         # Find AI1 exchange data
         ai1_price = next(p for p in prices if p.exchange == "AI1")
         assert ai1_price.material_ticker == "ABH"
-        assert ai1_price.average_price == Decimal("47830.12109375")
-        assert ai1_price.ask_amount == Decimal("84")
-        assert ai1_price.ask_price == Decimal("50900")
-        assert ai1_price.ask_available == Decimal("781")
-        assert ai1_price.bid_amount == Decimal("79")
-        assert ai1_price.bid_price == Decimal("45200")
-        assert ai1_price.bid_available == Decimal("387")
+        assert ai1_price.average_price == 47830.12109375
+        assert ai1_price.ask_amount == 84
+        assert ai1_price.ask_price == 50900
+        assert ai1_price.ask_available == 781
+        assert ai1_price.bid_amount == 79
+        assert ai1_price.bid_price == 45200
+        assert ai1_price.bid_available == 387
 
         # Test ADR data with MM prices
         prices = client.get_prices(material_ticker="ADR")
@@ -424,15 +425,15 @@ def test_parse_price_data(example_price_data):
         # Find AI1 exchange data
         ai1_price = next(p for p in prices if p.exchange == "AI1")
         assert ai1_price.material_ticker == "ADR"
-        assert ai1_price.mm_buy == Decimal("58000")
+        assert ai1_price.mm_buy == 58000
         assert ai1_price.mm_sell is None
-        assert ai1_price.average_price == Decimal("60000")
-        assert ai1_price.ask_amount == Decimal("32")
-        assert ai1_price.ask_price == Decimal("69000")
-        assert ai1_price.ask_available == Decimal("72")
-        assert ai1_price.bid_amount == Decimal("1")
-        assert ai1_price.bid_price == Decimal("58100")
-        assert ai1_price.bid_available == Decimal("101")
+        assert ai1_price.average_price == 60000
+        assert ai1_price.ask_amount == 32
+        assert ai1_price.ask_price == 69000
+        assert ai1_price.ask_available == 72
+        assert ai1_price.bid_amount == 1
+        assert ai1_price.bid_price == 58100
+        assert ai1_price.bid_available == 101
 
 
 def test_filter_by_exchange(example_price_data):
@@ -454,13 +455,13 @@ def test_filter_by_exchange(example_price_data):
 
         # Test specific CI1 data for AAR
         aar_ci1 = next(p for p in prices if p.material_ticker == "AAR")
-        assert aar_ci1.average_price == Decimal("14900")
-        assert aar_ci1.ask_amount == Decimal("217")
-        assert aar_ci1.ask_price == Decimal("14900")
-        assert aar_ci1.ask_available == Decimal("513")
+        assert aar_ci1.average_price == 14900
+        assert aar_ci1.ask_amount == 217
+        assert aar_ci1.ask_price == 14900
+        assert aar_ci1.ask_available == 513
         assert aar_ci1.bid_amount is None
         assert aar_ci1.bid_price is None
-        assert aar_ci1.bid_available == Decimal("0")
+        assert aar_ci1.bid_available == 0
 
 
 def test_get_recipes_success(example_recipe_data):
@@ -483,12 +484,12 @@ def test_get_recipes_success(example_recipe_data):
         assert recipe1.time_ms == 172800000
         assert len(recipe1.inputs) == 2
         assert recipe1.inputs[0].ticker == "BMF"
-        assert recipe1.inputs[0].amount == Decimal("1")
+        assert recipe1.inputs[0].amount == 1
         assert recipe1.inputs[1].ticker == "SNM"
-        assert recipe1.inputs[1].amount == Decimal("1")
+        assert recipe1.inputs[1].amount == 1
         assert len(recipe1.outputs) == 1
         assert recipe1.outputs[0].ticker == "NV2"
-        assert recipe1.outputs[0].amount == Decimal("1")
+        assert recipe1.outputs[0].amount == 1
 
         # Test second recipe
         recipe2 = recipes[1]
@@ -497,12 +498,12 @@ def test_get_recipes_success(example_recipe_data):
         assert recipe2.time_ms == 3600000
         assert len(recipe2.inputs) == 2
         assert recipe2.inputs[0].ticker == "H2O"
-        assert recipe2.inputs[0].amount == Decimal("10")
+        assert recipe2.inputs[0].amount == 10
         assert recipe2.inputs[1].ticker == "OVE"
-        assert recipe2.inputs[1].amount == Decimal("5")
+        assert recipe2.inputs[1].amount == 5
         assert len(recipe2.outputs) == 1
         assert recipe2.outputs[0].ticker == "RAT"
-        assert recipe2.outputs[0].amount == Decimal("2")
+        assert recipe2.outputs[0].amount == 2
 
 
 def test_get_recipes_http_error(mock_http_error_session):
@@ -545,16 +546,16 @@ def test_get_all_materials_success(example_material_data):
         assert material1.ticker == "AAR"
         assert material1.name == "antennaArray"
         assert material1.category == "electronic devices"
-        assert material1.weight == Decimal("0.78")
-        assert material1.volume == Decimal("0.5")
+        assert material1.weight == 0.78
+        assert material1.volume == 0.5
 
         # Test second material
         material2 = materials[1]
         assert material2.ticker == "H2O"
         assert material2.name == "Water"
         assert material2.category == "Resources"
-        assert material2.weight == Decimal("1.0")
-        assert material2.volume == Decimal("1.0")
+        assert material2.weight == 1.0
+        assert material2.volume == 1.0
 
 
 def test_get_all_materials_http_error(mock_http_error_session):
@@ -1222,8 +1223,7 @@ def example_storage_data():
     ]
 
 
-@pytest.mark.asyncio
-async def test_get_storage_success(example_storage_data):
+def test_get_storage_success(example_storage_data):
     mock_session = MagicMock()
     mock_response = MagicMock()
     mock_response.json.return_value = example_storage_data
@@ -1344,8 +1344,7 @@ def example_warehouse_data():
     ]
 
 
-@pytest.mark.asyncio
-async def test_get_warehouses_success(example_warehouse_data):
+def test_get_warehouses_success(example_warehouse_data):
     mock_session = MagicMock()
     mock_response = MagicMock()
     mock_response.json.return_value = example_warehouse_data

@@ -24,7 +24,7 @@ class WarehouseService:
         self.fio_client = fio_client
         self.warehouse_repository = warehouse_repository
 
-    def sync_warehouses(self, username) -> None:
+    def sync_warehouses(self, username: str) -> None:
         """Synchronize warehouses from the API."""
         warehouses = self.fio_client.get_warehouses(username)
         # Get all existing warehouses
