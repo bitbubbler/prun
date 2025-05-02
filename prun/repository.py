@@ -594,7 +594,9 @@ class SystemRepository(BaseRepository):
         Args:
             planet: Planet
         """
-        statement = select(PlanetResource).where(PlanetResource.planet_natural_id == planet.natural_id)
+        statement = select(PlanetResource).where(
+            PlanetResource.planet_natural_id == planet.natural_id
+        )
         resources = self.session.exec(statement).all()
         for resource in resources:
             self.session.delete(resource)
@@ -605,7 +607,9 @@ class SystemRepository(BaseRepository):
         Args:
             planet: Planet
         """
-        statement = select(PlanetBuildingRequirement).where(PlanetBuildingRequirement.planet_natural_id == planet.natural_id)
+        statement = select(PlanetBuildingRequirement).where(
+            PlanetBuildingRequirement.planet_natural_id == planet.natural_id
+        )
         requirements = self.session.exec(statement).all()
         for requirement in requirements:
             self.session.delete(requirement)
@@ -616,7 +620,9 @@ class SystemRepository(BaseRepository):
         Args:
             planet: Planet
         """
-        statement = select(PlanetProductionFee).where(PlanetProductionFee.planet_natural_id == planet.natural_id)
+        statement = select(PlanetProductionFee).where(
+            PlanetProductionFee.planet_natural_id == planet.natural_id
+        )
         fees = self.session.exec(statement).all()
         for fee in fees:
             self.session.delete(fee)
@@ -627,7 +633,9 @@ class SystemRepository(BaseRepository):
         Args:
             planet: Planet
         """
-        statement = select(COGCProgram).where(COGCProgram.planet_natural_id == planet.natural_id)
+        statement = select(COGCProgram).where(
+            COGCProgram.planet_natural_id == planet.natural_id
+        )
         programs = self.session.exec(statement).all()
         for program in programs:
             self.session.delete(program)
@@ -638,7 +646,9 @@ class SystemRepository(BaseRepository):
         Args:
             planet: Planet
         """
-        statement = select(COGCVote).where(COGCVote.planet_natural_id == planet.natural_id)
+        statement = select(COGCVote).where(
+            COGCVote.planet_natural_id == planet.natural_id
+        )
         votes = self.session.exec(statement).all()
         for vote in votes:
             self.session.delete(vote)
@@ -655,7 +665,9 @@ class SystemRepository(BaseRepository):
         self.session.add(resource)
         return resource
 
-    def create_planet_building_requirement(self, requirement: PlanetBuildingRequirement) -> PlanetBuildingRequirement:
+    def create_planet_building_requirement(
+        self, requirement: PlanetBuildingRequirement
+    ) -> PlanetBuildingRequirement:
         """Create a new planet building requirement.
 
         Args:
@@ -667,7 +679,9 @@ class SystemRepository(BaseRepository):
         self.session.add(requirement)
         return requirement
 
-    def create_planet_production_fee(self, fee: PlanetProductionFee) -> PlanetProductionFee:
+    def create_planet_production_fee(
+        self, fee: PlanetProductionFee
+    ) -> PlanetProductionFee:
         """Create a new planet production fee.
 
         Args:

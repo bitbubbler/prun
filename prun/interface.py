@@ -268,7 +268,9 @@ class SystemRepositoryInterface(ABC):
         pass
 
     @abstractmethod
-    def create_planet_building_requirement(self, requirement: PlanetBuildingRequirement) -> None:
+    def create_planet_building_requirement(
+        self, requirement: PlanetBuildingRequirement
+    ) -> None:
         """Create a new planet building requirement."""
         pass
 
