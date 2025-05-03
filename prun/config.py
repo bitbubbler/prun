@@ -12,7 +12,7 @@ class ProductionMaterialPrice(BaseModel):
     price: float = Field(..., description="The price of the item")
 
 
-class ProductionRecipe(BaseModel):
+class EmpireProductionRecipe(BaseModel):
     """A single step in a production chain."""
 
     building_symbol: str = Field(..., description="The symbol of the building to use")
@@ -23,11 +23,11 @@ class ProductionRecipe(BaseModel):
     )
 
 
-class Planet(BaseModel):
+class EmpirePlanet(BaseModel):
     """A single planet configuration."""
 
     natural_id: str = Field(..., description="The natural ID of the planet")
-    recipes: List[ProductionRecipe] = Field(
+    recipes: List[EmpireProductionRecipe] = Field(
         ..., description="List of production recipes in order"
     )
 
@@ -36,7 +36,9 @@ class Empire(BaseModel):
     """A complete empire configuration."""
 
     name: str = Field(..., description="Name of the empire")
-    planets: List[Planet] = Field(..., description="List of planets in the empire")
+    planets: List[EmpirePlanet] = Field(
+        ..., description="List of planets in the empire"
+    )
     material_buy_prices: Optional[Dict[str, float]] = Field(
         default=None, description="Optional material buy prices"
     )

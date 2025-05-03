@@ -4,7 +4,9 @@ from typing import List, Optional, Callable
 
 from pydantic import BaseModel, Field
 
-from prun.models import Recipe, Planet, PlanetBuilding
+from prun.config import Empire, EmpireProductionRecipe
+from prun.errors import PlanetNotFoundError, RecipeNotFoundError
+from prun.models import Planet, PlanetBuilding, PlanetResource, Recipe
 from prun.services.building_service import BuildingService
 from prun.services.exchange_service import ExchangeService
 from prun.services.planet_service import PlanetService
@@ -61,7 +63,7 @@ class CalculatedRecipeCost(BaseModel):
     total: float
 
 
-class CalculatedCOGM(BaseModel):
+class CalculatedRecipeOutputCOGM(BaseModel):
     """Calculated COGM."""
 
     recipe_symbol: str
@@ -72,6 +74,20 @@ class CalculatedCOGM(BaseModel):
     repair_cost: float
     total_cost: float
     input_costs: CalculatedInputCosts
+
+
+class CalculatedPlanetCOGM(BaseModel):
+    """Calculated planet COGM."""
+
+    planet_name: str
+    recipes: List[CalculatedRecipeOutputCOGM]
+
+
+class CalculatedEmpireCOGM(BaseModel):
+    """Calculated empire COGM."""
+
+    empire_name: str
+    planets: List[CalculatedPlanetCOGM]
 
 
 class CostService:
@@ -97,6 +113,55 @@ class CostService:
         self.planet_service = planet_service
         self.recipe_service = recipe_service
         self.workforce_service = workforce_service
+
+    def calculate_cogm(
+        self,
+        recipe: Recipe,
+        planet: Planet,
+        item_symbol: str,
+        get_buy_price: Callable[[str], float],
+    ) -> CalculatedRecipeOutputCOGM:
+        # Calculate base recipe cost
+        recipe_cost = self.calculate_recipe_cost(
+            recipe=recipe, planet=planet, get_buy_price=get_buy_price
+        )
+        recipe_output = next(
+            output for output in recipe.outputs if output.item_symbol == item_symbol
+        )
+        # Calculate scaled recipe cost
+        return CalculatedRecipeOutputCOGM(
+            recipe_symbol=recipe.symbol,
+            item_symbol=item_symbol,
+            building_symbol=recipe.building_symbol,
+            time_ms=recipe.time_ms,
+            input_costs=CalculatedInputCosts(
+                inputs=[
+                    CalculatedInput(
+                        item_symbol=input.item_symbol,
+                        quantity=input.quantity / recipe_output.quantity,
+                        price=input.price,
+                        total=input.total / recipe_output.quantity,
+                    )
+                    for input in recipe_cost.input_costs.inputs
+                ],
+                total=recipe_cost.input_costs.total / recipe_output.quantity,
+            ),
+            workforce_cost=CalculatedWorkforceCosts(
+                inputs=[
+                    CalculatedWorkforceInput(
+                        workforce_type=workforce_input_cost.workforce_type,
+                        item_symbol=workforce_input_cost.item_symbol,
+                        quantity=workforce_input_cost.quantity / recipe_output.quantity,
+                        price=workforce_input_cost.price,
+                        total=workforce_input_cost.total / recipe_output.quantity,
+                    )
+                    for workforce_input_cost in recipe_cost.workforce_cost.inputs
+                ],
+                total=recipe_cost.workforce_cost.total / recipe_output.quantity,
+            ),
+            repair_cost=recipe_cost.repair_cost / recipe_output.quantity,
+            total_cost=recipe_cost.total / recipe_output.quantity,
+        )
 
     def calculate_daily_building_repair_cost(
         self,
@@ -125,6 +190,99 @@ class CostService:
         daily_building_repair_cost = total_building_repair_cost / days_since_last_repair
 
         return daily_building_repair_cost
+
+    def calculate_empire_cogm(
+        self,
+        empire: Empire,
+        get_buy_price: Callable[[str], float],
+    ) -> CalculatedEmpireCOGM:
+        planet_cogms: List[CalculatedPlanetCOGM] = []
+        # cache of cogm prices for each item symbol
+        cogm_price_cache: dict[str, float] = {}
+
+        # get all planets and their recipes
+        planet_recipes: list[tuple[Planet, list[EmpireProductionRecipe]]] = [
+            (
+                self.planet_service.get_planet(planet.natural_id),
+                planet.recipes,
+            )
+            for planet in empire.planets
+        ]
+
+        # we do two passes
+        # the first pass fills the cogm cache
+        # the second pass calculates final values
+
+        # calculate everythin once, without storing it
+        for planet, production_recipes in planet_recipes:
+            self.calculate_planet_cogm(
+                planet=planet,
+                production_recipes=production_recipes,
+                get_buy_price=get_buy_price,
+                cogm_price_cache=cogm_price_cache,
+            )
+
+        # run everything again, but this time store the results
+        for planet, production_recipes in planet_recipes:
+            planet_cogms.append(
+                self.calculate_planet_cogm(
+                    planet=planet,
+                    production_recipes=production_recipes,
+                    get_buy_price=get_buy_price,
+                    cogm_price_cache=cogm_price_cache,
+                )
+            )
+
+        return CalculatedEmpireCOGM(empire_name=empire.name, planets=planet_cogms)
+
+    def calculate_planet_cogm(
+        self,
+        planet: Planet,
+        production_recipes: List[EmpireProductionRecipe],
+        get_buy_price: Callable[[str], float],
+        cogm_price_cache: Optional[dict[str, float]] = None,
+    ) -> CalculatedPlanetCOGM:
+        recipe_service = self.recipe_service
+
+        planet_resource: PlanetResource | None = None
+        recipe_output_cogms: List[CalculatedRecipeOutputCOGM] = []
+
+        # calculate cogm for each recipe
+        for production_recipe in production_recipes:
+            planet_resource = next(
+                (
+                    resource
+                    for resource in planet.resources
+                    if resource.item.symbol == production_recipe.item_symbol
+                ),
+                None,
+            )
+            recipe = recipe_service.find_recipe(
+                item_symbol=production_recipe.item_symbol,
+                recipe_symbol=production_recipe.recipe_symbol,
+                planet_resource=planet_resource,
+            )
+
+            if not recipe:
+                raise RecipeNotFoundError(production_recipe.recipe_symbol)
+
+            for output in recipe.outputs:
+                # Calculate COGM for this output
+                recipe_output_cogm = self.calculate_cogm(
+                    recipe=recipe,
+                    planet=planet,
+                    item_symbol=output.item_symbol,
+                    get_buy_price=get_buy_price,
+                )
+                # update the cache if it was provided
+                if cogm_price_cache:
+                    cogm_price_cache[output.item_symbol] = recipe_output_cogm.total_cost
+
+                recipe_output_cogms.append(recipe_output_cogm)
+
+        return CalculatedPlanetCOGM(
+            planet_name=planet.name, recipes=recipe_output_cogms
+        )
 
     def calculate_recipe_cost(
         self, recipe: Recipe, planet: Planet, get_buy_price: Callable[[str], float]
@@ -253,55 +411,6 @@ class CostService:
         return CalculatedWorkforceCosts(
             inputs=consumable_costs,
             total=sum(consumable_cost.total for consumable_cost in consumable_costs),
-        )
-
-    def calculate_cogm(
-        self,
-        recipe: Recipe,
-        planet: Planet,
-        item_symbol: str,
-        get_buy_price: Callable[[str], float],
-    ) -> CalculatedCOGM:
-        # Calculate base recipe cost
-        recipe_cost = self.calculate_recipe_cost(
-            recipe=recipe, planet=planet, get_buy_price=get_buy_price
-        )
-        recipe_output = next(
-            output for output in recipe.outputs if output.item_symbol == item_symbol
-        )
-        # Calculate scaled recipe cost
-        return CalculatedCOGM(
-            recipe_symbol=recipe.symbol,
-            item_symbol=item_symbol,
-            building_symbol=recipe.building_symbol,
-            time_ms=recipe.time_ms,
-            input_costs=CalculatedInputCosts(
-                inputs=[
-                    CalculatedInput(
-                        item_symbol=input.item_symbol,
-                        quantity=input.quantity / recipe_output.quantity,
-                        price=input.price,
-                        total=input.total / recipe_output.quantity,
-                    )
-                    for input in recipe_cost.input_costs.inputs
-                ],
-                total=recipe_cost.input_costs.total / recipe_output.quantity,
-            ),
-            workforce_cost=CalculatedWorkforceCosts(
-                inputs=[
-                    CalculatedWorkforceInput(
-                        workforce_type=workforce_input_cost.workforce_type,
-                        item_symbol=workforce_input_cost.item_symbol,
-                        quantity=workforce_input_cost.quantity / recipe_output.quantity,
-                        price=workforce_input_cost.price,
-                        total=workforce_input_cost.total / recipe_output.quantity,
-                    )
-                    for workforce_input_cost in recipe_cost.workforce_cost.inputs
-                ],
-                total=recipe_cost.workforce_cost.total / recipe_output.quantity,
-            ),
-            repair_cost=recipe_cost.repair_cost / recipe_output.quantity,
-            total_cost=recipe_cost.total / recipe_output.quantity,
         )
 
     def _calculate_final_costs(

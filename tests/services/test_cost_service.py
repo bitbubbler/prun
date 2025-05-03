@@ -22,7 +22,7 @@ from prun.services.cost_service import (
     CalculatedWorkforceInput,
     CalculatedWorkforceCosts,
     CalculatedRecipeCost,
-    CalculatedCOGM,
+    CalculatedRecipeOutputCOGM,
 )
 
 
@@ -687,7 +687,7 @@ class TestCostService:
         # Total per OVE: 11144.3 / 20 = 557.215 -> rounds to 557.21
 
         # Assert
-        assert isinstance(result, CalculatedCOGM)
+        assert isinstance(result, CalculatedRecipeOutputCOGM)
         assert result.recipe_symbol == ove_recipe.symbol
         assert result.item_symbol == "OVE"
         assert round(result.input_costs.total, 2) == 550.0
