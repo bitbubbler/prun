@@ -97,104 +97,6 @@ def sync(username: str, password: str, apikey: str | None):
 
 
 @cli.command()
-@click.option("--username", "-u", required=True, help="FIO API username")
-@click.option("--password", "-p", required=True, help="FIO API password")
-def sync_storage(username: str, password: str):
-    """Sync storage data from the FIO API"""
-    fio_client = container.fio_client()
-    fio_client.authenticate(username=username, password=password)
-    container.storage_service().sync_storage(username)
-
-
-def print_cogm_analysis(
-    item_symbol: str,
-    cogm: CalculatedRecipeOutputCOGM,
-):
-    """Print COGM analysis in a formatted table.
-
-    Args:
-        item_symbol: The symbol of the item being analyzed
-        cogm: The calculated COGM result
-    """
-    console = Console()
-
-    # Create a simple table showing just the COGM
-    cost_table = Table(title=f"COGM Analysis for {item_symbol}")
-    cost_table.add_column("Metric", style="cyan")
-    cost_table.add_column("Value", justify="right", style="green")
-
-    # Show input costs per unit
-    for input_cost in cogm.input_costs.inputs:
-        cost_table.add_row(
-            f"Input: {input_cost.item_symbol}", f"{input_cost.total:,.2f}"
-        )
-
-    cost_table.add_row("Input Cost", f"{cogm.input_costs.total:,.2f}")
-
-    # Show workforce cost per unit
-    for input_cost in cogm.workforce_cost.inputs:
-        cost_table.add_row(
-            f"Workforce {input_cost.workforce_type}: {input_cost.item_symbol}",
-            f"{input_cost.total:,.2f}",
-        )
-
-    # show workforce cost per recipe run
-    cost_table.add_row("Workforce Cost", f"{cogm.workforce_cost.total:,.2f}")
-
-    # Show repair cost per unit
-    cost_table.add_row("Repair Cost", f"{cogm.repair_cost:,.2f}")
-
-    # Show total COGM per unit
-    cost_table.add_row("Total COGM", f"{cogm.total_cost:,.2f}", style="bold")
-
-    console.print(cost_table)
-
-
-def print_multiple_recipes_error(
-    e: MultipleRecipesError,
-    planet: EmpirePlanet,
-    item_symbol: str,
-    get_buy_price: callable,
-):
-    """Print error and available recipes when multiple recipes are found.
-
-    Args:
-        e: The MultipleRecipesError instance
-        planet: The planet being analyzed
-        item_symbol: The symbol of the item being analyzed
-        get_buy_price: Function to get buy price for an item
-    """
-    stderr_console = Console(stderr=True)
-    stderr_console.print(f"[red]Error:[/red] {str(e)}")
-
-    # Show available recipes in a table
-    recipe_table = Table(title="Available Recipes")
-    recipe_table.add_column("Recipe", style="cyan")
-    recipe_table.add_column("Building", style="yellow")
-    recipe_table.add_column("Inputs", style="green")
-    recipe_table.add_column("Outputs", style="green")
-
-    for recipe in e.available_recipes:
-        inputs = ", ".join(f"{i.quantity}x {i.item_symbol}" for i in recipe.inputs)
-        outputs = ", ".join(f"{o.quantity}x {o.item_symbol}" for o in recipe.outputs)
-        recipe_table.add_row(recipe.symbol, recipe.building_symbol, inputs, outputs)
-
-    stderr_console.print()
-    stderr_console.print(recipe_table)
-    stderr_console.print("\nUse --recipe/-r to specify which recipe to use.")
-
-
-def serialize_exception(exc: Exception) -> str:
-    payload = {
-        "type": exc.__class__.__name__,
-        "message": str(exc),
-        "args": exc.args,
-        "traceback": traceback.format_exc().splitlines(),  # or leave as one string
-    }
-    return json.dumps(payload)
-
-
-@cli.command()
 @click.argument("item_symbol")
 @click.option(
     "--planet",
@@ -272,7 +174,7 @@ def cogm(
         if json:
             print(result.model_dump_json())
         else:
-            print_cogm_analysis(item_symbol=item_symbol, cogm=result)
+            print_recipe_cogm_analysis(item_symbol=item_symbol, cogm=result)
 
     except MultipleRecipesError as e:
         if json:
@@ -346,40 +248,6 @@ def analyze_empire(config_file: str, json: bool):
         )
         return exchange_price
 
-    def print_empire_analysis(empire: Empire, empire_cogm: CalculatedEmpireCOGM):
-        # Print the empire name
-        console.print(Panel(f"Analyzing Empire: {empire.name}", style="bold blue"))
-
-        # Create a table for the chain analysis
-        chain_table = Table(title="Empire COGM")
-        chain_table.add_column("Step", style="cyan")
-        chain_table.add_column("Planet", style="yellow")
-        chain_table.add_column("Recipe", style="green")
-        chain_table.add_column("Output", style="green")
-        chain_table.add_column("COGM", justify="right", style="bold")
-
-        for planet_cogm in empire_cogm.planets:
-            for planet_recipe_output_cogm in planet_cogm.recipes:
-                chain_table.add_row(
-                    f"{planet_cogm.planet_name} => {planet_recipe_output_cogm.item_symbol}",
-                    planet_cogm.planet_name,
-                    planet_recipe_output_cogm.recipe_symbol,
-                    planet_recipe_output_cogm.item_symbol,
-                    f"{planet_recipe_output_cogm.total_cost:,.2f}",
-                )
-
-                # Print detailed analysis for this output
-                console.print(
-                    f"\n[bold]Detailed Analysis for Step {planet_recipe_output_cogm.recipe_symbol} => {planet_recipe_output_cogm.item_symbol}:[/bold]"
-                )
-                print_cogm_analysis(
-                    item_symbol=planet_recipe_output_cogm.item_symbol,
-                    cogm=planet_recipe_output_cogm,
-                )
-
-        # Print the summary table
-        console.print(chain_table)
-
     empire_cogm = cost_service.calculate_empire_cogm(
         empire=empire,
         get_buy_price=get_buy_price,
@@ -388,7 +256,131 @@ def analyze_empire(config_file: str, json: bool):
     if json:
         print(empire_cogm.model_dump_json())
     else:
-        print_empire_analysis(empire, empire_cogm)
+        print_empire_cogm_analysis(empire=empire, empire_cogm=empire_cogm)
+
+
+def print_recipe_cogm_analysis(
+    item_symbol: str,
+    cogm: CalculatedRecipeOutputCOGM,
+):
+    """Print COGM analysis in a formatted table.
+
+    Args:
+        item_symbol: The symbol of the item being analyzed
+        cogm: The calculated COGM result
+    """
+    console = Console()
+
+    # Create a simple table showing just the COGM
+    cost_table = Table(title=f"COGM Analysis for {item_symbol}")
+    cost_table.add_column("Metric", style="cyan")
+    cost_table.add_column("Value", justify="right", style="green")
+
+    # Show input costs per unit
+    for input_cost in cogm.input_costs.inputs:
+        cost_table.add_row(
+            f"Input: {input_cost.item_symbol}", f"{input_cost.total:,.2f}"
+        )
+
+    cost_table.add_row("Input Cost", f"{cogm.input_costs.total:,.2f}")
+
+    # Show workforce cost per unit
+    for input_cost in cogm.workforce_cost.inputs:
+        cost_table.add_row(
+            f"Workforce {input_cost.workforce_type}: {input_cost.item_symbol}",
+            f"{input_cost.total:,.2f}",
+        )
+
+    # show workforce cost per recipe run
+    cost_table.add_row("Workforce Cost", f"{cogm.workforce_cost.total:,.2f}")
+
+    # Show repair cost per unit
+    cost_table.add_row("Repair Cost", f"{cogm.repair_cost:,.2f}")
+
+    # Show total COGM per unit
+    cost_table.add_row("Total COGM", f"{cogm.total_cost:,.2f}", style="bold")
+
+    console.print(cost_table)
+
+
+def print_empire_cogm_analysis(
+    empire: Empire,
+    empire_cogm: CalculatedEmpireCOGM,
+):
+    # Print the empire name
+    console = Console()
+    console.print(Panel(f"Analyzing Empire: {empire.name}", style="bold blue"))
+
+    # Create a table for the chain analysis
+    chain_table = Table(title="Empire COGM")
+    chain_table.add_column("Step", style="cyan")
+    chain_table.add_column("Planet", style="yellow")
+    chain_table.add_column("Recipe", style="green")
+    chain_table.add_column("Output", style="green")
+    chain_table.add_column("COGM", justify="right", style="bold")
+
+    for planet_cogm in empire_cogm.planets:
+        for planet_recipe_output_cogm in planet_cogm.recipes:
+            chain_table.add_row(
+                f"{planet_cogm.planet_name} => {planet_recipe_output_cogm.item_symbol}",
+                planet_cogm.planet_name,
+                planet_recipe_output_cogm.recipe_symbol,
+                planet_recipe_output_cogm.item_symbol,
+                f"{planet_recipe_output_cogm.total_cost:,.2f}",
+            )
+
+            # Print detailed analysis for this output
+            console.print(
+                f"\n[bold]Detailed Analysis for Step {planet_recipe_output_cogm.recipe_symbol} => {planet_recipe_output_cogm.item_symbol}:[/bold]"
+            )
+            print_recipe_cogm_analysis(
+                item_symbol=planet_recipe_output_cogm.item_symbol,
+                cogm=planet_recipe_output_cogm,
+            )
+
+    # Print the summary table
+    console.print(chain_table)
+
+
+def print_multiple_recipes_error(
+    e: MultipleRecipesError,
+):
+    """Print error and available recipes when multiple recipes are found.
+
+    Args:
+        e: The MultipleRecipesError instance
+        planet: The planet being analyzed
+        item_symbol: The symbol of the item being analyzed
+        get_buy_price: Function to get buy price for an item
+    """
+    stderr_console = Console(stderr=True)
+    stderr_console.print(f"[red]Error:[/red] {str(e)}")
+
+    # Show available recipes in a table
+    recipe_table = Table(title="Available Recipes")
+    recipe_table.add_column("Recipe", style="cyan")
+    recipe_table.add_column("Building", style="yellow")
+    recipe_table.add_column("Inputs", style="green")
+    recipe_table.add_column("Outputs", style="green")
+
+    for recipe in e.available_recipes:
+        inputs = ", ".join(f"{i.quantity}x {i.item_symbol}" for i in recipe.inputs)
+        outputs = ", ".join(f"{o.quantity}x {o.item_symbol}" for o in recipe.outputs)
+        recipe_table.add_row(recipe.symbol, recipe.building_symbol, inputs, outputs)
+
+    stderr_console.print()
+    stderr_console.print(recipe_table)
+    stderr_console.print("\nUse --recipe/-r to specify which recipe to use.")
+
+
+def serialize_exception(exc: Exception) -> str:
+    payload = {
+        "type": exc.__class__.__name__,
+        "message": str(exc),
+        "args": exc.args,
+        "traceback": traceback.format_exc().splitlines(),  # or leave as one string
+    }
+    return json.dumps(payload)
 
 
 if __name__ == "__main__":
