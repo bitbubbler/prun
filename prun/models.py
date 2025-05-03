@@ -412,15 +412,15 @@ class WorkforceNeed(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     workforce_type: str
     item_symbol: str = Field(foreign_key="items.symbol")
-    amount: float
+    amount_per_100_workers_per_day: float
 
     # Relationships
     item: Item = Relationship(back_populates="workforce_needs")
 
     @property
-    def per_worker_per_day(self) -> float:
+    def amount_per_worker_per_day(self) -> float:
         """Get the amount of the item needed per worker per day. FIO gives us the amount per 100 workers per day."""
-        return self.amount / 100
+        return self.amount_per_100_workers_per_day / 100
 
 
 class ComexExchange(SQLModel, table=True):

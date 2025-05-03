@@ -230,7 +230,7 @@ class CostService:
                         )
 
                     need_per_workforce_per_day = (
-                        need.per_worker_per_day * workforce_count
+                        need.amount_per_worker_per_day * workforce_count
                     )
 
                     need_per_recipe_run = (

@@ -51,7 +51,7 @@ class WorkforceService:
                     {
                         "workforce_type": fio_workforce_need.workforce_type,
                         "item_symbol": fio_need.material_ticker,
-                        "amount": fio_need.amount,
+                        "amount_per_100_workers_per_day": fio_need.amount,
                     }
                 )
                 self.workforce_repository.create_workforce_need(workforce_need)
