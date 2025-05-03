@@ -7,12 +7,12 @@ from rich.table import Table
 from rich.panel import Panel
 from yaml import YAMLError
 
-from prun.config import ProductionChain, ProductionRecipe
+from prun.config import Empire, Planet
 from prun.di import container
 from prun.errors import (
     RecipeNotFoundError,
     MultipleRecipesError,
-    PlanetResourceNotFoundError,
+    PlanetResourceRequiredError,
 )
 from prun.models import PlanetResource, Planet
 from prun.services.cost_service import CalculatedCOGM
@@ -149,25 +149,56 @@ def print_cogm_analysis(result: CalculatedCOGM, item_symbol: str):
 @cli.command()
 @click.argument("item_symbol")
 @click.option(
+    "--planet",
+    "-p",
+    "planet_natural_id",
+    help="Planet ID (required)",
+)
+@click.option(
+    "--building",
+    "-b",
+    "building_symbol",
+    help="Building symbol (required if item_symbol is a planet resource)",
+)
+@click.option(
     "--recipe",
     "-r",
     "recipe_symbol",
     help="Specific recipe to use (required if multiple recipes exist)",
 )
-@click.option(
-    "--planet",
-    "-p",
-    "planet_natural_id",
-    help="Planet ID (required if item is a planet resource)",
-)
-def cogm(item_symbol: str, recipe_symbol: str | None, planet_natural_id: str):
+def cogm(
+    item_symbol: str,
+    planet_natural_id: str,
+    building_symbol: str | None,
+    recipe_symbol: str | None,
+):
     """Calculate Cost of Goods Manufactured (COGM) for an item.
 
     Example: cogm RAT -q 10 -r 'FP:1xALG-1xMAI-1xNUT=>10xRAT'
     """
+    planet: Planet | None = None
+    planet_resource: PlanetResource | None = None
+
+    def get_buy_price(item_symbol: str) -> float:
+        return container.exchange_service().get_buy_price(
+            exchange_code="AI1", item_symbol=item_symbol
+        )
+
     try:
+        cost_service = container.cost_service()
+        planet_service = container.planet_service()
         recipe_service = container.recipe_service()
-        planet = container.planet_service().get_planet(planet_natural_id)
+        building_service = container.building_service()
+
+        # try to find the planet, it's required
+        planet = planet_service.get_planet(planet_natural_id)
+        # also try to find the building here, it's optional though
+        building = building_service.get_building(building_symbol)
+
+        if not planet:
+            raise ValueError("Planet is required")
+
+        # try to find the planet resource
         planet_resource = next(
             (
                 resource
@@ -176,27 +207,17 @@ def cogm(item_symbol: str, recipe_symbol: str | None, planet_natural_id: str):
             ),
             None,
         )
-
-        print(f"Planet: {planet.name}")
-        print(f"Planet resource: {planet_resource}")
-        print(f"Item symbol: {item_symbol}")
-
-        recipe = (
-            recipe_service.get_recipe(
-                recipe_symbol=recipe_symbol, planet_resource=planet_resource
+        try:
+            recipe = recipe_service.find_recipe(
+                item_symbol=item_symbol,
+                recipe_symbol=recipe_symbol,
+                planet_resource=planet_resource,
             )
-            if recipe_symbol
-            else recipe_service.find_recipe(item_symbol=item_symbol)
-        )
+        except PlanetResourceRequiredError as e:
+            console.print(f"[red]Error:[/red] {str(e)}")
+            return
 
-        print(f"recipe: {recipe}")
-
-        def get_buy_price(item_symbol: str) -> float:
-            return container.exchange_service().get_buy_price(
-                exchange_code="AI1", item_symbol=item_symbol
-            )
-
-        result: CalculatedCOGM = container.cost_service().calculate_cogm(
+        result: CalculatedCOGM = cost_service.calculate_cogm(
             recipe=recipe,
             planet=planet,
             item_symbol=item_symbol,
@@ -230,7 +251,10 @@ def cogm(item_symbol: str, recipe_symbol: str | None, planet_natural_id: str):
         for recipe in e.available_recipes:
             console.print(f"\n[bold]Analysis for recipe: {recipe.symbol}[/bold]")
             result = container.cost_service().calculate_cogm(
-                recipe=recipe, item_symbol=item_symbol
+                recipe=recipe,
+                planet=planet,
+                item_symbol=item_symbol,
+                get_buy_price=get_buy_price,
             )
             print_cogm_analysis(result, item_symbol)
 
@@ -242,16 +266,20 @@ def cogm(item_symbol: str, recipe_symbol: str | None, planet_natural_id: str):
 
 @cli.command()
 @click.argument("config_file", type=click.Path(exists=True))
-def analyze_chain(config_file: str):
-    """Analyze a production chain defined in a YAML configuration file.
+def analyze_empire(config_file: str):
+    """Analyze an empire defined in a YAML configuration file.
 
-    Example: analyze-chain production_chain.yaml
+    Example: analyze-empire empire.yaml
     """
+    cost_service = container.cost_service()
+    exchange_service = container.exchange_service()
+    planet_service = container.planet_service()
+    recipe_service = container.recipe_service()
     console = Console()
 
     # Load and validate the configuration
     try:
-        production_chain = ProductionChain.from_yaml(config_file)
+        empire = Empire.from_yaml(config_file)
     except FileNotFoundError as e:
         console.print(f"[red]Error:[/red] {str(e)}")
         return
@@ -262,12 +290,10 @@ def analyze_chain(config_file: str):
         console.print(f"[red]Error: Invalid configuration:[/red] {str(e)}")
         return
 
-    console.print(
-        Panel(f"Analyzing Production Chain: {production_chain.name}", style="bold blue")
-    )
+    console.print(Panel(f"Analyzing Empire: {empire.name}", style="bold blue"))
 
     # Create a table for the chain analysis
-    chain_table = Table(title="Production Chain Analysis")
+    chain_table = Table(title="Empire Analysis")
     chain_table.add_column("Step", style="cyan")
     chain_table.add_column("Planet", style="yellow")
     chain_table.add_column("Recipe", style="green")
@@ -277,89 +303,91 @@ def analyze_chain(config_file: str):
     cogm_price_cache: dict[str, float] = {}
 
     def get_buy_price(item_symbol: str) -> float:
-        if production_chain.material_buy_prices:
-            for material, price in production_chain.material_buy_prices.items():
+        if empire.material_buy_prices:
+            for material, price in empire.material_buy_prices.items():
                 if material == item_symbol:
                     return price
 
         if item_symbol in cogm_price_cache:
             return cogm_price_cache[item_symbol]
 
-        exchange_price = container.exchange_service().get_buy_price(
+        exchange_price = exchange_service.get_buy_price(
             exchange_code="AI1", item_symbol=item_symbol
         )
         return exchange_price
 
     # Process each recipe in the chain
-    def process_chain(do_print: bool = False):
-        for i, production_recipe in enumerate(production_chain.recipes, 1):
+    def process_empire(do_print: bool = False):
+        for empire_planet in empire.planets:
             try:
                 # Get the planet resources if planet is specified
                 planet: Planet | None = None
                 planet_resource: PlanetResource | None = None
-                if production_recipe.planet_natural_id:
-                    print("natural id", production_recipe.planet_natural_id)
-                    planet = container.planet_service().get_planet(
-                        production_recipe.planet_natural_id
-                    )
+
+                planet = planet_service.get_planet(empire_planet.natural_id)
+
+                for empire_recipe in empire_planet.recipes:
                     planet_resource = next(
                         (
                             resource
                             for resource in planet.resources
-                            if resource.item.symbol == production_recipe.item_symbol
+                            if resource.item.symbol == empire_recipe.item_symbol
                         ),
                         None,
                     )
-
-                recipe = container.recipe_service().get_recipe(
-                    recipe_symbol=production_recipe.recipe_symbol,
-                    planet_resource=planet_resource,
-                )
-
-                if not recipe:
-                    raise RecipeNotFoundError(production_recipe.recipe_symbol)
-
-                for output in recipe.outputs:
-                    # Calculate COGM for this output
-                    output_cogm = container.cost_service().calculate_cogm(
-                        recipe=recipe,
-                        item_symbol=output.item_symbol,
-                        get_buy_price=get_buy_price,
+                    recipe = recipe_service.find_recipe(
+                        item_symbol=empire_recipe.item_symbol,
+                        recipe_symbol=empire_recipe.recipe_symbol,
+                        planet_resource=planet_resource,
                     )
 
-                    cogm_price_cache[output.item_symbol] = output_cogm.total_cost
+                    if not recipe:
+                        raise RecipeNotFoundError(empire_recipe.recipe_symbol)
 
-                    if not do_print:
-                        continue
-                        # Add row to the table
-                    chain_table.add_row(
-                        f"{planet.name} => {output.item_symbol}",
-                        production_recipe.planet_natural_id or "Any",
-                        recipe.symbol,
-                        output.item_symbol,
-                        f"{output_cogm.total_cost:,.2f}",
-                    )
+                    for output in recipe.outputs:
+                        # Calculate COGM for this output
+                        output_cogm = cost_service.calculate_cogm(
+                            recipe=recipe,
+                            planet=planet,
+                            item_symbol=output.item_symbol,
+                            get_buy_price=get_buy_price,
+                        )
 
-                    # Print detailed analysis for this output
-                    console.print(
-                        f"\n[bold]Detailed Analysis for Step {i} => {output.item_symbol}:[/bold]"
-                    )
-                    print_cogm_analysis(output_cogm, output.item_symbol)
+                        cogm_price_cache[output.item_symbol] = output_cogm.total_cost
+
+                        if not do_print:
+                            continue
+                            # Add row to the table
+                        chain_table.add_row(
+                            f"{planet.name} => {output.item_symbol}",
+                            planet.natural_id,
+                            recipe.symbol,
+                            output.item_symbol,
+                            f"{output_cogm.total_cost:,.2f}",
+                        )
+
+                        # Print detailed analysis for this output
+                        console.print(
+                            f"\n[bold]Detailed Analysis for Step {empire_recipe.recipe_symbol} => {output.item_symbol}:[/bold]"
+                        )
+                        print_cogm_analysis(output_cogm, output.item_symbol)
 
             except Exception as e:
                 # Print the error traceback
                 traceback.print_exc()
-                console.print(f"[red]Error processing recipe {i}:[/red] {str(e)}")
+                console.print(
+                    f"[red]Error processing planet {planet.natural_id}:[/red] {str(e)}"
+                )
                 continue
 
     # we do two passes
     # the first pass fills the cogm cache
     # the second pass calculates final values and prints the table
-    process_chain(do_print=False)
-    process_chain(do_print=True)
+    process_empire(do_print=False)
+    process_empire(do_print=True)
 
     # Print the summary table
-    console.print("\n[bold]Production Chain Summary:[/bold]")
+    console.print("\n[bold]Empire Summary:[/bold]")
     console.print(chain_table)
 
 

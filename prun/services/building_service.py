@@ -1,24 +1,12 @@
 import logging
 
-from pydantic import BaseModel
-from typing import List, Dict, Any, Optional
+from typing import Optional
 
 from fio import FIOClientInterface
 from prun.interface import BuildingRepositoryInterface
-from prun.models import Building, BuildingCost, Recipe, Planet
-from prun.services.exchange_service import ExchangeService
-from prun.services.recipe_service import RecipeService
+from prun.models import Building, BuildingCost
 
 logger = logging.getLogger(__name__)
-
-
-class CalculatedBuildingCost(BaseModel):
-    """Calculated building cost."""
-
-    item_symbol: str
-    amount: int
-    price: float
-    total: float
 
 
 class BuildingService:
@@ -28,8 +16,6 @@ class BuildingService:
         self,
         fio_client: FIOClientInterface,
         building_repository: BuildingRepositoryInterface,
-        exchange_service: ExchangeService,
-        recipe_service: RecipeService,
     ):
         """Initialize the service.
 
@@ -38,8 +24,6 @@ class BuildingService:
         """
         self.fio_client = fio_client
         self.building_repository = building_repository
-        self.exchange_service = exchange_service
-        self.recipe_service = recipe_service
 
     def get_building(self, symbol: str) -> Optional[Building]:
         """Get a building by its symbol.
@@ -63,17 +47,6 @@ class BuildingService:
         for fio_building in buildings:
             # Check if building already exists
             if not self.building_repository.get_building(fio_building.ticker):
-                recipes: list[Recipe] = []
-                for fio_recipe in fio_building.recipes:
-                    recipe = self.recipe_service.get_recipe_unsafe(
-                        fio_recipe.standard_recipe_name
-                    )
-                    if not recipe:
-                        raise ValueError(
-                            f"Recipe {fio_recipe.standard_recipe_name} not found"
-                        )
-                    recipes.append(recipe)
-
                 building = Building.model_validate(
                     {
                         "symbol": fio_building.ticker,
@@ -87,7 +60,6 @@ class BuildingService:
                         "area_cost": fio_building.area_cost,
                     }
                 )
-                building.recipes = recipes
 
                 building.building_costs = [
                     BuildingCost.model_validate(

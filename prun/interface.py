@@ -89,10 +89,6 @@ class ExchangeRepositoryInterface(ABC):
         pass
 
 
-class LiquidityRepositoryInterface(ABC):
-    """Interface for liquidity-related operations."""
-
-
 class RecipeRepositoryInterface(ABC):
     """Interface for recipe-related operations."""
 

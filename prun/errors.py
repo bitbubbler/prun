@@ -58,3 +58,10 @@ class PlanetNotFoundError(ValueError):
 
     def __init__(self, natural_id: str):
         super().__init__(f"Planet {natural_id} not found")
+
+
+class PlanetResourceRequiredError(ValueError):
+    """Raised when a planet resource is required."""
+
+    def __init__(self):
+        super().__init__("A planet resource is required to calculate the COGM")

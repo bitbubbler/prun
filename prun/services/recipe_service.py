@@ -7,10 +7,18 @@ from prun.errors import (
     MultipleRecipesError,
     RecipeNotFoundError,
     PlanetResourceRequiredError,
-    ItemRecipeNotFoundError,
+    BuildingNotFoundError,
 )
 from prun.interface import RecipeRepositoryInterface
-from prun.models import Recipe, RecipeInput, ExchangePrice, RecipeOutput, PlanetResource
+from prun.models import (
+    Recipe,
+    RecipeInput,
+    ExchangePrice,
+    RecipeOutput,
+    PlanetResource,
+    ExtractionRecipe,
+)
+
 
 logger = logging.getLogger(__name__)
 
@@ -27,7 +35,6 @@ class RecipeService:
 
         Args:
             repository: Repository for database operations
-            workforce_service: Workforce service for calculating workforce costs
         """
         self.fio_client = fio_client
         self.recipe_repository = recipe_repository
@@ -51,55 +58,53 @@ class RecipeService:
         """
         return self.recipe_repository.get_recipes_for_item(item_symbol)
 
-    def get_recipe_unsafe(
-        self, recipe_symbol: str, planet_resource: Optional[PlanetResource] = None
-    ) -> Optional[Recipe]:
+    def get_recipe(self, recipe_symbol: str) -> Optional[Recipe]:
         """Get a recipe by its symbol.
 
         Args:
             symbol: Recipe symbol
-            planet_resource: Planet resource to use for extraction recipes
+
         Returns:
             Recipe if found, None otherwise
+
+        Raises:
+            RecipeNotFoundError: If the recipe is not found
+            PlanetResourceRequiredError: If the recipe is an extraction recipe and a planet resource is required (you should use get_extraction_recipe instead)
         """
-        recipe: Recipe | None = None
-        if planet_resource:
-            recipe = self.recipe_from_resource(planet_resource)
-            return Recipe.extraction_recipe_from(recipe, planet_resource)
-        else:
-            recipe = self.recipe_repository.get_recipe(recipe_symbol)
+        recipe = self.recipe_repository.get_recipe(recipe_symbol)
 
-            if not recipe:
-                raise RecipeNotFoundError(recipe_symbol)
+        if not recipe:
+            raise RecipeNotFoundError(recipe_symbol)
 
-            return recipe
+        if recipe.is_resource_extraction_recipe:
+            raise PlanetResourceRequiredError()
 
-    def get_recipe(
-        self, recipe_symbol: str, planet_resource: Optional[PlanetResource] = None
-    ) -> Optional[Recipe]:
-        """Get a recipe by its symbol.
+        return recipe
+
+    def get_extraction_recipe(
+        self, recipe_symbol: str, planet_resource: PlanetResource
+    ) -> Recipe:
+        """Get an extraction recipe by its symbol.
 
         Args:
             symbol: Recipe symbol
             planet_resource: Planet resource to use for extraction recipes
+
         Returns:
-            Recipe if found, None otherwise
+            Extraction recipe
+
+        Raises:
+            RecipeNotFoundError: If the recipe is not found
         """
+        recipe = self.recipe_repository.get_recipe(recipe_symbol)
 
-        recipe: Recipe | None = None
-        if planet_resource:
-            recipe = self.recipe_from_resource(planet_resource)
-            return Recipe.extraction_recipe_from(recipe, planet_resource)
-        else:
-            recipe = self.recipe_repository.get_recipe(recipe_symbol)
+        if not recipe:
+            raise RecipeNotFoundError(recipe_symbol)
 
-            if not recipe:
-                raise RecipeNotFoundError(recipe_symbol)
+        if not recipe.is_resource_extraction_recipe:
+            raise ValueError("Recipe is not an extraction recipe")
 
-            if recipe.is_resource_extraction_recipe and planet_resource is None:
-                raise PlanetResourceRequiredError(recipe_symbol, planet_resource)
-
-            return recipe
+        return ExtractionRecipe.extraction_recipe_from(recipe, planet_resource)
 
     def get_recipe_with_prices(
         self, symbol: str
@@ -173,7 +178,7 @@ class RecipeService:
             if not recipe:
                 raise RecipeNotFoundError("RIG:=>")
             return Recipe.extraction_recipe_from(recipe, planet_resource)
-        elif planet_resource.resource_type == "SOLID":
+        elif planet_resource.resource_type == "MINERAL":
             recipe = self.recipe_repository.get_recipe("EXT:=>")
             if not recipe:
                 raise RecipeNotFoundError("EXT:=>")
@@ -187,27 +192,28 @@ class RecipeService:
             raise ValueError(f"Unknown resource type: {planet_resource.resource_type}")
 
     def find_recipe(
-        self, item_symbol: str | None, recipe_symbol: Optional[str] = None
-    ) -> Recipe:
+        self,
+        item_symbol: str | None,
+        recipe_symbol: str | None = None,
+        planet_resource: PlanetResource | None = None,
+    ) -> Recipe | None:
         """Find a recipe for an item.
 
         Args:
             item_symbol: Symbol of the item to find a recipe for
             recipe_symbol: Optional specific recipe to use
+            planet_resource: Optional specific planet resource to use
 
         Returns:
             Recipe object
 
         Raises:
-            ValueError: If recipe not found
+            ValueError: If recipe not found by symbol and no item symbol is provided
             MultipleRecipesError: If multiple recipes are found and no specific recipe was chosen
         """
         try:
             if recipe_symbol:
-                recipe = self.recipe_repository.get_recipe(recipe_symbol)
-                if not recipe:
-                    raise RecipeNotFoundError(recipe_symbol)
-                return recipe
+                return self.get_recipe(recipe_symbol)
 
             if not item_symbol:
                 raise ValueError(
@@ -217,7 +223,7 @@ class RecipeService:
             recipes = self.recipe_repository.get_recipes_for_item(item_symbol)
 
             if not recipes:
-                raise ItemRecipeNotFoundError(item_symbol)
+                return None
 
             if len(recipes) > 1:
                 raise MultipleRecipesError(
@@ -226,6 +232,9 @@ class RecipeService:
                 )
 
             return recipes[0]
+
+        except PlanetResourceRequiredError as e:
+            return self.get_extraction_recipe(recipe_symbol, planet_resource)
         except Exception as e:
             logger.error(
                 f"Error finding recipe for {item_symbol}: {str(e)}", exc_info=True

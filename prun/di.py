@@ -61,69 +61,59 @@ class Container(containers.DeclarativeContainer):
         repository.WorkforceRepository, session=session
     )
 
-    # Services
-    item_service = providers.Factory(
-        item_service.ItemService, fio_client=fio_client, item_repository=item_repository
+    # Services with no other service dependencies
+    building_service = providers.Factory(
+        building_service.BuildingService,
+        fio_client=fio_client,
+        building_repository=building_repository,
     )
-
+    item_service = providers.Factory(
+        item_service.ItemService,
+        fio_client=fio_client,
+        item_repository=item_repository,
+    )
+    planet_service = providers.Factory(
+        planet_service.PlanetService,
+        fio_client=fio_client,
+        system_repository=system_repository,
+    )
+    recipe_service = providers.Factory(
+        recipe_service.RecipeService,
+        fio_client=fio_client,
+        recipe_repository=recipe_repository,
+    )
+    site_service = providers.Factory(
+        site_service.SiteService,
+        fio_client=fio_client,
+        site_repository=site_repository,
+    )
+    storage_service = providers.Factory(
+        storage_service.StorageService,
+        fio_client=fio_client,
+        storage_repository=storage_repository,
+    )
+    system_service = providers.Factory(
+        system_service.SystemService,
+        fio_client=fio_client,
+        system_repository=system_repository,
+    )
+    warehouse_service = providers.Factory(
+        warehouse_service.WarehouseService,
+        fio_client=fio_client,
+        warehouse_repository=warehouse_repository,
+    )
+    workforce_service = providers.Factory(
+        workforce_service.WorkforceService,
+        fio_client=fio_client,
+        workforce_repository=workforce_repository,
+    )
+    # Services with other service dependencies
     exchange_service = providers.Factory(
         exchange_service.ExchangeService,
         fio_client=fio_client,
         exchange_repository=exchange_repository,
         item_service=item_service,
     )
-
-    recipe_service = providers.Factory(
-        recipe_service.RecipeService,
-        fio_client=fio_client,
-        recipe_repository=recipe_repository,
-    )
-
-    building_service = providers.Factory(
-        building_service.BuildingService,
-        fio_client=fio_client,
-        building_repository=building_repository,
-        exchange_service=exchange_service,
-        recipe_service=recipe_service,
-    )
-
-    workforce_service = providers.Factory(
-        workforce_service.WorkforceService,
-        fio_client=fio_client,
-        workforce_repository=workforce_repository,
-        building_service=building_service,
-        exchange_service=exchange_service,
-    )
-
-    planet_service = providers.Factory(
-        planet_service.PlanetService,
-        fio_client=fio_client,
-        system_repository=system_repository,
-        building_service=building_service,
-    )
-
-    site_service = providers.Factory(
-        site_service.SiteService, fio_client=fio_client, site_repository=site_repository
-    )
-
-    storage_service = providers.Factory(
-        storage_service.StorageService,
-        fio_client=fio_client,
-        storage_repository=storage_repository,
-    )
-
-    system_service = providers.Factory(
-        system_service.SystemService,
-        fio_client=fio_client,
-        system_repository=system_repository,
-    )
-
-    warehouse_service = providers.Factory(
-        warehouse_service.WarehouseService,
-        fio_client=fio_client,
-        warehouse_repository=warehouse_repository,
-    )
-
     cost_service = providers.Factory(
         cost_service.CostService,
         building_service=building_service,

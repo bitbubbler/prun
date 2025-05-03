@@ -123,10 +123,23 @@ class Recipe(SQLModel, table=True):
         """Get the recipe time_ms in hours, as a float."""
         return self.time_ms / 3600000.0
 
-    @staticmethod
+
+class ExtractionRecipe(BaseModel):
+    """Model for extraction recipes in Prosperous Universe. (not a database table)"""
+
+    symbol: str
+    building_symbol: str
+    time_ms: int
+    inputs: List[RecipeInput]
+    outputs: List[RecipeOutput]
+    building: "Building"
+
+    is_resource_extraction_recipe: bool = True
+
+    @classmethod
     def extraction_recipe_from(
-        recipe: "Recipe", planet_resource: "PlanetResource"
-    ) -> "Recipe":
+        cls, recipe: "Recipe", planet_resource: "PlanetResource"
+    ) -> "ExtractionRecipe":
         """Create an extraction recipe from a normal recipe."""
 
         if not recipe.is_resource_extraction_recipe:
@@ -150,7 +163,7 @@ class Recipe(SQLModel, table=True):
             recipe.hours_decimal * (remainder_units_per_run / fractional_units_per_run)
         )
 
-        return Recipe(
+        return cls(
             symbol=recipe.symbol,
             building_symbol=recipe.building_symbol,
             time_ms=int(extraction_time_hours_decimal * 3600000),
@@ -161,7 +174,13 @@ class Recipe(SQLModel, table=True):
                     quantity=extraction_units_per_run,
                 )
             ],
+            building=recipe.building,
         )
+
+    @property
+    def hours_decimal(self) -> float:
+        """Get the recipe time_ms in hours, as a float."""
+        return self.time_ms / 3600000.0
 
 
 class Building(SQLModel, table=True):

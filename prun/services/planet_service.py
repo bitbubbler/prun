@@ -13,7 +13,6 @@ from prun.models import (
     PlanetProductionFee,
     PlanetResource,
 )
-from prun.services.building_service import BuildingService
 
 logger = logging.getLogger(__name__)
 
@@ -25,7 +24,6 @@ class PlanetService:
         self,
         fio_client: FIOClientInterface,
         system_repository: SystemRepositoryInterface,
-        building_service: BuildingService,
     ):
         """Initialize the service.
 
@@ -34,7 +32,6 @@ class PlanetService:
         """
         self.fio_client = fio_client
         self.system_repository = system_repository
-        self.building_service = building_service
 
     def get_planet(self, natural_id: str) -> Planet | None:
         """Get a planet by natural ID."""

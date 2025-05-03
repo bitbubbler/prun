@@ -1,13 +1,8 @@
-from pydantic import BaseModel
 from typing import List, Optional
 
 from fio import FIOClientInterface
-from prun.interface import (
-    WorkforceRepositoryInterface,
-)
-from prun.models import Recipe, WorkforceNeed
-from prun.services.building_service import BuildingService
-from prun.services.exchange_service import ExchangeService
+from prun.interface import WorkforceRepositoryInterface
+from prun.models import WorkforceNeed
 
 
 class WorkforceService:
@@ -17,8 +12,6 @@ class WorkforceService:
         self,
         fio_client: FIOClientInterface,
         workforce_repository: WorkforceRepositoryInterface,
-        building_service: BuildingService,
-        exchange_service: ExchangeService,
     ):
         """Initialize the service.
 
@@ -27,8 +20,6 @@ class WorkforceService:
         """
         self.fio_client = fio_client
         self.workforce_repository = workforce_repository
-        self.building_service = building_service
-        self.exchange_service = exchange_service
 
     def get_workforce_needs(
         self, workforce_type: Optional[str] = None
@@ -77,15 +68,3 @@ class WorkforceService:
         """
         # Calculate the time needed as a fraction of a day
         return time_ms / (24 * 60 * 60 * 1000)  # Convert ms to days
-
-
-class CalculatedItemNeed(BaseModel):
-    item: str
-    daily_amount: float
-    daily_cost: float
-
-
-class CalculatedWorkforceNeed(BaseModel):
-    type: str
-    daily_amount: float
-    daily_cost: float

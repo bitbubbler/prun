@@ -122,7 +122,9 @@ class CostService:
                 buliding_cost.repair_amount(days_since_last_repair) * price
             )
 
-        return total_building_repair_cost / days_since_last_repair
+        daily_building_repair_cost = total_building_repair_cost / days_since_last_repair
+
+        return daily_building_repair_cost
 
     def calculate_recipe_cost(
         self, recipe: Recipe, planet: Planet, get_buy_price: Callable[[str], float]
@@ -168,7 +170,7 @@ class CostService:
             if planet_building:
                 daily_repair_cost = self.calculate_daily_building_repair_cost(
                     planet_building=planet_building,
-                    days_since_last_repair=30,
+                    days_since_last_repair=90,
                     get_buy_price=get_buy_price,
                 )
                 recipe_repair_cost = daily_repair_cost * (

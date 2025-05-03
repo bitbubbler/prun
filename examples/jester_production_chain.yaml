@@ -1,0 +1,20 @@
+name: "CorporateJester"
+planets:
+  - natural_id: "ZV-759c"
+    recipes:
+      - building_symbol: "GF"
+        recipe_symbol: "GF:1xNA-2xSIO=>10xGL"
+
+  - natural_id: "LS-300c"
+    recipes:
+      - building_symbol: "CHP"
+        recipe_symbol: "CHP:1xH2O-3xHAL=>1xCL-2xNA"
+
+  - natural_id: "WU-070a"
+    recipes:
+      - building_symbol: "EXT"
+        recipe_symbol: "EXT:=>"
+        item_symbol: "SIO"
+
+      - building_symbol: "GF"
+        recipe_symbol: "GF:1xNA-2xSIO=>10xGL"

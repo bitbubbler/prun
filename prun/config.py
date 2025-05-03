@@ -5,24 +5,6 @@ import yaml
 from pydantic import BaseModel, Field
 
 
-# Liquidity configuration
-LIQUIDITY_CONFIG = {
-    "safety_buffer_percent": 0.1,  # 10% of balance
-    "min_safety_buffer": 1000,  # Minimum 1000 A$
-    "variance_tolerance": 0.05,  # 5% variance allowed
-    "workforce_rates": {
-        "pioneer": 30,  # A$/hour
-        "settler": 40,  # A$/hour
-        "technician": 50,  # A$/hour
-        "engineer": 60,  # A$/hour
-        "scientist": 70,  # A$/hour
-    },
-    "power_rate": 5,  # A$/kWh
-    "power_usage": 0.5,  # kW per building
-    "wear_rate": 0.1,  # A$/tick
-}
-
-
 class ProductionMaterialPrice(BaseModel):
     """Production configuration for material prices."""
 
@@ -33,36 +15,41 @@ class ProductionMaterialPrice(BaseModel):
 class ProductionRecipe(BaseModel):
     """A single step in a production chain."""
 
+    building_symbol: str = Field(..., description="The symbol of the building to use")
     recipe_symbol: str = Field(..., description="The symbol of the recipe to use")
     item_symbol: Optional[str] = Field(
         default=None,
         description="The symbol of the item to produce. Required for resource extraction recipes. Ignored for all other recipes",
     )
-    planet_natural_id: Optional[str] = Field(
-        default=None, description="The planet where this recipe will be executed"
-    )
 
 
-class ProductionChain(BaseModel):
-    """A complete production chain configuration."""
+class Planet(BaseModel):
+    """A single planet configuration."""
 
-    name: str = Field(..., description="Name of the production chain")
+    natural_id: str = Field(..., description="The natural ID of the planet")
     recipes: List[ProductionRecipe] = Field(
         ..., description="List of production recipes in order"
     )
+
+
+class Empire(BaseModel):
+    """A complete empire configuration."""
+
+    name: str = Field(..., description="Name of the empire")
+    planets: List[Planet] = Field(..., description="List of planets in the empire")
     material_buy_prices: Optional[Dict[str, float]] = Field(
         default=None, description="Optional material buy prices"
     )
 
     @classmethod
-    def from_yaml(cls, yaml_path: str | Path) -> "ProductionChain":
-        """Load a production chain configuration from a YAML file.
+    def from_yaml(cls, yaml_path: str | Path) -> "Empire":
+        """Load a empire configuration from a YAML file.
 
         Args:
             yaml_path: Path to the YAML configuration file
 
         Returns:
-            ProductionChain: The loaded production chain configuration
+            Empire: The loaded empire configuration
 
         Raises:
             FileNotFoundError: If the YAML file doesn't exist

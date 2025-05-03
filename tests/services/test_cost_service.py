@@ -96,6 +96,23 @@ def bmp_building():
         engineers=0,
         scientists=0,
         area_cost=12,
+        building_costs=[
+            BuildingCost(
+                building_symbol="BMP",
+                item_symbol="BDE",
+                amount=2,
+            ),
+            BuildingCost(
+                building_symbol="BMP",
+                item_symbol="BBH",
+                amount=4,
+            ),
+            BuildingCost(
+                building_symbol="BMP",
+                item_symbol="BSE",
+                amount=6,
+            ),
+        ],
     )
 
 
@@ -178,25 +195,30 @@ def ove_recipe():
 
 class TestCostService:
     def test_calculate_daily_building_repair_cost(
-        self, cost_service, bmp_building, sample_planet
+        self, cost_service: CostService, bmp_building: Building, sample_planet: Planet
     ):
         # Setup
-        building_cost = BuildingCost(
-            building_symbol=bmp_building.symbol,
-            item_symbol="MCG",
-            amount=48,  # 12 area cost * 4 for surface planet
-        )
         planet_building = PlanetBuilding(
             building=bmp_building,
             planet=sample_planet,
-            building_costs=[building_cost],
+            building_costs=[
+                BuildingCost(
+                    building_symbol=bmp_building.symbol,
+                    item_symbol="MCG",
+                    amount=48,
+                ),
+                *bmp_building.building_costs,
+            ],
         )
-        days_since_repair = 30
+        days_since_repair = 90
 
         # Real market prices
         def get_buy_price(symbol):
             prices = {
-                "MCG": 150.0,
+                "MCG": 35.90,
+                "BDE": 2350.00,
+                "BBH": 2530.00,
+                "BSE": 1650.00,
             }
             return prices.get(symbol, 0)
 
@@ -207,11 +229,7 @@ class TestCostService:
             get_buy_price=get_buy_price,
         )
 
-        # Expected calculation:
-        # MCG amount = 48 (12 area cost * 4 for surface)
-        # repair_amount = 48 * (30/180) = 8
-        # daily_cost = (8 * 150) / 30 = 40.0
-        expected_daily_cost = 40.0
+        expected_daily_cost = 146.91
 
         # Assert
         assert round(daily_cost, 2) == expected_daily_cost
@@ -234,7 +252,7 @@ class TestCostService:
         planet_building = PlanetBuilding(
             building=bmp_building,
             planet=sample_planet,
-            building_costs=[building_cost],
+            building_costs=[*bmp_building.building_costs, building_cost],
         )
         cost_service.planet_service.get_planet_building.return_value = planet_building
 
@@ -249,6 +267,9 @@ class TestCostService:
                 "PWO": 40.0,
                 "COF": 35.0,
                 "DW": 15.0,
+                "BDE": 2300.00,
+                "BBH": 2500.00,
+                "BSE": 1650.00,
             }
             return prices.get(symbol, 0)
 
@@ -259,27 +280,14 @@ class TestCostService:
             get_buy_price=get_buy_price,
         )
 
-        # Expected calculations:
-        # Input costs: (100 * 80.0) + (25 * 120.0) = 8000 + 3000 = 11000.0
-
-        # Workforce costs for 14.4 hours (0.6 days):
-        # DB values are per 100 workers per day, and we have 100 pioneers
-        # - RAT: 4.0 * 0.6 = 2.4 units * 25.0 = 60.0
-        # - DW:  4.0 * 0.6 = 2.4 units * 15.0 = 36.0
-        # - OVE: 0.5 * 0.6 = 0.3 units * 30.0 = 9.0
-        # - COF: 0.5 * 0.6 = 0.3 units * 35.0 = 10.5
-        # - PWO: 0.2 * 0.6 = 0.12 units * 40.0 = 4.8
-        # Total workforce = 120.3
-
-        # Repair costs: (48 * (1/6) * 150.0) * (14.4/24) = 24.0
-        expected_total = 11144.3  # 11000 + 120.3 + 24.0
+        expected_total = 11225.97
 
         # Assert
         assert isinstance(result, CalculatedRecipeCost)
         assert len(result.input_costs.inputs) == 2
         assert round(result.input_costs.total, 2) == 11000.0
         assert round(result.workforce_cost.total, 2) == 120.3
-        assert round(result.repair_cost, 2) == 24.0
+        assert round(result.repair_cost, 2) == 105.67
         assert round(result.total, 2) == expected_total
 
     def test_calculate_cogm(
