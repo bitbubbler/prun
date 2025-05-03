@@ -7,7 +7,7 @@ from prun.errors import (
     MultipleRecipesError,
     RecipeNotFoundError,
     PlanetResourceRequiredError,
-    BuildingNotFoundError,
+    RecipeSymbolRequiredError,
 )
 from prun.interface import RecipeRepositoryInterface
 from prun.models import (
@@ -83,7 +83,7 @@ class RecipeService:
 
     def get_extraction_recipe(
         self, recipe_symbol: str, planet_resource: PlanetResource
-    ) -> Recipe:
+    ) -> ExtractionRecipe:
         """Get an extraction recipe by its symbol.
 
         Args:
@@ -171,23 +171,23 @@ class RecipeService:
             logger.error(f"Error syncing recipes: {str(e)}")
             raise
 
-    def recipe_from_resource(self, planet_resource: PlanetResource) -> Recipe:
+    def recipe_from_resource(self, planet_resource: PlanetResource) -> ExtractionRecipe:
         """Get a recipe for a planet resource."""
         if planet_resource.resource_type == "LIQUID":
             recipe = self.recipe_repository.get_recipe("RIG:=>")
             if not recipe:
                 raise RecipeNotFoundError("RIG:=>")
-            return Recipe.extraction_recipe_from(recipe, planet_resource)
+            return ExtractionRecipe.extraction_recipe_from(recipe, planet_resource)
         elif planet_resource.resource_type == "MINERAL":
             recipe = self.recipe_repository.get_recipe("EXT:=>")
             if not recipe:
                 raise RecipeNotFoundError("EXT:=>")
-            return Recipe.extraction_recipe_from(recipe, planet_resource)
+            return ExtractionRecipe.extraction_recipe_from(recipe, planet_resource)
         elif planet_resource.resource_type == "GASEOUS":
             recipe = self.recipe_repository.get_recipe("COL:=>")
             if not recipe:
                 raise RecipeNotFoundError("COL:=>")
-            return Recipe.extraction_recipe_from(recipe, planet_resource)
+            return ExtractionRecipe.extraction_recipe_from(recipe, planet_resource)
         else:
             raise ValueError(f"Unknown resource type: {planet_resource.resource_type}")
 
@@ -196,7 +196,7 @@ class RecipeService:
         item_symbol: str | None,
         recipe_symbol: str | None = None,
         planet_resource: PlanetResource | None = None,
-    ) -> Recipe | None:
+    ) -> Recipe | ExtractionRecipe | None:
         """Find a recipe for an item.
 
         Args:
@@ -236,6 +236,8 @@ class RecipeService:
         except PlanetResourceRequiredError as e:
             if not planet_resource:
                 raise PlanetResourceRequiredError()
+            if not recipe_symbol:
+                raise RecipeSymbolRequiredError()
             return self.get_extraction_recipe(recipe_symbol, planet_resource)
         except Exception as e:
             logger.error(

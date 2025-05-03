@@ -1,8 +1,8 @@
-# mypy: ignore-errors
-import click
 import json
 import logging
 import traceback
+
+import click
 from rich.console import Console
 from rich.table import Table
 from rich.panel import Panel
@@ -11,28 +11,27 @@ from yaml import YAMLError
 from prun.config import Empire, EmpirePlanet
 from prun.di import container
 from prun.errors import (
-    RecipeNotFoundError,
     MultipleRecipesError,
-    PlanetResourceRequiredError,
+    RecipeNotFoundError,
+    RecipeSymbolRequiredError,
 )
-from prun.models import Planet, PlanetResource, Recipe
 from prun.services.cost_service import CalculatedRecipeOutputCOGM, CalculatedEmpireCOGM
 
 
-def setup_logging():
+def setup_logging() -> None:
     """Configure logging for the application."""
     logging.basicConfig(
         level=logging.FATAL,
         format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
     )
     # Set exc_info=True for all error logs
-    logging.getLogger().error = lambda msg, *args, **kwargs: logging.getLogger()._error(
+    logging.getLogger().error = lambda msg, *args, **kwargs: logging.getLogger()._error(  # type: ignore
         msg, *args, exc_info=True, **kwargs
     )
 
 
 @click.group()
-def cli():
+def cli() -> None:
     """PrUn COGM - Production Economics Tracker"""
     setup_logging()
 
@@ -41,7 +40,7 @@ def cli():
 @click.option("--username", "-u", required=True, help="FIO API username")
 @click.option("--password", "-p", required=False, help="FIO API password")
 @click.option("--apikey", "-k", required=False, help="FIO API password")
-def sync(username: str, password: str, apikey: str | None):
+def sync(username: str, password: str, apikey: str | None) -> None:
     """Sync data from the FIO API"""
     logger = logging.getLogger(__name__)
     fio_client = container.fio_client()
@@ -120,21 +119,22 @@ def cogm(
     planet_natural_id: str,
     recipe_symbol: str | None,
     json: bool,
-):
+) -> None:
     """Calculate Cost of Goods Manufactured (COGM) for an item.
 
     Example:
     - cogm CL -p LS-300c
     - cogm RAT -p 'KW-688c' -r 'FP:1xALG-1xMAI-1xNUT=>10xRAT'
     """
-    planet: EmpirePlanet | None = None
-    console = Console()
     stderr_console = Console(stderr=True)
 
     def get_buy_price(item_symbol: str) -> float:
-        return container.exchange_service().get_buy_price(
+        exchange_price = container.exchange_service().get_buy_price(
             exchange_code="AI1", item_symbol=item_symbol
         )
+        if not exchange_price:
+            raise ValueError(f"No exchange price found for {item_symbol}")
+        return exchange_price
 
     try:
         cost_service = container.cost_service()
@@ -147,23 +147,23 @@ def cogm(
         if not planet:
             raise ValueError("Planet is required")
 
-        # try to find the planet resource
-        try:
-            recipe = recipe_service.find_recipe(
-                item_symbol=item_symbol,
-                recipe_symbol=recipe_symbol,
-                planet_resource=next(
-                    (
-                        resource
-                        for resource in planet.resources
-                        if resource.item.symbol == item_symbol
-                    ),
-                    None,
+        recipe = recipe_service.find_recipe(
+            item_symbol=item_symbol,
+            recipe_symbol=recipe_symbol,
+            planet_resource=next(
+                (
+                    resource
+                    for resource in planet.resources
+                    if resource.item.symbol == item_symbol
                 ),
-            )
-        except PlanetResourceRequiredError as e:
-            stderr_console.print(f"[red]Error:[/red] {str(e)}")
-            exit(1)
+                None,
+            ),
+        )
+
+        if not recipe:
+            if not recipe_symbol:
+                raise RecipeSymbolRequiredError()
+            raise RecipeNotFoundError(recipe_symbol)
 
         result: CalculatedRecipeOutputCOGM = cost_service.calculate_cogm(
             recipe=recipe,
@@ -180,7 +180,7 @@ def cogm(
         if json:
             print(serialize_exception(e))
         else:
-            print_multiple_recipes_error(e, planet, item_symbol, get_buy_price)
+            print_multiple_recipes_error(e)
         exit(1)
 
     except ValueError as e:
@@ -199,7 +199,7 @@ def cogm(
     is_flag=True,
     help="Output in JSON format",
 )
-def analyze_empire(config_file: str, json: bool):
+def analyze_empire(config_file: str, json: bool) -> None:
     """Analyze an empire defined in a YAML configuration file.
 
     Example: analyze-empire empire.yaml
@@ -246,6 +246,10 @@ def analyze_empire(config_file: str, json: bool):
         exchange_price = exchange_service.get_buy_price(
             exchange_code="AI1", item_symbol=item_symbol
         )
+
+        if not exchange_price:
+            raise ValueError(f"No exchange price found for {item_symbol}")
+
         return exchange_price
 
     empire_cogm = cost_service.calculate_empire_cogm(
@@ -262,7 +266,7 @@ def analyze_empire(config_file: str, json: bool):
 def print_recipe_cogm_analysis(
     item_symbol: str,
     cogm: CalculatedRecipeOutputCOGM,
-):
+) -> None:
     """Print COGM analysis in a formatted table.
 
     Args:
@@ -306,7 +310,7 @@ def print_recipe_cogm_analysis(
 def print_empire_cogm_analysis(
     empire: Empire,
     empire_cogm: CalculatedEmpireCOGM,
-):
+) -> None:
     # Print the empire name
     console = Console()
     console.print(Panel(f"Analyzing Empire: {empire.name}", style="bold blue"))
@@ -344,7 +348,7 @@ def print_empire_cogm_analysis(
 
 def print_multiple_recipes_error(
     e: MultipleRecipesError,
-):
+) -> None:
     """Print error and available recipes when multiple recipes are found.
 
     Args:

@@ -16,7 +16,7 @@ class MultipleRecipesError(ValueError):
 class ItemRecipeNotFoundError(ValueError):
     """Raised when an item recipe is not found."""
 
-    def __init__(self, item_symbol: str, recipe_symbol: Optional[str] = None):
+    def __init__(self, item_symbol: str, recipe_symbol: Optional[str] = None) -> None:
         message = f"Item {item_symbol} recipe {recipe_symbol} not found"
         super().__init__(message)
 
@@ -24,44 +24,42 @@ class ItemRecipeNotFoundError(ValueError):
 class RecipeNotFoundError(ValueError):
     """Raised when a recipe is not found."""
 
-    def __init__(self, recipe_symbol: str):
+    def __init__(self, recipe_symbol: str) -> None:
         super().__init__(f"Recipe {recipe_symbol} not found")
 
 
 class PlanetResourceNotFoundError(ValueError):
     """Raised when a planet resource is not found."""
 
-    def __init__(self, item_symbol: str, planet_natural_id: str):
+    def __init__(self, item_symbol: str, planet_natural_id: str) -> None:
         super().__init__(
             f"Planet resource {item_symbol} not found on planet {planet_natural_id}"
-        )
-
-
-class PlanetResourceRequiredError(ValueError):
-    """Raised when a planet resource is required for an extraction recipe."""
-
-    def __init__(self, recipe_symbol: str, planet_resource: Optional[PlanetResource]):
-        super().__init__(
-            f"Planet resource required for recipe {recipe_symbol}. Planet resource: {planet_resource}"
         )
 
 
 class BuildingNotFoundError(ValueError):
     """Raised when a building is not found."""
 
-    def __init__(self, building_symbol: str):
+    def __init__(self, building_symbol: str) -> None:
         super().__init__(f"Building {building_symbol} not found")
 
 
 class PlanetNotFoundError(ValueError):
     """Raised when a planet is not found."""
 
-    def __init__(self, natural_id: str):
+    def __init__(self, natural_id: str) -> None:
         super().__init__(f"Planet {natural_id} not found")
 
 
 class PlanetResourceRequiredError(ValueError):
     """Raised when a planet resource is required."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__("A planet resource is required to calculate the COGM")
+
+
+class RecipeSymbolRequiredError(ValueError):
+    """Raised when a recipe symbol is required."""
+
+    def __init__(self) -> None:
+        super().__init__("A recipe symbol is required to find an extraction recipe")

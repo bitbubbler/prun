@@ -6,7 +6,7 @@ from pydantic import BaseModel, Field
 
 from prun.config import Empire, EmpireProductionRecipe
 from prun.errors import PlanetNotFoundError, RecipeNotFoundError
-from prun.models import Planet, PlanetBuilding, PlanetResource, Recipe
+from prun.models import ExtractionRecipe, Planet, PlanetBuilding, PlanetResource, Recipe
 from prun.services.building_service import BuildingService
 from prun.services.exchange_service import ExchangeService
 from prun.services.planet_service import PlanetService
@@ -116,7 +116,7 @@ class CostService:
 
     def calculate_cogm(
         self,
-        recipe: Recipe,
+        recipe: Recipe | ExtractionRecipe,
         planet: Planet,
         item_symbol: str,
         get_buy_price: Callable[[str], float],
@@ -201,13 +201,7 @@ class CostService:
         cogm_price_cache: dict[str, float] = {}
 
         # get all planets and their recipes
-        planet_recipes: list[tuple[Planet, list[EmpireProductionRecipe]]] = [
-            (
-                self.planet_service.get_planet(planet.natural_id),
-                planet.recipes,
-            )
-            for planet in empire.planets
-        ]
+        planet_recipes = self.planet_recipes(empire)
 
         # we do two passes
         # the first pass fills the cogm cache
@@ -285,7 +279,10 @@ class CostService:
         )
 
     def calculate_recipe_cost(
-        self, recipe: Recipe, planet: Planet, get_buy_price: Callable[[str], float]
+        self,
+        recipe: Recipe | ExtractionRecipe,
+        planet: Planet,
+        get_buy_price: Callable[[str], float],
     ) -> CalculatedRecipeCost:
         """Calculate the cost of a recipe.
 
@@ -353,7 +350,10 @@ class CostService:
             raise
 
     def calculate_workforce_cost_for_recipe(
-        self, recipe: Recipe, planet: Planet, get_buy_price: Callable[[str], float]
+        self,
+        recipe: Recipe | ExtractionRecipe,
+        planet: Planet,
+        get_buy_price: Callable[[str], float],
     ) -> CalculatedWorkforceCosts:
         """Calculate the workforce cost for a recipe.
 
@@ -444,3 +444,21 @@ class CostService:
         ]
 
         return total_input_cost, total_workforce_cost, scaled_input_costs
+
+    def planet_recipes(
+        self, empire: Empire
+    ) -> list[tuple[Planet, list[EmpireProductionRecipe]]]:
+        planet_recipes: list[tuple[Planet, list[EmpireProductionRecipe]]] = []
+        for empire_planet in empire.planets:
+            planet = self.planet_service.get_planet(empire_planet.natural_id)
+            if not planet:
+                raise PlanetNotFoundError(empire_planet.natural_id)
+
+            planet_recipes.append(
+                (
+                    planet,
+                    empire_planet.recipes,
+                )
+            )
+
+        return planet_recipes
