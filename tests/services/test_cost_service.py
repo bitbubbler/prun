@@ -563,7 +563,7 @@ class TestCostService:
             planet=planet,
             building=building,
             workforce_needs=pioneer_needs,
-            workforce_days=14.4 / 24,  # 14.4 hours in days
+            workforce_days=recipe.hours_decimal / 24,
             building_costs=building.building_costs,
             market_prices={
                 "PE": 80.0,

@@ -67,6 +67,11 @@ class Container(containers.DeclarativeContainer):
         fio_client=fio_client,
         building_repository=building_repository,
     )
+    exchange_service = providers.Factory(
+        exchange_service.ExchangeService,
+        fio_client=fio_client,
+        exchange_repository=exchange_repository,
+    )
     item_service = providers.Factory(
         item_service.ItemService,
         fio_client=fio_client,
@@ -108,12 +113,6 @@ class Container(containers.DeclarativeContainer):
         workforce_repository=workforce_repository,
     )
     # Services with other service dependencies
-    exchange_service = providers.Factory(
-        exchange_service.ExchangeService,
-        fio_client=fio_client,
-        exchange_repository=exchange_repository,
-        item_service=item_service,
-    )
     cost_service = providers.Factory(
         cost_service.CostService,
         building_service=building_service,

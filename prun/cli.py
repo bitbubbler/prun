@@ -155,12 +155,6 @@ def print_cogm_analysis(result: CalculatedCOGM, item_symbol: str):
     help="Planet ID (required)",
 )
 @click.option(
-    "--building",
-    "-b",
-    "building_symbol",
-    help="Building symbol (required if item_symbol is a planet resource)",
-)
-@click.option(
     "--recipe",
     "-r",
     "recipe_symbol",
@@ -169,12 +163,13 @@ def print_cogm_analysis(result: CalculatedCOGM, item_symbol: str):
 def cogm(
     item_symbol: str,
     planet_natural_id: str,
-    building_symbol: str | None,
     recipe_symbol: str | None,
 ):
     """Calculate Cost of Goods Manufactured (COGM) for an item.
 
-    Example: cogm RAT -q 10 -r 'FP:1xALG-1xMAI-1xNUT=>10xRAT'
+    Example:
+    - cogm CL -p LS-300c
+    - cogm RAT -p 'KW-688c' -r 'FP:1xALG-1xMAI-1xNUT=>10xRAT'
     """
     planet: Planet | None = None
     planet_resource: PlanetResource | None = None
@@ -188,30 +183,26 @@ def cogm(
         cost_service = container.cost_service()
         planet_service = container.planet_service()
         recipe_service = container.recipe_service()
-        building_service = container.building_service()
 
         # try to find the planet, it's required
         planet = planet_service.get_planet(planet_natural_id)
-        # also try to find the building here, it's optional though
-        building = building_service.get_building(building_symbol)
 
         if not planet:
             raise ValueError("Planet is required")
 
         # try to find the planet resource
-        planet_resource = next(
-            (
-                resource
-                for resource in planet.resources
-                if resource.item.symbol == item_symbol
-            ),
-            None,
-        )
         try:
             recipe = recipe_service.find_recipe(
                 item_symbol=item_symbol,
                 recipe_symbol=recipe_symbol,
-                planet_resource=planet_resource,
+                planet_resource=next(
+                    (
+                        resource
+                        for resource in planet.resources
+                        if resource.item.symbol == item_symbol
+                    ),
+                    None,
+                ),
             )
         except PlanetResourceRequiredError as e:
             console.print(f"[red]Error:[/red] {str(e)}")

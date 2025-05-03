@@ -5,7 +5,6 @@ from typing import List, Optional
 from fio import FIOClientInterface
 from prun.interface import ExchangeRepositoryInterface
 from prun.models import ExchangePrice, ComexExchange
-from prun.services.item_service import ItemService
 
 logger = logging.getLogger(__name__)
 
@@ -17,7 +16,6 @@ class ExchangeService:
         self,
         fio_client: FIOClientInterface,
         exchange_repository: ExchangeRepositoryInterface,
-        item_service: ItemService,
     ):
         """Initialize the service.
 
@@ -27,7 +25,6 @@ class ExchangeService:
         """
         self.fio_client = fio_client
         self.exchange_repository = exchange_repository
-        self.item_service = item_service
 
     def get_all_comex_exchanges(self) -> List[ComexExchange]:
         """Get all comex exchanges from the database."""

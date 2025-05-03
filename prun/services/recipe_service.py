@@ -234,6 +234,8 @@ class RecipeService:
             return recipes[0]
 
         except PlanetResourceRequiredError as e:
+            if not planet_resource:
+                raise PlanetResourceRequiredError()
             return self.get_extraction_recipe(recipe_symbol, planet_resource)
         except Exception as e:
             logger.error(
