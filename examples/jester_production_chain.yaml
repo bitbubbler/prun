@@ -18,3 +18,6 @@ planets:
 
       - building_symbol: "GF"
         recipe_symbol: "GF:1xNA-2xSIO=>10xGL"
+
+      - building_symbol: "GF"
+        recipe_symbol: "GF:10xGL-15xPG=>10xRG"

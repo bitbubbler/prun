@@ -417,11 +417,6 @@ class WorkforceNeed(SQLModel, table=True):
     # Relationships
     item: Item = Relationship(back_populates="workforce_needs")
 
-    @property
-    def amount_per_worker_per_day(self) -> float:
-        """Get the amount of the item needed per worker per day. FIO gives us the amount per 100 workers per day."""
-        return self.amount_per_100_workers_per_day / 100
-
 
 class ComexExchange(SQLModel, table=True):
     """Database model for commodity exchanges."""

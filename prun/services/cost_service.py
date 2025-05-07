@@ -1,5 +1,4 @@
 import logging
-import math
 from typing import List, Optional, Callable
 
 from pydantic import BaseModel, Field
@@ -12,6 +11,7 @@ from prun.services.exchange_service import ExchangeService
 from prun.services.planet_service import PlanetService
 from prun.services.recipe_service import RecipeService
 from prun.services.workforce_service import WorkforceService
+from prun.util import round_half_up
 
 logger = logging.getLogger(__name__)
 
@@ -49,6 +49,15 @@ class CalculatedWorkforceCosts(BaseModel):
     total: float = Field(
         description="The total cost of all consumables for the workforce"
     )
+
+
+class CalculatedBuildingRepairCosts(BaseModel):
+    """Calculated building repair cost."""
+
+    inputs: List[CalculatedInput] = Field(
+        description="The individual input costs for the building"
+    )
+    total: float = Field(description="The total cost of all inputs for the building")
 
 
 class CalculatedRecipeCost(BaseModel):
@@ -125,50 +134,21 @@ class CostService:
         recipe_cost = self.calculate_recipe_cost(
             recipe=recipe, planet=planet, get_buy_price=get_buy_price
         )
-        recipe_output = next(
-            output for output in recipe.outputs if output.item_symbol == item_symbol
+        print(f"recipe_cost.total: {recipe_cost.total}")
+        recipe_output_cogm = self.calculate_recipe_output_cogm(
+            recipe=recipe,
+            recipe_cost=recipe_cost,
+            item_symbol=item_symbol,
         )
         # Calculate scaled recipe cost
-        return CalculatedRecipeOutputCOGM(
-            recipe_symbol=recipe.symbol,
-            item_symbol=item_symbol,
-            building_symbol=recipe.building_symbol,
-            time_ms=recipe.time_ms,
-            input_costs=CalculatedInputCosts(
-                inputs=[
-                    CalculatedInput(
-                        item_symbol=input.item_symbol,
-                        quantity=input.quantity / recipe_output.quantity,
-                        price=input.price,
-                        total=input.total / recipe_output.quantity,
-                    )
-                    for input in recipe_cost.input_costs.inputs
-                ],
-                total=recipe_cost.input_costs.total / recipe_output.quantity,
-            ),
-            workforce_cost=CalculatedWorkforceCosts(
-                inputs=[
-                    CalculatedWorkforceInput(
-                        workforce_type=workforce_input_cost.workforce_type,
-                        item_symbol=workforce_input_cost.item_symbol,
-                        quantity=workforce_input_cost.quantity / recipe_output.quantity,
-                        price=workforce_input_cost.price,
-                        total=workforce_input_cost.total / recipe_output.quantity,
-                    )
-                    for workforce_input_cost in recipe_cost.workforce_cost.inputs
-                ],
-                total=recipe_cost.workforce_cost.total / recipe_output.quantity,
-            ),
-            repair_cost=recipe_cost.repair_cost / recipe_output.quantity,
-            total_cost=recipe_cost.total / recipe_output.quantity,
-        )
+        return recipe_output_cogm
 
-    def calculate_daily_building_repair_cost(
+    def calculate_total_building_repair_cost(
         self,
         planet_building: PlanetBuilding,
         days_since_last_repair: int,
         get_buy_price: Callable[[str], float],
-    ) -> float:
+    ) -> CalculatedBuildingRepairCosts:
         """
         Calculate the daily repair cost of a building.
 
@@ -179,17 +159,24 @@ class CostService:
         Returns:
             The daily repair cost of the building
         """
-        total_building_repair_cost: float = 0
+        inputs: List[CalculatedInput] = []
 
         for buliding_cost in planet_building.building_costs:
+            quantity = buliding_cost.repair_amount(days_since_last_repair)
             price = get_buy_price(buliding_cost.item_symbol)
-            total_building_repair_cost += (
-                buliding_cost.repair_amount(days_since_last_repair) * price
+            inputs.append(
+                CalculatedInput(
+                    item_symbol=buliding_cost.item_symbol,
+                    quantity=quantity,
+                    price=price,
+                    total=round(quantity * price, 2),
+                )
             )
 
-        daily_building_repair_cost = total_building_repair_cost / days_since_last_repair
-
-        return daily_building_repair_cost
+        return CalculatedBuildingRepairCosts(
+            inputs=inputs,
+            total=round(sum(input.total for input in inputs), 2),
+        )
 
     def calculate_empire_cogm(
         self,
@@ -201,7 +188,7 @@ class CostService:
         cogm_price_cache: dict[str, float] = {}
 
         # get all planets and their recipes
-        planet_recipes = self.planet_recipes(empire)
+        planet_recipes = self.get_planet_recipes(empire)
 
         # we do two passes
         # the first pass fills the cogm cache
@@ -294,7 +281,6 @@ class CostService:
             Dictionary containing cost details
         """
         try:
-            total_cost: float = 0
             inputs: List[CalculatedInput] = []
 
             for input in recipe.inputs:
@@ -302,7 +288,6 @@ class CostService:
                 if not price:
                     raise ValueError(f"No price found for item {input.item_symbol}")
                 input_cost = input.quantity * price
-                total_cost += input_cost
                 inputs.append(
                     CalculatedInput(
                         item_symbol=input.item_symbol,
@@ -316,22 +301,11 @@ class CostService:
             workforce_cost = self.calculate_workforce_cost_for_recipe(
                 recipe=recipe, planet=planet, get_buy_price=get_buy_price
             )
-            total_cost += workforce_cost.total
 
             # Calculate repair cost
-            planet_building = self.planet_service.get_planet_building(
-                planet.natural_id, recipe.building
+            repair_costs = self.calculate_repair_cost_for_recipe(
+                recipe=recipe, planet=planet, get_buy_price=get_buy_price
             )
-            if planet_building:
-                daily_repair_cost = self.calculate_daily_building_repair_cost(
-                    planet_building=planet_building,
-                    days_since_last_repair=90,
-                    get_buy_price=get_buy_price,
-                )
-                recipe_repair_cost = daily_repair_cost * (
-                    recipe.time_ms / (24 * 60 * 60 * 1000)
-                )  # Convert ms to days
-                total_cost += recipe_repair_cost
 
             return CalculatedRecipeCost(
                 recipe_symbol=recipe.symbol,
@@ -342,12 +316,81 @@ class CostService:
                     total=sum(input.total for input in inputs),
                 ),
                 workforce_cost=workforce_cost,
-                repair_cost=recipe_repair_cost,
-                total=total_cost,
+                repair_cost=repair_costs.total,
+                total=(
+                    sum(input.total for input in inputs)
+                    + repair_costs.total
+                    + workforce_cost.total
+                ),
             )
         except Exception as e:
             logger.error(f"Error calculating recipe cost for {recipe.symbol}: {str(e)}")
             raise
+
+    def calculate_repair_cost_for_recipe(
+        self,
+        recipe: Recipe | ExtractionRecipe,
+        planet: Planet,
+        get_buy_price: Callable[[str], float],
+    ) -> CalculatedBuildingRepairCosts:
+        """Calculate the repair cost for a recipe.
+
+        Args:
+            recipe: Recipe to calculate repair cost for
+            planet: Planet where the recipe is being run
+            get_buy_price: Function to get the buy price for an item
+
+        Returns:
+            CalculatedBuildingRepairCosts containing the breakdown and total repair costs
+        """
+        planet_building = self.planet_service.get_planet_building(
+            planet.natural_id, recipe.building
+        )
+        if not planet_building:
+            raise ValueError(
+                f"PlanetBuilding was not found for {recipe.building.symbol} on planet {planet.name}"
+            )
+
+        # Use 83 days instead of 90 to account for the "7-day bug" mentioned in
+        # the building degradation documentation (90 - 7 = 83)
+        total_repair_cost = self.calculate_total_building_repair_cost(
+            planet_building=planet_building,
+            days_since_last_repair=180,
+            get_buy_price=get_buy_price,
+        )
+
+        for input in total_repair_cost.inputs:
+            print(f"{input.item_symbol} {input.quantity} {input.price} {input.total}")
+
+        # Calculate the daily repair cost
+        daily_repair_cost = round(total_repair_cost.total / 180, 2)
+
+        print(f"daily_repair_cost: {daily_repair_cost}")
+
+        # The recipe time as a percentage of a day (31.2 hours / 24 hours)
+        recipe_days = recipe.hours_decimal / 24
+
+        print(f"recipe_days: {recipe_days}")
+
+        # Calculate recipe repair cost
+        recipe_repair_cost = round(daily_repair_cost * recipe_days, 2)
+
+        print(f"recipe_repair_cost: {recipe_repair_cost}")
+
+        # Scale the input costs by the recipe duration
+        scaled_inputs = [
+            CalculatedInput(
+                item_symbol=input.item_symbol,
+                quantity=round(input.quantity * recipe_days / 180, 2),
+                price=input.price,
+                total=round(input.total * recipe_days / 180, 2),
+            )
+            for input in total_repair_cost.inputs
+        ]
+
+        return CalculatedBuildingRepairCosts(
+            inputs=scaled_inputs, total=recipe_repair_cost
+        )
 
     def calculate_workforce_cost_for_recipe(
         self,
@@ -387,16 +430,19 @@ class CostService:
                             f"No price found for workforce need item {need.item_symbol}"
                         )
 
+                    # Calculate need per day for all workers of this type
+                    # The amount is per 100 workers per day, so we divide by 100 first
                     need_per_workforce_per_day = (
-                        need.amount_per_worker_per_day * workforce_count
+                        need.amount_per_100_workers_per_day / 100 * workforce_count
                     )
 
-                    need_per_recipe_run = (
-                        need_per_workforce_per_day
-                        * self.workforce_service.workforce_days(recipe.time_ms)
+                    workforce_days = self.workforce_service.workforce_days(
+                        recipe.time_ms
                     )
 
-                    price_per_recipe_run = price * need_per_recipe_run
+                    need_per_recipe_run = need_per_workforce_per_day * workforce_days
+
+                    price_per_recipe_run = round(price * need_per_recipe_run, 2)
 
                     consumable_costs.append(
                         CalculatedWorkforceInput(
@@ -413,11 +459,13 @@ class CostService:
             total=sum(consumable_cost.total for consumable_cost in consumable_costs),
         )
 
-    def _calculate_final_costs(
+    def calculate_recipe_output_cogm(
         self,
+        recipe: Recipe | ExtractionRecipe,
         recipe_cost: CalculatedRecipeCost,
-    ) -> tuple[float, float, List[CalculatedInput]]:
-        """Calculate the final costs based on the number of recipe runs needed.
+        item_symbol: str,
+    ) -> CalculatedRecipeOutputCOGM:
+        """Calculate the final cogm based on the recipe cost and the recipe output.
 
         Args:
             cost_details: The base recipe cost details
@@ -426,26 +474,49 @@ class CostService:
         Returns:
             Tuple of (total_input_cost, total_workforce_cost, scaled_input_costs)
         """
-        # Calculate input costs separately from workforce costs
-        total_input_cost = sum(
-            input_cost.total for input_cost in recipe_cost.input_costs.inputs
+        recipe_output = next(
+            output for output in recipe.outputs if output.item_symbol == item_symbol
         )
-        total_workforce_cost = recipe_cost.workforce_cost.total
 
-        # Scale the input costs for the total quantity
-        scaled_input_costs = [
-            CalculatedInput(
-                item_symbol=input_cost.item_symbol,
-                quantity=input_cost.quantity,
-                price=input_cost.price,
-                total=input_cost.total,
-            )
-            for input_cost in recipe_cost.input_costs.inputs
-        ]
+        output_quantity = recipe_output.quantity
 
-        return total_input_cost, total_workforce_cost, scaled_input_costs
+        return CalculatedRecipeOutputCOGM(
+            recipe_symbol=recipe.symbol,
+            item_symbol=item_symbol,
+            building_symbol=recipe.building_symbol,
+            time_ms=recipe.time_ms,
+            input_costs=CalculatedInputCosts(
+                inputs=[
+                    CalculatedInput(
+                        item_symbol=input.item_symbol,
+                        quantity=input.quantity,
+                        price=input.price,
+                        total=round_half_up(input.total / output_quantity),
+                    )
+                    for input in recipe_cost.input_costs.inputs
+                ],
+                total=round_half_up(recipe_cost.input_costs.total / output_quantity),
+            ),
+            workforce_cost=CalculatedWorkforceCosts(
+                inputs=[
+                    CalculatedWorkforceInput(
+                        workforce_type=workforce_input_cost.workforce_type,
+                        item_symbol=workforce_input_cost.item_symbol,
+                        quantity=workforce_input_cost.quantity / output_quantity,
+                        price=workforce_input_cost.price,
+                        total=round_half_up(
+                            workforce_input_cost.total / output_quantity
+                        ),
+                    )
+                    for workforce_input_cost in recipe_cost.workforce_cost.inputs
+                ],
+                total=round_half_up(recipe_cost.workforce_cost.total / output_quantity),
+            ),
+            repair_cost=round_half_up(recipe_cost.repair_cost / output_quantity),
+            total_cost=round_half_up(recipe_cost.total / output_quantity),
+        )
 
-    def planet_recipes(
+    def get_planet_recipes(
         self, empire: Empire
     ) -> list[tuple[Planet, list[EmpireProductionRecipe]]]:
         planet_recipes: list[tuple[Planet, list[EmpireProductionRecipe]]] = []
