@@ -1,4 +1,3 @@
-from decimal import Decimal
 from typing import List, Optional
 
 from fio import FIOClientInterface
@@ -68,4 +67,4 @@ class WorkforceService:
             Workforce cost for given time
         """
         # Calculate the time needed as a fraction of a day
-        return decimal.Decimal(time_ms / 86400000)  # Convert ms to days (24*60*60*1000)
+        return time_ms / 86400000  # Convert ms to days (24*60*60*1000)
