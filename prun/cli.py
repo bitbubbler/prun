@@ -7,6 +7,9 @@ from rich.console import Console
 from rich.table import Table
 from rich.panel import Panel
 from yaml import YAMLError
+from rich.align import Align
+from rich.text import Text
+from rich import box
 
 from prun.config import Empire, EmpirePlanet
 from prun.di import container
@@ -140,12 +143,12 @@ def cogm(
     stderr_console = Console(stderr=True)
 
     def get_buy_price(item_symbol: str) -> float:
-        exchange_price = container.exchange_service().get_buy_price(
+        buy_price = container.exchange_service().get_buy_price(
             exchange_code="AI1", item_symbol=item_symbol
         )
-        if not exchange_price:
-            raise ValueError(f"No exchange price found for {item_symbol}")
-        return exchange_price
+        if not buy_price:
+            raise ValueError(f"No exchange ask_price found for {item_symbol}")
+        return buy_price
 
     try:
         cost_service = container.cost_service()
@@ -292,51 +295,98 @@ def print_recipe_cogm_analysis(
     item_symbol: str,
     cogm: CalculatedRecipeOutputCOGM,
 ) -> None:
-    """Print COGM analysis in a formatted table.
-
-    Args:
-        item_symbol: The symbol of the item being analyzed
-        cogm: The calculated COGM result
-    """
+    """Print COGM analysis in a formatted table, styled like the provided screenshot."""
     console = Console()
 
-    # Create a simple table showing just the COGM
-    cost_table = Table(title=f"COGM Analysis for {item_symbol}")
-    cost_table.add_column("Metric", style="cyan")
-    cost_table.add_column("Value", justify="right", style="green")
+    # --- Parameters Section ---
+    parameters_table = Table(show_header=False, box=box.SIMPLE)
+    parameters_table.add_column("Label", min_width=16)
+    parameters_table.add_column("Value", justify="right")
+    parameters_table.add_column("Extra", justify="right")
+    # Runtime in hours and minutes
+    if cogm.time_ms:
+        total_minutes = int(cogm.time_ms // 60000)
+        hours = total_minutes // 60
+        minutes = total_minutes % 60
+        runtime_str = f"{hours}h {minutes:02d}m"
+        percent_per_day = (hours + minutes / 60) / 24 * 100
+        percent_per_day_str = f"{percent_per_day:.2f} % / Day"
+    else:
+        runtime_str = "-"
+        percent_per_day_str = "-"
+    efficiency = (
+        f"{cogm.expert_efficiency * 100:.2f} %"
+        if cogm.expert_efficiency is not None
+        else "-"
+    )
+    parameters_table.add_row("[b]Recipe Runtime[/b]", runtime_str, percent_per_day_str)
+    parameters_table.add_row("[b]Efficiency[/b]", efficiency, "")
 
-    # Show input costs per unit
+    # --- Cost Section ---
+    cost_table = Table(show_header=False, box=box.SIMPLE)
+    cost_table.add_column("Label", min_width=16)
+    cost_table.add_column("Value", justify="right")
+    cost_table.add_column("Extra", justify="right")
+    degradation = f"{getattr(cogm, 'repair_cost', '-'):,.2f} $"
+    cost_table.add_row("[b]Degradation[/b]", degradation, percent_per_day_str)
+
+    # --- Materials Section ---
+    materials_table = Table(title="Materials", box=box.SIMPLE_HEAVY)
+    materials_table.add_column("Ticker")
+    materials_table.add_column("Units")
+    materials_table.add_column("$ / Unit")
+    materials_table.add_column("$ Total")
     for input_cost in cogm.input_costs.inputs:
-        cost_table.add_row(
-            f"Input: {input_cost.item_symbol}", f"{input_cost.total:,.2f}"
+        materials_table.add_row(
+            input_cost.item_symbol,
+            str(input_cost.quantity),
+            f"{input_cost.price:,.2f}",
+            f"{input_cost.total:,.2f}",
         )
+    materials_table.add_row(
+        "[b]Input Total[/b]", "", "", f"{cogm.input_costs.total:,.2f} $"
+    )
 
-    cost_table.add_row("Input Cost", f"{cogm.input_costs.total:,.2f}")
-
-    # Show workforce cost per recipe run
-    cost_table.add_row("Workforce Cost", f"{cogm.workforce_cost.total:,.2f}")
-
-    # Show repair cost per unit
-    cost_table.add_row("Repair Cost", f"{cogm.repair_cost:,.2f}")
-
-    # Show total COGM per unit
-    cost_table.add_row("Total COGM", f"{cogm.total_cost:,.2f}", style="bold")
-
-    console.print(cost_table)
-
-    # Workforce sub-table (aggregate by workforce type)
-    workforce_table = Table(title="Workforce Costs")
-    workforce_table.add_column("Workforce Type", style="magenta")
-    workforce_table.add_column("Count", justify="right", style="yellow")
-    workforce_table.add_column("Cost", justify="right", style="green")
-
-    # Aggregate by workforce type
+    # --- Workforce Section ---
+    workforce_table = Table(title="Workforce", expand=False, box=box.SIMPLE_HEAVY)
+    workforce_table.add_column("Type")
+    workforce_table.add_column("Units")
+    workforce_table.add_column("$ Total")
     for need in cogm.workforce_cost.needs:
         workforce_table.add_row(
-            need.workforce_type, str(need.workforce_count), f"{need.total:,.2f}"
+            need.workforce_type.title(), str(need.workforce_count), f"{need.total:,.2f}"
         )
+    workforce_table.add_row(
+        "[b]Workforce Total[/b]", "", f"{cogm.workforce_cost.total:,.2f} $"
+    )
 
+    # --- Total Section ---
+    total_cost = cogm.total_cost
+    total_panel = Panel(
+        f"[b]{total_cost:,.2f} $[/b]",
+        title="Total",
+        expand=False,
+    )
+
+    # --- Cost Of Goods Manufactured Summary Table ---
+    summary_table = Table(title="Cost Of Goods Manufactured", box=box.SIMPLE_HEAVY)
+    summary_table.add_column("Ticker")
+    summary_table.add_column("Units")
+    summary_table.add_column("Cost / Split")
+    summary_table.add_column("Cost / All Cost")
+    summary_table.add_row(
+        f"[b]{item_symbol}[/b]", "1", f"{total_cost:,.2f}", f"{total_cost:,.2f}"
+    )
+
+    # --- Print All Sections ---
+    console.print(
+        Panel(parameters_table, title="Parameters", style="bold", expand=False)
+    )
+    console.print(Panel(cost_table, title="Cost", style="bold", expand=False))
+    console.print(materials_table)
     console.print(workforce_table)
+    console.print(total_panel)
+    console.print(summary_table)
 
 
 def print_empire_cogm_analysis(
