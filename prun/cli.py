@@ -52,17 +52,18 @@ def sync(username: str, password: str, apikey: str | None, all: bool) -> None:
 
     logger.info("Starting sync operations")
     # Sync in order of dependencies
-    logger.info("Syncing materials...")
-    container.item_service().sync_materials()  # Must sync materials first
+    if all:
+        logger.info("Syncing materials...")
+        container.item_service().sync_materials()  # Must sync materials first
 
-    logger.info("Syncing recipes...")
-    container.recipe_service().sync_recipes()  # Recipes depend on buildings
+        logger.info("Syncing recipes...")
+        container.recipe_service().sync_recipes()  # Recipes depend on buildings
 
-    logger.info("Syncing buildings...")
-    container.building_service().sync_buildings()  # Buildings depend on materials for costs
+        logger.info("Syncing buildings...")
+        container.building_service().sync_buildings()  # Buildings depend on materials for costs
 
-    logger.info("Syncing comex exchanges...")
-    container.exchange_service().sync_comex_exchanges()  # Sync exchanges before prices
+        logger.info("Syncing comex exchanges...")
+        container.exchange_service().sync_comex_exchanges()  # Sync exchanges before prices
 
     logger.info("Syncing prices...")
     container.exchange_service().sync_prices()  # Prices depend on exchanges
@@ -74,8 +75,8 @@ def sync(username: str, password: str, apikey: str | None, all: bool) -> None:
         logger.info("Syncing planets...")
         container.planet_service().sync_planets()  # Planets depend on systems
 
-    logger.info("Syncing workforce needs...")
-    container.workforce_service().sync_workforce_needs()  # Workforce needs depend on materials
+        logger.info("Syncing workforce needs...")
+        container.workforce_service().sync_workforce_needs()  # Workforce needs depend on materials
 
     logger.info("Syncing sites...")
     container.site_service().sync_sites(
@@ -166,8 +167,6 @@ def cogm(
             None,
         )
 
-        print(f"planet_resource: {planet_resource}")
-
         recipe = recipe_service.find_recipe(
             item_symbol=item_symbol,
             recipe_symbol=recipe_symbol,
@@ -178,9 +177,8 @@ def cogm(
             if not recipe_symbol:
                 raise RecipeSymbolRequiredError()
             raise RecipeNotFoundError(recipe_symbol)
-        print(f"recipe: {recipe}")
+
         if recipe.is_resource_extraction_recipe:
-            print(f"recipe is a resource extraction recipe: {recipe.symbol}")
             efficient_recipe = recipe_service.get_efficient_planet_extraction_recipe(
                 recipe_symbol=recipe.symbol,
                 planet_resource=planet_resource,
@@ -191,8 +189,6 @@ def cogm(
                 recipe_symbol=recipe.symbol,
                 num_experts=num_experts,
             )
-
-        print(f"efficient_recipe time: {efficient_recipe.hours_decimal}")
 
         result: CalculatedRecipeOutputCOGM = cost_service.calculate_cogm(
             recipe=efficient_recipe,
@@ -317,14 +313,7 @@ def print_recipe_cogm_analysis(
 
     cost_table.add_row("Input Cost", f"{cogm.input_costs.total:,.2f}")
 
-    # Show workforce cost per unit
-    for input_cost in cogm.workforce_cost.inputs:
-        cost_table.add_row(
-            f"Workforce {input_cost.workforce_type}: {input_cost.item_symbol}",
-            f"{input_cost.total:,.2f}",
-        )
-
-    # show workforce cost per recipe run
+    # Show workforce cost per recipe run
     cost_table.add_row("Workforce Cost", f"{cogm.workforce_cost.total:,.2f}")
 
     # Show repair cost per unit
@@ -334,6 +323,20 @@ def print_recipe_cogm_analysis(
     cost_table.add_row("Total COGM", f"{cogm.total_cost:,.2f}", style="bold")
 
     console.print(cost_table)
+
+    # Workforce sub-table (aggregate by workforce type)
+    workforce_table = Table(title="Workforce Costs")
+    workforce_table.add_column("Workforce Type", style="magenta")
+    workforce_table.add_column("Count", justify="right", style="yellow")
+    workforce_table.add_column("Cost", justify="right", style="green")
+
+    # Aggregate by workforce type
+    for need in cogm.workforce_cost.needs:
+        workforce_table.add_row(
+            need.workforce_type, str(need.workforce_count), f"{need.total:,.2f}"
+        )
+
+    console.print(workforce_table)
 
 
 def print_empire_cogm_analysis(

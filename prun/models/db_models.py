@@ -304,6 +304,11 @@ class Recipe(SQLModel, table=True):
         """Get the recipe time_ms in hours, as a float."""
         return self.time_ms / 3600000.0
 
+    @property
+    def percent_of_day(self) -> float:
+        """Get the recipe time_ms as a percentage of a day (31.2 hours / 24 hours). with 2 decimal places."""
+        return round(self.hours_decimal / 24, 2)
+
 
 class RecipeInput(SQLModel, table=True):
     """Database model for recipe inputs."""
