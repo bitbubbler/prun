@@ -10,14 +10,15 @@ from prun.services import (
     building_service,
     cost_service,
     exchange_service,
+    expert_service,
     item_service,
     planet_service,
     recipe_service,
     site_service,
     storage_service,
     system_service,
-    workforce_service,
     warehouse_service,
+    workforce_service,
 )
 from fio import FIOClient
 
@@ -72,6 +73,7 @@ class Container(containers.DeclarativeContainer):
         fio_client=fio_client,
         exchange_repository=exchange_repository,
     )
+    expert_service = providers.Factory(expert_service.ExpertService)
     item_service = providers.Factory(
         item_service.ItemService,
         fio_client=fio_client,
@@ -85,6 +87,7 @@ class Container(containers.DeclarativeContainer):
     recipe_service = providers.Factory(
         recipe_service.RecipeService,
         fio_client=fio_client,
+        expert_service=expert_service,
         recipe_repository=recipe_repository,
     )
     site_service = providers.Factory(
@@ -117,6 +120,7 @@ class Container(containers.DeclarativeContainer):
         cost_service.CostService,
         building_service=building_service,
         exchange_service=exchange_service,
+        expert_service=expert_service,
         planet_service=planet_service,
         recipe_service=recipe_service,
         workforce_service=workforce_service,

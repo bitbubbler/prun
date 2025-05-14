@@ -1,0 +1,22 @@
+---
+description: 
+globs: **.*.py
+alwaysApply: false
+---
+---
+description: Prefer PEP-585 built-in generics instead of importing from typing
+globs:
+  - "**/*.py"
+alwaysApply: true
+---
+
+This project is using python 3.12. In Python 3.12 and above:
+
+  * **Do not** use `import typing` or `from typing import List, Dict, Optional, …` for container or union types.  
+  * **Use** PEP-585 built-​in generics:
+    - `list[int]` instead of `List[int]`
+    - `dict[str, int]` instead of `Dict[str, int]`
+    - `str | None` instead of `Optional[str]`
+    - `tuple[int, …]` instead of `Tuple[int, …]`
+
+Whenever you encounter a `typing` import for these cases, remove it and switch to the native syntax.  

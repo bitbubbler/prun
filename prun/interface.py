@@ -3,7 +3,7 @@ from typing import List, Dict, Any, Optional
 
 from prun.models import (
     Building,
-    ComexExchange,
+    Exchange,
     ExchangePrice,
     Item,
     Planet,
@@ -57,12 +57,12 @@ class ExchangeRepositoryInterface(ABC):
     """Interface for exchange and price-related operations."""
 
     @abstractmethod
-    def get_all_comex_exchanges(self) -> List[ComexExchange]:
+    def get_all_comex_exchanges(self) -> List[Exchange]:
         """Get all comex exchanges."""
         pass
 
     @abstractmethod
-    def get_comex_exchange(self, exchange_code: str) -> Optional[ComexExchange]:
+    def get_comex_exchange(self, exchange_code: str) -> Optional[Exchange]:
         """Get a comex exchange by exchange code."""
         pass
 
@@ -84,7 +84,7 @@ class ExchangeRepositoryInterface(ABC):
         pass
 
     @abstractmethod
-    def create_comex_exchange(self, comex_exchange: ComexExchange) -> ComexExchange:
+    def create_comex_exchange(self, comex_exchange: Exchange) -> Exchange:
         """Create a new comex exchange."""
         pass
 

@@ -1,7 +1,7 @@
 [project]
-name = "prun"
+name = "prun-fly"
 version = "0.1.0"
-description = "Cost of Goods Manufactured calculator for Prosperous Universe"
+description = "a tool for running simulations in Prosperous Universe, and.. other related stuff"
 authors = []
 dependencies = [
     "fastapi>=0.115.12",

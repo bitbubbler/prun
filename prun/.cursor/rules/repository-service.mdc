@@ -1,3 +1,8 @@
+---
+description: 
+globs: **.*.py
+alwaysApply: false
+---
 - never create created_at or updated_at columns
 - never store user_submitted type columns
 - when importing modules from this package use prun.{module} not relative paths.

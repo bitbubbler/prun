@@ -21,7 +21,7 @@ from prun.services.cost_service import CalculatedRecipeOutputCOGM, CalculatedEmp
 def setup_logging() -> None:
     """Configure logging for the application."""
     logging.basicConfig(
-        level=logging.FATAL,
+        level=logging.INFO,
         format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
     )
     # Set exc_info=True for all error logs
@@ -40,7 +40,8 @@ def cli() -> None:
 @click.option("--username", "-u", required=True, help="FIO API username")
 @click.option("--password", "-p", required=False, help="FIO API password")
 @click.option("--apikey", "-k", required=False, help="FIO API password")
-def sync(username: str, password: str, apikey: str | None) -> None:
+@click.option("--all", "-a", is_flag=True, help="Sync all data")
+def sync(username: str, password: str, apikey: str | None, all: bool) -> None:
     """Sync data from the FIO API"""
     logger = logging.getLogger(__name__)
     fio_client = container.fio_client()
@@ -66,11 +67,12 @@ def sync(username: str, password: str, apikey: str | None) -> None:
     logger.info("Syncing prices...")
     container.exchange_service().sync_prices()  # Prices depend on exchanges
 
-    logger.info("Syncing systems...")
-    container.system_service().sync_systems()  # Systems must be synced before planets
+    if all:
+        logger.info("Syncing systems...")
+        container.system_service().sync_systems()  # Systems must be synced before planets
 
-    logger.info("Syncing planets...")
-    container.planet_service().sync_planets()  # Planets depend on systems
+        logger.info("Syncing planets...")
+        container.planet_service().sync_planets()  # Planets depend on systems
 
     logger.info("Syncing workforce needs...")
     container.workforce_service().sync_workforce_needs()  # Workforce needs depend on materials
@@ -110,6 +112,13 @@ def sync(username: str, password: str, apikey: str | None) -> None:
     help="Specific recipe to use (required if multiple recipes exist)",
 )
 @click.option(
+    "--experts",
+    "-e",
+    "num_experts",
+    help="Number of experts to use, defaults to 0. Assumes you know what you're doing (double check you actually have experts for this building)",
+    default=0,
+)
+@click.option(
     "--json",
     is_flag=True,
     help="Output in JSON format",
@@ -118,6 +127,7 @@ def cogm(
     item_symbol: str,
     planet_natural_id: str,
     recipe_symbol: str | None,
+    num_experts: int,
     json: bool,
 ) -> None:
     """Calculate Cost of Goods Manufactured (COGM) for an item.
@@ -165,8 +175,15 @@ def cogm(
                 raise RecipeSymbolRequiredError()
             raise RecipeNotFoundError(recipe_symbol)
 
+        efficient_recipe = recipe_service.get_efficient_recipe(
+            recipe_symbol=recipe.symbol,
+            num_experts=num_experts,
+        )
+
+        print(f"efficient_recipe time: {efficient_recipe.hours_decimal}")
+
         result: CalculatedRecipeOutputCOGM = cost_service.calculate_cogm(
-            recipe=recipe,
+            recipe=efficient_recipe,
             planet=planet,
             item_symbol=item_symbol,
             get_buy_price=get_buy_price,

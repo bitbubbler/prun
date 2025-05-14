@@ -5,9 +5,18 @@ from pydantic import BaseModel, Field
 
 from prun.config import Empire, EmpireProductionRecipe
 from prun.errors import PlanetNotFoundError, RecipeNotFoundError
-from prun.models import ExtractionRecipe, Planet, PlanetBuilding, PlanetResource, Recipe
+from prun.models import (
+    EfficientRecipe,
+    EfficientPlanetExtractionRecipe,
+    PlanetExtractionRecipe,
+    Planet,
+    PlanetBuilding,
+    PlanetResource,
+    Recipe,
+)
 from prun.services.building_service import BuildingService
 from prun.services.exchange_service import ExchangeService
+from prun.services.expert_service import ExpertService
 from prun.services.planet_service import PlanetService
 from prun.services.recipe_service import RecipeService
 from prun.services.workforce_service import WorkforceService
@@ -70,6 +79,7 @@ class CalculatedRecipeCost(BaseModel):
     workforce_cost: CalculatedWorkforceCosts
     repair_cost: float
     total: float
+    expert_efficiency: float
 
 
 class CalculatedRecipeOutputCOGM(BaseModel):
@@ -83,6 +93,7 @@ class CalculatedRecipeOutputCOGM(BaseModel):
     repair_cost: float
     total_cost: float
     input_costs: CalculatedInputCosts
+    expert_efficiency: float
 
 
 class CalculatedPlanetCOGM(BaseModel):
@@ -106,6 +117,7 @@ class CostService:
         self,
         building_service: BuildingService,
         exchange_service: ExchangeService,
+        expert_service: ExpertService,
         planet_service: PlanetService,
         recipe_service: RecipeService,
         workforce_service: WorkforceService,
@@ -119,20 +131,23 @@ class CostService:
         """
         self.building_service = building_service
         self.exchange_service = exchange_service
+        self.expert_service = expert_service
         self.planet_service = planet_service
         self.recipe_service = recipe_service
         self.workforce_service = workforce_service
 
     def calculate_cogm(
         self,
-        recipe: Recipe | ExtractionRecipe,
+        recipe: EfficientRecipe | EfficientPlanetExtractionRecipe,
         planet: Planet,
         item_symbol: str,
         get_buy_price: Callable[[str], float],
     ) -> CalculatedRecipeOutputCOGM:
         # Calculate base recipe cost
         recipe_cost = self.calculate_recipe_cost(
-            recipe=recipe, planet=planet, get_buy_price=get_buy_price
+            recipe=recipe,
+            planet=planet,
+            get_buy_price=get_buy_price,
         )
         print(f"recipe_cost.total: {recipe_cost.total}")
         recipe_output_cogm = self.calculate_recipe_output_cogm(
@@ -249,10 +264,10 @@ class CostService:
 
             for output in recipe.outputs:
                 # Calculate COGM for this output
-                recipe_output_cogm = self.calculate_cogm(
+                recipe_output_cogm = self.calculate_recipe_cost(
                     recipe=recipe,
                     planet=planet,
-                    item_symbol=output.item_symbol,
+                    num_experts=num_experts,
                     get_buy_price=get_buy_price,
                 )
                 # update the cache if it was provided
@@ -267,7 +282,7 @@ class CostService:
 
     def calculate_recipe_cost(
         self,
-        recipe: Recipe | ExtractionRecipe,
+        recipe: EfficientRecipe | EfficientPlanetExtractionRecipe,
         planet: Planet,
         get_buy_price: Callable[[str], float],
     ) -> CalculatedRecipeCost:
@@ -281,6 +296,7 @@ class CostService:
             Dictionary containing cost details
         """
         try:
+
             inputs: List[CalculatedInput] = []
 
             for input in recipe.inputs:
@@ -311,6 +327,7 @@ class CostService:
                 recipe_symbol=recipe.symbol,
                 building_symbol=recipe.building_symbol,
                 time_ms=recipe.time_ms,
+                expert_efficiency=recipe.expert_efficiency,
                 input_costs=CalculatedInputCosts(
                     inputs=inputs,
                     total=sum(input.total for input in inputs),
@@ -329,7 +346,7 @@ class CostService:
 
     def calculate_repair_cost_for_recipe(
         self,
-        recipe: Recipe | ExtractionRecipe,
+        recipe: Recipe | PlanetExtractionRecipe,
         planet: Planet,
         get_buy_price: Callable[[str], float],
     ) -> CalculatedBuildingRepairCosts:
@@ -394,7 +411,7 @@ class CostService:
 
     def calculate_workforce_cost_for_recipe(
         self,
-        recipe: Recipe | ExtractionRecipe,
+        recipe: Recipe | PlanetExtractionRecipe,
         planet: Planet,
         get_buy_price: Callable[[str], float],
     ) -> CalculatedWorkforceCosts:
@@ -461,7 +478,7 @@ class CostService:
 
     def calculate_recipe_output_cogm(
         self,
-        recipe: Recipe | ExtractionRecipe,
+        recipe: EfficientRecipe | EfficientPlanetExtractionRecipe,
         recipe_cost: CalculatedRecipeCost,
         item_symbol: str,
     ) -> CalculatedRecipeOutputCOGM:
@@ -485,6 +502,7 @@ class CostService:
             item_symbol=item_symbol,
             building_symbol=recipe.building_symbol,
             time_ms=recipe.time_ms,
+            expert_efficiency=recipe.expert_efficiency,
             input_costs=CalculatedInputCosts(
                 inputs=[
                     CalculatedInput(

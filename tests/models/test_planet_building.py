@@ -1,5 +1,5 @@
 import unittest
-from prun.models import PlanetBuilding, Building, Planet, BuildingCost
+from prun.model import PlanetBuilding, Building, Planet, BuildingCost
 
 
 class TestBuildingFrom(unittest.TestCase):

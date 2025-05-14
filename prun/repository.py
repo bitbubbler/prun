@@ -14,7 +14,7 @@ from prun.models import (
     Planet,
     System,
     WorkforceNeed,
-    ComexExchange,
+    Exchange,
     Site,
     SiteBuilding,
     SiteBuildingMaterial,
@@ -143,26 +143,24 @@ class ExchangeRepository(BaseRepository):
         )
         return self.session.exec(statement).first()
 
-    def get_all_comex_exchanges(self) -> Sequence[ComexExchange]:
+    def get_all_comex_exchanges(self) -> Sequence[Exchange]:
         """Get all commodity exchanges."""
-        statement = select(ComexExchange)
+        statement = select(Exchange)
         return self.session.exec(statement).all()
 
-    def get_comex_exchange(self, exchange_code: str) -> Optional[ComexExchange]:
+    def get_comex_exchange(self, exchange_code: str) -> Optional[Exchange]:
         """Get a commodity exchange by exchange code.
 
         Returns:
             ComexExchange if found, None otherwise
         """
-        statement = select(ComexExchange).where(
-            ComexExchange.exchange_code == exchange_code
-        )
+        statement = select(Exchange).where(Exchange.exchange_code == exchange_code)
         return self.session.exec(statement).first()
 
     def create_comex_exchange(
         self,
-        comex_exchange: ComexExchange,
-    ) -> ComexExchange:
+        comex_exchange: Exchange,
+    ) -> Exchange:
         """Create a new commodity exchange.
 
         Args:
@@ -176,7 +174,7 @@ class ExchangeRepository(BaseRepository):
 
     def delete_comex_exchanges(self) -> None:
         """Delete all commodity exchanges."""
-        statement = select(ComexExchange)
+        statement = select(Exchange)
         exchanges = self.session.exec(statement).all()
         for exchange in exchanges:
             self.session.delete(exchange)

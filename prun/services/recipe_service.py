@@ -11,14 +11,16 @@ from prun.errors import (
 )
 from prun.interface import RecipeRepositoryInterface
 from prun.models import (
+    EfficientPlanetExtractionRecipe,
+    EfficientRecipe,
+    ExchangePrice,
+    PlanetExtractionRecipe,
+    PlanetResource,
     Recipe,
     RecipeInput,
-    ExchangePrice,
     RecipeOutput,
-    PlanetResource,
-    ExtractionRecipe,
 )
-
+from prun.services.expert_service import ExpertService
 
 logger = logging.getLogger(__name__)
 
@@ -29,6 +31,7 @@ class RecipeService:
     def __init__(
         self,
         fio_client: FIOClientInterface,
+        expert_service: ExpertService,
         recipe_repository: RecipeRepositoryInterface,
     ):
         """Initialize the service.
@@ -37,6 +40,7 @@ class RecipeService:
             repository: Repository for database operations
         """
         self.fio_client = fio_client
+        self.expert_service = expert_service
         self.recipe_repository = recipe_repository
 
     def get_all_recipes(self) -> List[Recipe]:
@@ -58,7 +62,7 @@ class RecipeService:
         """
         return self.recipe_repository.get_recipes_for_item(item_symbol)
 
-    def get_recipe(self, recipe_symbol: str) -> Optional[Recipe]:
+    def get_recipe(self, recipe_symbol: str) -> Recipe:
         """Get a recipe by its symbol.
 
         Args:
@@ -81,9 +85,30 @@ class RecipeService:
 
         return recipe
 
+    def get_efficient_recipe(
+        self, recipe_symbol: str, num_experts: int
+    ) -> EfficientRecipe:
+        """Get an efficient recipe by its symbol.
+
+        Args:
+            recipe_symbol: Recipe symbol
+            planet_resource: Planet resource to use for extraction recipes
+
+        Returns:
+            Efficient recipe
+        """
+        recipe = self.recipe_repository.get_recipe(recipe_symbol)
+
+        if not recipe:
+            raise RecipeNotFoundError(recipe_symbol)
+
+        expert_efficiency = self.expert_service.get_expert_efficiency(num_experts)
+
+        return EfficientRecipe.efficient_recipe_from(recipe, expert_efficiency)
+
     def get_extraction_recipe(
         self, recipe_symbol: str, planet_resource: PlanetResource
-    ) -> ExtractionRecipe:
+    ) -> PlanetExtractionRecipe:
         """Get an extraction recipe by its symbol.
 
         Args:
@@ -104,7 +129,35 @@ class RecipeService:
         if not recipe.is_resource_extraction_recipe:
             raise ValueError("Recipe is not an extraction recipe")
 
-        return ExtractionRecipe.extraction_recipe_from(recipe, planet_resource)
+        return PlanetExtractionRecipe.extraction_recipe_from(recipe, planet_resource)
+
+    def get_efficient_planet_extraction_recipe(
+        self, recipe_symbol: str, planet_resource: PlanetResource, num_experts: int
+    ) -> EfficientPlanetExtractionRecipe:
+        """Get an efficient planet extraction recipe by its symbol.
+
+        Args:
+            recipe_symbol: Recipe symbol
+            planet_resource: Planet resource to use for extraction recipes
+
+        Returns:
+            Efficient extraction recipe
+        """
+        recipe = self.recipe_repository.get_recipe(recipe_symbol)
+
+        if not recipe:
+            raise RecipeNotFoundError(recipe_symbol)
+
+        if not recipe.is_resource_extraction_recipe:
+            raise ValueError("Recipe is not an extraction recipe")
+
+        efficient_recipe = EfficientRecipe.efficient_recipe_from(
+            recipe=recipe, num_experts=num_experts
+        )
+
+        return EfficientPlanetExtractionRecipe.extraction_recipe_from(
+            recipe=efficient_recipe, planet_resource=planet_resource
+        )
 
     def get_recipe_with_prices(
         self, symbol: str
@@ -171,23 +224,31 @@ class RecipeService:
             logger.error(f"Error syncing recipes: {str(e)}")
             raise
 
-    def recipe_from_resource(self, planet_resource: PlanetResource) -> ExtractionRecipe:
+    def recipe_from_resource(
+        self, planet_resource: PlanetResource
+    ) -> PlanetExtractionRecipe:
         """Get a recipe for a planet resource."""
         if planet_resource.resource_type == "LIQUID":
             recipe = self.recipe_repository.get_recipe("RIG:=>")
             if not recipe:
                 raise RecipeNotFoundError("RIG:=>")
-            return ExtractionRecipe.extraction_recipe_from(recipe, planet_resource)
+            return PlanetExtractionRecipe.extraction_recipe_from(
+                recipe, planet_resource
+            )
         elif planet_resource.resource_type == "MINERAL":
             recipe = self.recipe_repository.get_recipe("EXT:=>")
             if not recipe:
                 raise RecipeNotFoundError("EXT:=>")
-            return ExtractionRecipe.extraction_recipe_from(recipe, planet_resource)
+            return PlanetExtractionRecipe.extraction_recipe_from(
+                recipe, planet_resource
+            )
         elif planet_resource.resource_type == "GASEOUS":
             recipe = self.recipe_repository.get_recipe("COL:=>")
             if not recipe:
                 raise RecipeNotFoundError("COL:=>")
-            return ExtractionRecipe.extraction_recipe_from(recipe, planet_resource)
+            return PlanetExtractionRecipe.extraction_recipe_from(
+                recipe, planet_resource
+            )
         else:
             raise ValueError(f"Unknown resource type: {planet_resource.resource_type}")
 
@@ -196,7 +257,7 @@ class RecipeService:
         item_symbol: str | None,
         recipe_symbol: str | None = None,
         planet_resource: PlanetResource | None = None,
-    ) -> Recipe | ExtractionRecipe | None:
+    ) -> Recipe | PlanetExtractionRecipe | None:
         """Find a recipe for an item.
 
         Args:

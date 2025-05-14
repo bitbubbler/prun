@@ -4,7 +4,7 @@ from typing import List, Optional
 
 from fio import FIOClientInterface
 from prun.interface import ExchangeRepositoryInterface
-from prun.models import ExchangePrice, ComexExchange
+from prun.models import ExchangePrice, Exchange
 
 logger = logging.getLogger(__name__)
 
@@ -26,7 +26,7 @@ class ExchangeService:
         self.fio_client = fio_client
         self.exchange_repository = exchange_repository
 
-    def get_all_comex_exchanges(self) -> List[ComexExchange]:
+    def get_all_comex_exchanges(self) -> List[Exchange]:
         """Get all comex exchanges from the database."""
         return self.exchange_repository.get_all_comex_exchanges()
 
@@ -130,7 +130,7 @@ class ExchangeService:
                 exchange.location_natural_id = fio_exchange.location_natural_id
             else:
                 # Create new exchange
-                comex_exchange = ComexExchange.model_validate(
+                comex_exchange = Exchange.model_validate(
                     {
                         "comex_exchange_id": fio_exchange.comex_exchange_id,
                         "exchange_name": fio_exchange.exchange_name,

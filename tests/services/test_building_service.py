@@ -2,7 +2,7 @@ import pytest
 from unittest.mock import Mock, MagicMock
 
 from prun.services.building_service import BuildingService
-from prun.models import Building, BuildingCost, Recipe
+from prun.model import Building, BuildingCost, Recipe
 
 
 @pytest.fixture
