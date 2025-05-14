@@ -38,29 +38,28 @@ class EfficientRecipe(BaseModel):
     building: Building
     expert_efficiency: float
 
+    is_resource_extraction_recipe: bool = False
+
     @classmethod
     def efficient_recipe_from(
         cls, recipe: Recipe, expert_efficiency: float
     ) -> "EfficientRecipe":
         """Create an efficient recipe from a normal recipe."""
 
-        print(f"recipe.time_ms: {recipe.time_ms}")
+        # Calculate the new time_ms based on expert_efficiency
+        # Efficiency reduces time, so we multiply by (1 - efficiency_factor)
+        # Ensure time_ms is an integer
+        effective_time_ms = int(recipe.time_ms * (1.0 - expert_efficiency))
+
         print(f"expert_efficiency: {expert_efficiency}")
-        print(1 - expert_efficiency)
-
-        efficient_hours_decimal = recipe.hours_decimal - (
-            recipe.hours_decimal * expert_efficiency
-        )
-
-        hours = int(efficient_hours_decimal)
-        minutes = int(round((efficient_hours_decimal - hours) * 60))
-
-        time_ms = (hours * 60 + minutes) * 60_000
+        print(f"start_time_ms: {recipe.time_ms}")
+        print(f"effective_time_ms: {effective_time_ms}")
+        print(f"effective_time decimal: {effective_time_ms / 3600000.0}")
 
         return cls(
             symbol=recipe.symbol,
             building_symbol=recipe.building_symbol,
-            time_ms=time_ms,
+            time_ms=effective_time_ms,
             inputs=recipe.inputs,
             outputs=recipe.outputs,
             building=recipe.building,
@@ -95,9 +94,9 @@ class PlanetExtractionRecipe(BaseModel):
             raise ValueError("Recipe is not a resource extraction recipe")
 
         daily_extraction = (
-            round(planet_resource.factor * 100 * 0.7, 1)
+            planet_resource.factor * 100 * 0.7
             if recipe.building_symbol in ["RIG", "EXT"]
-            else round(planet_resource.factor * 100 * 0.6, 1)
+            else planet_resource.factor * 100 * 0.6
         )
 
         fractional_units_per_run = daily_extraction / (24 / recipe.hours_decimal)
@@ -112,15 +111,10 @@ class PlanetExtractionRecipe(BaseModel):
             recipe.hours_decimal * (remainder_units_per_run / fractional_units_per_run)
         )
 
-        hours = int(extraction_time_hours_decimal)
-        minutes = int(round((extraction_time_hours_decimal - hours) * 60))
-
-        time_ms = (hours * 60 + minutes) * 60_000
-
         return cls(
             symbol=recipe.symbol,
             building_symbol=recipe.building_symbol,
-            time_ms=time_ms,
+            time_ms=int(extraction_time_hours_decimal * 3600000),
             inputs=[],
             outputs=[
                 RecipeOutput(
@@ -150,9 +144,9 @@ class EfficientPlanetExtractionRecipe(PlanetExtractionRecipe, EfficientRecipe):
             raise ValueError("Recipe is not a resource extraction recipe")
 
         daily_extraction = (
-            round(planet_resource.factor * 100 * 0.7, 1)
+            planet_resource.factor * 100 * 0.7
             if recipe.building_symbol in ["RIG", "EXT"]
-            else round(planet_resource.factor * 100 * 0.6, 1)
+            else planet_resource.factor * 100 * 0.6
         )
 
         fractional_units_per_run = daily_extraction / (24 / recipe.hours_decimal)
@@ -167,15 +161,10 @@ class EfficientPlanetExtractionRecipe(PlanetExtractionRecipe, EfficientRecipe):
             recipe.hours_decimal * (remainder_units_per_run / fractional_units_per_run)
         )
 
-        hours = int(extraction_time_hours_decimal)
-        minutes = int(round((extraction_time_hours_decimal - hours) * 60))
-
-        time_ms = (hours * 60 + minutes) * 60_000
-
         return cls(
             symbol=recipe.symbol,
             building_symbol=recipe.building_symbol,
-            time_ms=time_ms,
+            time_ms=int(extraction_time_hours_decimal * 3600000),
             expert_efficiency=recipe.expert_efficiency,
             inputs=[],
             outputs=[

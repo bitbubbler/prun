@@ -157,28 +157,40 @@ def cogm(
         if not planet:
             raise ValueError("Planet is required")
 
+        planet_resource = next(
+            (
+                resource
+                for resource in planet.resources
+                if resource.item.symbol == item_symbol
+            ),
+            None,
+        )
+
+        print(f"planet_resource: {planet_resource}")
+
         recipe = recipe_service.find_recipe(
             item_symbol=item_symbol,
             recipe_symbol=recipe_symbol,
-            planet_resource=next(
-                (
-                    resource
-                    for resource in planet.resources
-                    if resource.item.symbol == item_symbol
-                ),
-                None,
-            ),
+            planet_resource=planet_resource,
         )
 
         if not recipe:
             if not recipe_symbol:
                 raise RecipeSymbolRequiredError()
             raise RecipeNotFoundError(recipe_symbol)
-
-        efficient_recipe = recipe_service.get_efficient_recipe(
-            recipe_symbol=recipe.symbol,
-            num_experts=num_experts,
-        )
+        print(f"recipe: {recipe}")
+        if recipe.is_resource_extraction_recipe:
+            print(f"recipe is a resource extraction recipe: {recipe.symbol}")
+            efficient_recipe = recipe_service.get_efficient_planet_extraction_recipe(
+                recipe_symbol=recipe.symbol,
+                planet_resource=planet_resource,
+                num_experts=num_experts,
+            )
+        else:
+            efficient_recipe = recipe_service.get_efficient_recipe(
+                recipe_symbol=recipe.symbol,
+                num_experts=num_experts,
+            )
 
         print(f"efficient_recipe time: {efficient_recipe.hours_decimal}")
 

@@ -387,6 +387,7 @@ class CostService:
         # The recipe time as a percentage of a day (31.2 hours / 24 hours)
         recipe_days = recipe.hours_decimal / 24
 
+        print(f"recipe: {isinstance(recipe, EfficientPlanetExtractionRecipe)} {recipe}")
         print(f"recipe_days: {recipe_days}")
 
         # Calculate recipe repair cost

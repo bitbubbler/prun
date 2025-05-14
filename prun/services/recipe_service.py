@@ -106,7 +106,7 @@ class RecipeService:
 
         return EfficientRecipe.efficient_recipe_from(recipe, expert_efficiency)
 
-    def get_extraction_recipe(
+    def get_planet_extraction_recipe(
         self, recipe_symbol: str, planet_resource: PlanetResource
     ) -> PlanetExtractionRecipe:
         """Get an extraction recipe by its symbol.
@@ -143,21 +143,23 @@ class RecipeService:
         Returns:
             Efficient extraction recipe
         """
-        recipe = self.recipe_repository.get_recipe(recipe_symbol)
+        extraction_recipe = self.get_planet_extraction_recipe(
+            recipe_symbol, planet_resource
+        )
 
-        if not recipe:
+        if not extraction_recipe:
             raise RecipeNotFoundError(recipe_symbol)
 
-        if not recipe.is_resource_extraction_recipe:
+        if not extraction_recipe.is_resource_extraction_recipe:
             raise ValueError("Recipe is not an extraction recipe")
 
-        efficient_recipe = EfficientRecipe.efficient_recipe_from(
-            recipe=recipe, num_experts=num_experts
+        expert_efficiency = self.expert_service.get_expert_efficiency(num_experts)
+
+        efficient_recipe = EfficientPlanetExtractionRecipe.efficient_recipe_from(
+            recipe=extraction_recipe, expert_efficiency=expert_efficiency
         )
 
-        return EfficientPlanetExtractionRecipe.extraction_recipe_from(
-            recipe=efficient_recipe, planet_resource=planet_resource
-        )
+        return efficient_recipe
 
     def get_recipe_with_prices(
         self, symbol: str
@@ -299,7 +301,7 @@ class RecipeService:
                 raise PlanetResourceRequiredError()
             if not recipe_symbol:
                 raise RecipeSymbolRequiredError()
-            return self.get_extraction_recipe(recipe_symbol, planet_resource)
+            return self.get_planet_extraction_recipe(recipe_symbol, planet_resource)
         except Exception as e:
             logger.error(
                 f"Error finding recipe for {item_symbol}: {str(e)}", exc_info=True
