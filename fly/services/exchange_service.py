@@ -3,8 +3,8 @@ import logging
 from typing import List, Optional
 
 from fio import FIOClientInterface
-from prun.interface import ExchangeRepositoryInterface
-from prun.models import ExchangePrice, Exchange
+from fly.interface import ExchangeRepositoryInterface
+from fly.models import ExchangePrice, Exchange
 
 logger = logging.getLogger(__name__)
 
@@ -107,8 +107,7 @@ class ExchangeService:
 
         # Get existing exchanges for comparison
         existing_exchanges = {
-            exchange.comex_exchange_id: exchange
-            for exchange in self.exchange_repository.get_all_comex_exchanges()
+            exchange.comex_exchange_id: exchange for exchange in self.exchange_repository.get_all_comex_exchanges()
         }
 
         for fio_exchange in exchanges:

@@ -1,0 +1,31 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# Frontend Setup
+
+## Project Structure
+- The frontend code is located in the `frontend/` directory
+- All package management and dependency installation must be done within the `frontend/` directory
+- [frontend/package.json](mdc:frontend/package.json) contains all frontend dependencies
+- Do not attempt to install packages at the root level or create a root-level package.json
+
+## Package Management
+- All npm commands should be run from the `frontend/` directory
+- Installation command: `cd frontend && npm install`
+
+## Dependencies
+- React 19.x
+- Material-UI v7.x
+- Data Grid v8.x
+- TypeScript 5.x
+
+Current dependency versions can be found in [frontend/package.json](mdc:frontend/package.json).
+
+## Development
+Always ensure you're in the frontend directory before running npm commands:
+```bash
+cd frontend
+npm install  # Install dependencies
+```

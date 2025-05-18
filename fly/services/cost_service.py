@@ -3,9 +3,9 @@ from typing import List, Optional, Callable
 
 from pydantic import BaseModel, Field
 
-from prun.config import Empire, EmpireProductionRecipe
-from prun.errors import PlanetNotFoundError, RecipeNotFoundError
-from prun.models import (
+from fly.config import EmpireIn, EmpireProductionRecipeIn, EmpirePlanetIn
+from fly.errors import PlanetNotFoundError, RecipeNotFoundError
+from fly.models import (
     EfficientRecipe,
     EfficientPlanetExtractionRecipe,
     PlanetExtractionRecipe,
@@ -14,13 +14,13 @@ from prun.models import (
     PlanetResource,
     Recipe,
 )
-from prun.services.building_service import BuildingService
-from prun.services.exchange_service import ExchangeService
-from prun.services.expert_service import ExpertService
-from prun.services.planet_service import PlanetService
-from prun.services.recipe_service import RecipeService
-from prun.services.workforce_service import WorkforceService
-from prun.util import round_half_up
+from fly.services.building_service import BuildingService
+from fly.services.efficiency_service import EfficiencyService
+from fly.services.exchange_service import ExchangeService
+from fly.services.planet_service import PlanetService
+from fly.services.recipe_service import RecipeService
+from fly.services.workforce_service import WorkforceService
+from fly.util import round_half_up
 
 logger = logging.getLogger(__name__)
 
@@ -29,17 +29,13 @@ class CalculatedInput(BaseModel):
     """Calculated recipe input cost."""
 
     item_symbol: str = Field(description="The symbol of the item")
-    quantity: float = Field(
-        description="The quantity of the item needed for the recipe run"
-    )
+    quantity: float = Field(description="The quantity of the item needed for the recipe run")
     price: float = Field(description="The price of the item per unit")
     total: float = Field(description="The total cost of the item for the recipe run")
 
 
 class CalculatedInputCosts(BaseModel):
-    inputs: List[CalculatedInput] = Field(
-        description="The individual input costs for the recipe run"
-    )
+    inputs: List[CalculatedInput] = Field(description="The individual input costs for the recipe run")
     total: float = Field(description="The total cost of all inputs for the recipe run")
 
 
@@ -48,12 +44,8 @@ class CalculatedWorkforceNeedCost(BaseModel):
 
     workforce_type: str = Field(description="The type of workforce")
     workforce_count: int = Field(description="The number of workers")
-    inputs: List[CalculatedInput] = Field(
-        description="The individual input costs for the workforce"
-    )
-    total: float = Field(
-        description="The total cost of all inputs for the workforce type"
-    )
+    inputs: List[CalculatedInput] = Field(description="The individual input costs for the workforce")
+    total: float = Field(description="The total cost of all inputs for the workforce type")
 
 
 class CalculatedWorkforceCosts(BaseModel):
@@ -62,17 +54,13 @@ class CalculatedWorkforceCosts(BaseModel):
     needs: List[CalculatedWorkforceNeedCost] = Field(
         description="The individual workforce need costs for the recipe run"
     )
-    total: float = Field(
-        description="The total cost of all consumables for the workforce"
-    )
+    total: float = Field(description="The total cost of all consumables for the workforce")
 
 
 class CalculatedBuildingRepairCosts(BaseModel):
     """Calculated building repair cost."""
 
-    inputs: List[CalculatedInput] = Field(
-        description="The individual input costs for the building"
-    )
+    inputs: List[CalculatedInput] = Field(description="The individual input costs for the building")
     total: float = Field(description="The total cost of all inputs for the building")
 
 
@@ -117,14 +105,22 @@ class CalculatedEmpireCOGM(BaseModel):
     planets: List[CalculatedPlanetCOGM]
 
 
+class CostContext(BaseModel):
+    """Context for cost calculations."""
+
+    get_buy_price: Callable[[str], float]
+    set_cogm_price: Callable[[str, float], None]
+    cogm_price_cache: dict[str, float]
+
+
 class CostService:
     """Service for cost-related operations."""
 
     def __init__(
         self,
         building_service: BuildingService,
+        efficiency_service: EfficiencyService,
         exchange_service: ExchangeService,
-        expert_service: ExpertService,
         planet_service: PlanetService,
         recipe_service: RecipeService,
         workforce_service: WorkforceService,
@@ -137,8 +133,8 @@ class CostService:
             workforce_service: Workforce service for calculating workforce costs
         """
         self.building_service = building_service
+        self.efficiency_service = efficiency_service
         self.exchange_service = exchange_service
-        self.expert_service = expert_service
         self.planet_service = planet_service
         self.recipe_service = recipe_service
         self.workforce_service = workforce_service
@@ -148,13 +144,13 @@ class CostService:
         recipe: EfficientRecipe | EfficientPlanetExtractionRecipe,
         planet: Planet,
         item_symbol: str,
-        get_buy_price: Callable[[str], float],
+        cost_context: CostContext,
     ) -> CalculatedRecipeOutputCOGM:
         # Calculate base recipe cost
         recipe_cost = self.calculate_recipe_cost(
+            cost_context=cost_context,
             recipe=recipe,
             planet=planet,
-            get_buy_price=get_buy_price,
         )
         recipe_output_cogm = self.calculate_recipe_output_cogm(
             recipe=recipe,
@@ -166,9 +162,9 @@ class CostService:
 
     def calculate_total_building_repair_cost(
         self,
+        cost_context: CostContext,
         planet_building: PlanetBuilding,
         days_since_last_repair: int,
-        get_buy_price: Callable[[str], float],
     ) -> CalculatedBuildingRepairCosts:
         """
         Calculate the daily repair cost of a building.
@@ -184,7 +180,7 @@ class CostService:
 
         for buliding_cost in planet_building.building_costs:
             quantity = buliding_cost.repair_amount(days_since_last_repair)
-            price = get_buy_price(buliding_cost.item_symbol)
+            price = cost_context.get_buy_price(buliding_cost.item_symbol)
             inputs.append(
                 CalculatedInput(
                     item_symbol=buliding_cost.item_symbol,
@@ -201,37 +197,35 @@ class CostService:
 
     def calculate_empire_cogm(
         self,
-        empire: Empire,
-        get_buy_price: Callable[[str], float],
+        cost_context: CostContext,
+        empire: EmpireIn,
     ) -> CalculatedEmpireCOGM:
         planet_cogms: List[CalculatedPlanetCOGM] = []
         # cache of cogm prices for each item symbol
         cogm_price_cache: dict[str, float] = {}
 
         # get all planets and their recipes
-        planet_recipes = self.get_planet_recipes(empire)
+        empire_planet_planets = self.get_empire_planet_planets(empire)
 
         # we do two passes
         # the first pass fills the cogm cache
         # the second pass calculates final values
 
         # calculate everythin once, without storing it
-        for planet, production_recipes in planet_recipes:
+        for planet, empire_planet in empire_planet_planets:
             self.calculate_planet_cogm(
+                cost_context=cost_context,
                 planet=planet,
-                production_recipes=production_recipes,
-                get_buy_price=get_buy_price,
-                cogm_price_cache=cogm_price_cache,
+                empire_planet=empire_planet,
             )
 
         # run everything again, but this time store the results
-        for planet, production_recipes in planet_recipes:
+        for planet, empire_planet in empire_planet_planets:
             planet_cogms.append(
                 self.calculate_planet_cogm(
+                    cost_context=cost_context,
                     planet=planet,
-                    production_recipes=production_recipes,
-                    get_buy_price=get_buy_price,
-                    cogm_price_cache=cogm_price_cache,
+                    empire_planet=empire_planet,
                 )
             )
 
@@ -239,10 +233,9 @@ class CostService:
 
     def calculate_planet_cogm(
         self,
+        cost_context: CostContext,
+        empire_planet: EmpirePlanetIn,
         planet: Planet,
-        production_recipes: List[EmpireProductionRecipe],
-        get_buy_price: Callable[[str], float],
-        cogm_price_cache: Optional[dict[str, float]] = None,
     ) -> CalculatedPlanetCOGM:
         recipe_service = self.recipe_service
 
@@ -250,13 +243,9 @@ class CostService:
         recipe_output_cogms: List[CalculatedRecipeOutputCOGM] = []
 
         # calculate cogm for each recipe
-        for production_recipe in production_recipes:
+        for production_recipe in empire_planet.recipes:
             planet_resource = next(
-                (
-                    resource
-                    for resource in planet.resources
-                    if resource.item.symbol == production_recipe.item_symbol
-                ),
+                (resource for resource in planet.resources if resource.item.symbol == production_recipe.item_symbol),
                 None,
             )
             recipe = recipe_service.find_recipe(
@@ -268,29 +257,46 @@ class CostService:
             if not recipe:
                 raise RecipeNotFoundError(production_recipe.recipe_symbol)
 
+            if recipe.is_resource_extraction_recipe:
+                efficient_recipe = recipe_service.get_efficient_planet_extraction_recipe(
+                    recipe_symbol=recipe.symbol,
+                    planet_resource=planet_resource,
+                    experts=empire_planet.experts,
+                )
+            else:
+                efficient_recipe = recipe_service.get_efficient_recipe(
+                    recipe_symbol=recipe.symbol,
+                    experts=empire_planet.experts,
+                )
+
+            recipe_cost = self.calculate_recipe_cost(
+                cost_context=cost_context,
+                recipe=efficient_recipe,
+                planet=planet,
+            )
+
             for output in recipe.outputs:
                 # Calculate COGM for this output
-                recipe_output_cogm = self.calculate_recipe_cost(
-                    recipe=recipe,
-                    planet=planet,
-                    num_experts=num_experts,
-                    get_buy_price=get_buy_price,
+                recipe_output_cogm = self.calculate_recipe_output_cogm(
+                    recipe=efficient_recipe,
+                    recipe_cost=recipe_cost,
+                    item_symbol=output.item_symbol,
                 )
                 # update the cache if it was provided
-                if cogm_price_cache:
-                    cogm_price_cache[output.item_symbol] = recipe_output_cogm.total_cost
+                cost_context.set_cogm_price(
+                    item_symbol=output.item_symbol,
+                    price=recipe_output_cogm.total_cost,
+                )
 
                 recipe_output_cogms.append(recipe_output_cogm)
 
-        return CalculatedPlanetCOGM(
-            planet_name=planet.name, recipes=recipe_output_cogms
-        )
+        return CalculatedPlanetCOGM(planet_name=planet.name, recipes=recipe_output_cogms)
 
     def calculate_recipe_cost(
         self,
+        cost_context: CostContext,
         recipe: EfficientRecipe | EfficientPlanetExtractionRecipe,
         planet: Planet,
-        get_buy_price: Callable[[str], float],
     ) -> CalculatedRecipeCost:
         """Calculate the cost of a recipe.
 
@@ -302,11 +308,10 @@ class CostService:
             Dictionary containing cost details
         """
         try:
-
             inputs: List[CalculatedInput] = []
 
             for input in recipe.inputs:
-                price = get_buy_price(input.item_symbol)
+                price = cost_context.get_buy_price(input.item_symbol)
                 if not price:
                     raise ValueError(f"No price found for item {input.item_symbol}")
                 input_cost = input.quantity * price
@@ -321,12 +326,16 @@ class CostService:
 
             # Calculate workforce cost
             workforce_cost = self.calculate_workforce_cost_for_recipe(
-                recipe=recipe, planet=planet, get_buy_price=get_buy_price
+                cost_context=cost_context,
+                recipe=recipe,
+                planet=planet,
             )
 
             # Calculate repair cost
             repair_costs = self.calculate_repair_cost_for_recipe(
-                recipe=recipe, planet=planet, get_buy_price=get_buy_price
+                cost_context=cost_context,
+                recipe=recipe,
+                planet=planet,
             )
 
             return CalculatedRecipeCost(
@@ -340,11 +349,7 @@ class CostService:
                 ),
                 workforce_cost=workforce_cost,
                 repair_cost=repair_costs.total,
-                total=(
-                    sum(input.total for input in inputs)
-                    + repair_costs.total
-                    + workforce_cost.total
-                ),
+                total=(sum(input.total for input in inputs) + repair_costs.total + workforce_cost.total),
             )
         except Exception as e:
             logger.error(f"Error calculating recipe cost for {recipe.symbol}: {str(e)}")
@@ -352,9 +357,9 @@ class CostService:
 
     def calculate_repair_cost_for_recipe(
         self,
+        cost_context: CostContext,
         recipe: Recipe | PlanetExtractionRecipe,
         planet: Planet,
-        get_buy_price: Callable[[str], float],
     ) -> CalculatedBuildingRepairCosts:
         """Calculate the repair cost for a recipe.
 
@@ -366,18 +371,14 @@ class CostService:
         Returns:
             CalculatedBuildingRepairCosts containing the breakdown and total repair costs
         """
-        planet_building = self.planet_service.get_planet_building(
-            planet.natural_id, recipe.building
-        )
+        planet_building = self.planet_service.get_planet_building(planet.natural_id, recipe.building)
         if not planet_building:
-            raise ValueError(
-                f"PlanetBuilding was not found for {recipe.building.symbol} on planet {planet.name}"
-            )
+            raise ValueError(f"PlanetBuilding was not found for {recipe.building.symbol} on planet {planet.name}")
 
         total_repair_cost = self.calculate_total_building_repair_cost(
+            cost_context=cost_context,
             planet_building=planet_building,
             days_since_last_repair=180,
-            get_buy_price=get_buy_price,
         )
 
         # Calculate the daily repair cost
@@ -397,15 +398,13 @@ class CostService:
             for input in total_repair_cost.inputs
         ]
 
-        return CalculatedBuildingRepairCosts(
-            inputs=scaled_inputs, total=recipe_repair_cost
-        )
+        return CalculatedBuildingRepairCosts(inputs=scaled_inputs, total=recipe_repair_cost)
 
     def calculate_workforce_cost_for_recipe(
         self,
+        cost_context: CostContext,
         recipe: Recipe | PlanetExtractionRecipe,
         planet: Planet,
-        get_buy_price: Callable[[str], float],
     ) -> CalculatedWorkforceCosts:
         """Calculate the workforce cost for a recipe.
 
@@ -415,9 +414,7 @@ class CostService:
         Returns:
             Total workforce cost
         """
-        planet_building = self.planet_service.get_planet_building(
-            planet.natural_id, recipe.building
-        )
+        planet_building = self.planet_service.get_planet_building(planet.natural_id, recipe.building)
         if not planet_building:
             raise ValueError(f"Building {recipe.building.symbol} not found")
 
@@ -431,29 +428,19 @@ class CostService:
             ("SCIENTIST", planet_building.building.scientists),
         ]:
             if workforce_count > 0:
-                workforce_needs = self.workforce_service.get_workforce_needs(
-                    workforce_type
-                )
+                workforce_needs = self.workforce_service.get_workforce_needs(workforce_type)
                 inputs: List[CalculatedInput] = []
 
                 for workforce_need in workforce_needs:
-                    price = get_buy_price(workforce_need.item_symbol)
+                    price = cost_context.get_buy_price(workforce_need.item_symbol)
                     if not price:
-                        raise ValueError(
-                            f"No price found for workforce need item {workforce_need.item_symbol}"
-                        )
+                        raise ValueError(f"No price found for workforce need item {workforce_need.item_symbol}")
 
                     # Calculate need per day for all workers of this type
                     # The amount is per 100 workers per day, so we divide by 100 first
-                    need_per_workforce_per_day = (
-                        workforce_need.amount_per_100_workers_per_day
-                        / 100
-                        * workforce_count
-                    )
+                    need_per_workforce_per_day = workforce_need.amount_per_100_workers_per_day / 100 * workforce_count
 
-                    workforce_days = self.workforce_service.workforce_days(
-                        recipe.time_ms
-                    )
+                    workforce_days = self.workforce_service.workforce_days(recipe.time_ms)
 
                     need_per_recipe_run = need_per_workforce_per_day * workforce_days
 
@@ -498,9 +485,8 @@ class CostService:
         Returns:
             Tuple of (total_input_cost, total_workforce_cost, scaled_input_costs)
         """
-        recipe_output = next(
-            output for output in recipe.outputs if output.item_symbol == item_symbol
-        )
+        print(f"recipe: {recipe}")
+        recipe_output = next(output for output in recipe.outputs if output.item_symbol == item_symbol)
 
         output_quantity = recipe_output.quantity
 
@@ -546,20 +532,18 @@ class CostService:
             total_cost=round_half_up(recipe_cost.total / output_quantity),
         )
 
-    def get_planet_recipes(
-        self, empire: Empire
-    ) -> list[tuple[Planet, list[EmpireProductionRecipe]]]:
-        planet_recipes: list[tuple[Planet, list[EmpireProductionRecipe]]] = []
+    def get_empire_planet_planets(self, empire: EmpireIn) -> list[tuple[Planet, EmpirePlanetIn]]:
+        empire_planet_planets: list[tuple[Planet, EmpirePlanetIn]] = []
         for empire_planet in empire.planets:
             planet = self.planet_service.get_planet(empire_planet.natural_id)
             if not planet:
                 raise PlanetNotFoundError(empire_planet.natural_id)
 
-            planet_recipes.append(
+            empire_planet_planets.append(
                 (
                     planet,
-                    empire_planet.recipes,
+                    empire_planet,
                 )
             )
 
-        return planet_recipes
+        return empire_planet_planets

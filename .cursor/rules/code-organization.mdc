@@ -1,0 +1,22 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# Code Organization
+
+## Frontend Structure
+
+The frontend is organized around these key files:
+
+- [frontend/src/App.tsx](mdc:frontend/src/App.tsx): Main application component that uses DataProvider and handles tab navigation
+- [frontend/src/context/DataContext.tsx](mdc:frontend/src/context/DataContext.tsx): Central data context that manages API interactions and state 
+- Component directory: [frontend/src/components/](mdc:frontend/src/components) contains individual feature components:
+  - [InternalOffers.tsx](mdc:frontend/src/components/InternalOffers.tsx): Component for managing internal offers
+  - Other tab components (Planets, Buildings, etc.)
+
+## Data Flow
+
+- Data is fetched and stored in the DataContext
+- Components subscribe to the context using the `useDataContext` hook
+- Operations that modify data (create/delete offers) are performed through context methods

@@ -1,9 +1,9 @@
 import logging
 
 from fio import FIOClientInterface
-from prun.errors import BuildingNotFoundError, PlanetNotFoundError
-from prun.interface import SystemRepositoryInterface
-from prun.models import (
+from fly.errors import BuildingNotFoundError, PlanetNotFoundError
+from fly.interface import SystemRepositoryInterface
+from fly.models import (
     Building,
     COGCProgram,
     COGCVote,
@@ -37,9 +37,7 @@ class PlanetService:
         """Get a planet by natural ID."""
         return self.system_repository.get_planet(natural_id)
 
-    def get_planet_building(
-        self, natural_id: str, building: Building
-    ) -> PlanetBuilding | None:
+    def get_planet_building(self, natural_id: str, building: Building) -> PlanetBuilding | None:
         """Get a planet building by natural ID."""
         planet = self.get_planet(natural_id)
 
@@ -74,9 +72,7 @@ class PlanetService:
                 )
 
             # Check if planet already exists
-            existing_planet = self.system_repository.get_planet(
-                fio_planet.planet_natural_id
-            )
+            existing_planet = self.system_repository.get_planet(fio_planet.planet_natural_id)
             if not existing_planet:
                 planet = Planet.model_validate(
                     {
@@ -152,36 +148,24 @@ class PlanetService:
                 existing_planet.temperature = fio_planet.temperature
                 existing_planet.fertility = fio_planet.fertility
                 existing_planet.has_local_market = fio_planet.has_local_market
-                existing_planet.has_chamber_of_commerce = (
-                    fio_planet.has_chamber_of_commerce
-                )
+                existing_planet.has_chamber_of_commerce = fio_planet.has_chamber_of_commerce
                 existing_planet.has_warehouse = fio_planet.has_warehouse
-                existing_planet.has_administration_center = (
-                    fio_planet.has_administration_center
-                )
+                existing_planet.has_administration_center = fio_planet.has_administration_center
                 existing_planet.has_shipyard = fio_planet.has_shipyard
                 existing_planet.faction_code = fio_planet.faction_code
                 existing_planet.faction_name = fio_planet.faction_name
                 existing_planet.governor_id = fio_planet.governor_id
                 existing_planet.governor_user_name = fio_planet.governor_user_name
-                existing_planet.governor_corporation_id = (
-                    fio_planet.governor_corporation_id
-                )
-                existing_planet.governor_corporation_name = (
-                    fio_planet.governor_corporation_name
-                )
-                existing_planet.governor_corporation_code = (
-                    fio_planet.governor_corporation_code
-                )
+                existing_planet.governor_corporation_id = fio_planet.governor_corporation_id
+                existing_planet.governor_corporation_name = fio_planet.governor_corporation_name
+                existing_planet.governor_corporation_code = fio_planet.governor_corporation_code
                 existing_planet.currency_name = fio_planet.currency_name
                 existing_planet.currency_code = fio_planet.currency_code
                 existing_planet.collector_id = fio_planet.collector_id
                 existing_planet.collector_name = fio_planet.collector_name
                 existing_planet.collector_code = fio_planet.collector_code
                 existing_planet.base_local_market_fee = fio_planet.base_local_market_fee
-                existing_planet.local_market_fee_factor = (
-                    fio_planet.local_market_fee_factor
-                )
+                existing_planet.local_market_fee_factor = fio_planet.local_market_fee_factor
                 existing_planet.warehouse_fee = fio_planet.warehouse_fee
                 existing_planet.population_id = fio_planet.population_id
                 existing_planet.cogc_program_status = fio_planet.cogc_program_status
@@ -215,9 +199,7 @@ class PlanetService:
                     weight=requirement.material_weight,
                     volume=requirement.material_volume,
                 )
-                self.system_repository.create_planet_building_requirement(
-                    planet_requirement
-                )
+                self.system_repository.create_planet_building_requirement(planet_requirement)
 
             # Create new production fees
             for fee in fio_planet.production_fees:

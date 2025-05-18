@@ -3,8 +3,8 @@ from datetime import datetime
 import logging
 
 from fio import FIOClientInterface
-from prun.interface import SystemRepositoryInterface
-from prun.models import System, SystemConnection
+from fly.interface import SystemRepositoryInterface
+from fly.models import System, SystemConnection
 
 logger = logging.getLogger(__name__)
 

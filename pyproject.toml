@@ -13,6 +13,7 @@ dependencies = [
     "requests>=2.31.0",
     "dependency-injector>=4.46.0",
     "pyyaml",
+    "aiosqlite>=0.21.0",
 ]
 
 [tool.ruff]

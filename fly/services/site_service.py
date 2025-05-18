@@ -4,8 +4,8 @@ from pydantic import BaseModel
 from typing import List, Optional
 
 from fio import FIOClientInterface
-from prun.interface import SiteRepositoryInterface
-from prun.models import Site, SiteBuilding, SiteBuildingMaterial
+from fly.interface import SiteRepositoryInterface
+from fly.models import Site, SiteBuilding, SiteBuildingMaterial
 
 logger = logging.getLogger(__name__)
 
@@ -13,9 +13,7 @@ logger = logging.getLogger(__name__)
 class SiteService:
     """Service for site-related operations."""
 
-    def __init__(
-        self, fio_client: FIOClientInterface, site_repository: SiteRepositoryInterface
-    ):
+    def __init__(self, fio_client: FIOClientInterface, site_repository: SiteRepositoryInterface):
         """Initialize the service.
 
         Args:
@@ -38,9 +36,7 @@ class SiteService:
             sites = self.fio_client.get_sites(character_id)
 
             # Get existing sites for comparison
-            existing_sites = {
-                site.site_id: site for site in self.site_repository.get_all_sites()
-            }
+            existing_sites = {site.site_id: site for site in self.site_repository.get_all_sites()}
 
             for fio_site in sites:
                 site: Site

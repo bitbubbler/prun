@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import List, Dict, Any, Optional
 
-from prun.models import (
+from fly.models import (
     Building,
     Exchange,
     ExchangePrice,
@@ -22,6 +22,7 @@ from prun.models import (
     PlanetProductionFee,
     COGCProgram,
     COGCVote,
+    InternalOffer,
 )
 
 
@@ -67,9 +68,7 @@ class ExchangeRepositoryInterface(ABC):
         pass
 
     @abstractmethod
-    def get_exchange_price(
-        self, exchange_code: str, item_symbol: str
-    ) -> Optional[ExchangePrice]:
+    def get_exchange_price(self, exchange_code: str, item_symbol: str) -> Optional[ExchangePrice]:
         """Get an exchange price by item symbol and exchange code."""
         pass
 
@@ -103,9 +102,7 @@ class RecipeRepositoryInterface(ABC):
         pass
 
     @abstractmethod
-    def get_recipe_with_prices(
-        self, symbol: str
-    ) -> tuple[Recipe, List[tuple[RecipeInput, ExchangePrice]]]:
+    def get_recipe_with_prices(self, symbol: str) -> tuple[Recipe, List[tuple[RecipeInput, ExchangePrice]]]:
         """Get a recipe with current prices for its inputs."""
         pass
 
@@ -149,9 +146,7 @@ class SiteRepositoryInterface(ABC):
         pass
 
     @abstractmethod
-    def create_site_building_material(
-        self, site_building_material: SiteBuildingMaterial
-    ) -> SiteBuildingMaterial:
+    def create_site_building_material(self, site_building_material: SiteBuildingMaterial) -> SiteBuildingMaterial:
         """Create a new site building material."""
         pass
 
@@ -264,9 +259,7 @@ class SystemRepositoryInterface(ABC):
         pass
 
     @abstractmethod
-    def create_planet_building_requirement(
-        self, requirement: PlanetBuildingRequirement
-    ) -> None:
+    def create_planet_building_requirement(self, requirement: PlanetBuildingRequirement) -> None:
         """Create a new planet building requirement."""
         pass
 
@@ -309,9 +302,7 @@ class WorkforceRepositoryInterface(ABC):
     """Interface for workforce-related operations."""
 
     @abstractmethod
-    def get_workforce_needs(
-        self, workforce_type: Optional[str] = None
-    ) -> List[WorkforceNeed]:
+    def get_workforce_needs(self, workforce_type: Optional[str] = None) -> List[WorkforceNeed]:
         """Get workforce needs, optionally filtered by workforce type."""
         pass
 
@@ -323,4 +314,54 @@ class WorkforceRepositoryInterface(ABC):
     @abstractmethod
     def delete_workforce_needs(self) -> None:
         """Delete all workforce needs."""
+        pass
+
+
+class InternalOfferRepositoryInterface(ABC):
+    """Interface for internal offer-related operations."""
+
+    @abstractmethod
+    def get_offers_by_item(self, item_symbol: str) -> List[InternalOffer]:
+        """Get all internal offers for a given item symbol.
+
+        Args:
+            item_symbol: Item symbol
+        """
+        pass
+
+    @abstractmethod
+    def get_offer_by_item_and_user(self, item_symbol: str, user_name: str) -> Optional[InternalOffer]:
+        """Get an internal offer by item symbol and user name.
+
+        Args:
+            item_symbol: Item symbol
+            user_name: User name
+
+        Returns:
+            InternalOffer if found, None otherwise
+        """
+        pass
+
+    @abstractmethod
+    def create_offer(self, offer: InternalOffer) -> InternalOffer:
+        """Create a new internal offer.
+
+        Args:
+            offer: Internal offer to create
+
+        Returns:
+            Created internal offer
+        """
+        pass
+
+    @abstractmethod
+    def update_offer(self, offer: InternalOffer) -> InternalOffer:
+        """Update an existing internal offer.
+
+        Args:
+            offer: Internal offer to update
+
+        Returns:
+            Updated internal offer
+        """
         pass

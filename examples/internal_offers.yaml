@@ -1,0 +1,305 @@
+name: "internal offers"
+description: "Internal offers for various materials from trusted suppliers"
+
+companies:
+  - name: "27Bit Industries"
+    user_name: "Zillatron"
+    offers:
+      - item_symbol: "ALO"
+        price: 100.00
+      - item_symbol: "BBH"
+        price: 1800.00
+      - item_symbol: "BSE"
+        price: 1300.00
+      - item_symbol: "H2O"
+        price: 32.00
+      - item_symbol: "HCP"
+        price: 300.00
+      - item_symbol: "LBH"
+        price: 2700.00
+      - item_symbol: "LDE"
+        price: 8000.00
+      - item_symbol: "LHP"
+        price: 2000.00
+      - item_symbol: "LSE"
+        price: 5500.00
+      - item_symbol: "LTA"
+        price: 2600.00
+      - item_symbol: "NL"
+        price: 4000.00
+      - item_symbol: "O"
+        price: 80.00
+      - item_symbol: "PG"
+        price: 30.00
+
+  - name: "Bitkov Industries"
+    user_name: "Pxlfox"
+    offers:
+      - item_symbol: "BDE"
+        price: 2000.00
+      - item_symbol: "BTA"
+        price: 1300.00
+
+  - name: "Apple Systems"
+    user_name: "Appletree23"
+    offers:
+      - item_symbol: "TRU"
+        price: 325.00
+      - item_symbol: "GV"
+        price: 2000.00
+      - item_symbol: "PG"
+        price: 35.00
+
+  - name: "Scorpy Industries"
+    user_name: "Scorpy"
+    offers:
+      - item_symbol: "BOR"
+        price: 550.00
+      - item_symbol: "FLX"
+        price: 125.00
+      - item_symbol: "NS"
+        price: 350.00
+      - item_symbol: "RAT"
+        price: 150.00
+      - item_symbol: "KOM"
+        price: 750.00
+      - item_symbol: "HE"
+        price: 200.00
+      - item_symbol: "AMM"
+        price: 95.00
+      - item_symbol: "MHL"
+        price: 1.80
+
+  - name: "PC7"
+    user_name: "CptColeslaw"
+    offers:
+      - item_symbol: "SF"
+        price: 13.50
+      - item_symbol: "PE"
+        price: 6.50
+
+  - name: "Short Term Grains Ltd"
+    user_name: "sidepipe"
+    offers:
+      - item_symbol: "RAT"
+        price: 80.00
+      - item_symbol: "DW"
+        price: 65.00
+      - item_symbol: "FIM"
+        price: 1750.00
+      - item_symbol: "DDT"
+        price: 3000.00
+      - item_symbol: "BWS"
+        price: 30000.00
+      - item_symbol: "INS"
+        price: 100.00
+      - item_symbol: "NA"
+        price: 0.00
+
+  - name: "Friendly Metals Storefront"
+    user_name: "hal98"
+    stock_link: "https://docs.google.com/spreadsheets/d/1uF1CC0yQeW5_OBAXH1UUUzlzZM2F3Q6h6RkfMRbmCPU/pubhtml?gid=1964780185&single=true"
+    offers:
+      - item_symbol: "AL"
+        price: 450.00
+      - item_symbol: "C"
+        price: 450.00
+      - item_symbol: "HAL"
+        price: 150.00
+      - item_symbol: "ALO"
+        price: 75.00
+      - item_symbol: "TRU"
+        price: 200.00
+      - item_symbol: "BBH"
+        price: 1500.00
+      - item_symbol: "BDE"
+        price: 1400.00
+      - item_symbol: "BSE"
+        price: 1000.00
+      - item_symbol: "BTA"
+        price: 1000.00
+      - item_symbol: "LBH"
+        price: 1700.00
+      - item_symbol: "LDE"
+        price: 5500.00
+      - item_symbol: "LSE"
+        price: 4000.00
+      - item_symbol: "LTA"
+        price: 2500.00
+
+  - name: "Ingenious Store"
+    user_name: "akyan"
+    stock_link: "https://docs.google.com/spreadsheets/d/e/2PACX-1vQyIiYe6LaI_KVXb6uIcf3XHnLOBdl3MxU5koX8JtnhCvhefnH_YDTzCVkbmT7qCF4QMxIvGVtMIVAP/pubhtml?gid=1719482400&single=true"
+    offers:
+      - item_symbol: "BBH"
+        price: 1800.00
+      - item_symbol: "BDE"
+        price: 1600.00
+      - item_symbol: "BSE"
+        price: 1100.00
+      - item_symbol: "BTA"
+        price: 1100.00
+      - item_symbol: "LBH"
+        price: 3000.00
+      - item_symbol: "LDE"
+        price: 7000.00
+      - item_symbol: "LSE"
+        price: 6000.00
+      - item_symbol: "LTA"
+        price: 3000.00
+      - item_symbol: "RBH"
+        price: 14000.00
+      - item_symbol: "RDE"
+        price: 20000.00
+      - item_symbol: "RSE"
+        price: 20000.00
+      - item_symbol: "RTA"
+        price: 12500.00
+      - item_symbol: "ABH"
+        price: 36000.00
+      - item_symbol: "ADE"
+        price: 34000.00
+      - item_symbol: "ASE"
+        price: 30000.00
+      - item_symbol: "ATA"
+        price: 25000.00
+      - item_symbol: "HSE"
+        price: 9000.00
+      - item_symbol: "APT"
+        price: 9250.00
+      - item_symbol: "AWH"
+        price: 9000.00
+      - item_symbol: "AHP"
+        price: 7000.00
+      - item_symbol: "SRP"
+        price: 9500.00
+      - item_symbol: "LCB"
+        price: 400000.00
+      - item_symbol: "WCB"
+        price: 450000.00
+      - item_symbol: "MSL"
+        price: 150000.00
+      - item_symbol: "OVE"
+        price: 80.00
+      - item_symbol: "EXO"
+        price: 190.00
+      - item_symbol: "OFF"
+        price: 75.00
+      - item_symbol: "TUB"
+        price: 160.00
+
+  - name: "Fin Metals"
+    user_name: "Finest_One"
+    offers:
+      - item_symbol: "TI"
+        price: 1400.00
+      - item_symbol: "BRO"
+        price: 1700.00
+      - item_symbol: "TAI"
+        price: 650.00
+      - item_symbol: "BRM"
+        price: 120.00
+      - item_symbol: "TIO"
+        price: 190.00
+      - item_symbol: "H"
+        price: 110.00
+      - item_symbol: "GIN"
+        price: 1300.00
+      - item_symbol: "ALE"
+        price: 1300.00
+      - item_symbol: "LC"
+        price: 7200.00
+      - item_symbol: "HSS"
+        price: 2900.00
+      - item_symbol: "REP"
+        price: 640.00
+      - item_symbol: "SEA"
+        price: 140.00
+      - item_symbol: "SP"
+        price: 2500.00
+      - item_symbol: "POW"
+        price: 8200.00
+      - item_symbol: "DIS"
+        price: 6400.00
+      - item_symbol: "LD"
+        price: 9000.00
+      - item_symbol: "BAI"
+        price: 12000.00
+      - item_symbol: "MLI"
+        price: 18000.00
+      - item_symbol: "SAL"
+        price: 6000.00
+      - item_symbol: "SA"
+        price: 6000.00
+
+  - name: "Energetic Solutions"
+    user_name: "Dyeus_Phter"
+    offers:
+      - item_symbol: "COF"
+        price: 690.00
+      - item_symbol: "SP"
+        price: 2200.00
+      - item_symbol: "SRD"
+        price: 59000.00
+      - item_symbol: "INS"
+        price: 115.00
+
+  - name: "PDC"
+    user_name: "jcheung9941"
+    offers:
+      - item_symbol: "SC"
+        price: 1000.00
+      - item_symbol: "MED"
+        price: 1100.00
+      - item_symbol: "NL"
+        price: 4000.00
+      - item_symbol: "TSH"
+        price: 31000.00
+      - item_symbol: "TRU"
+        price: 350.00
+      - item_symbol: "PSL"
+        price: 3000.00
+
+  - name: "Silent Running's Storefront"
+    user_name: "tanda"
+    offers:
+      - item_symbol: "BBH"
+        price: 1500.00
+      - item_symbol: "BSE"
+        price: 1200.00
+      - item_symbol: "RBH"
+        price: 16400.00
+      - item_symbol: "RSE"
+        price: 26500.00
+      - item_symbol: "RDE"
+        price: 29600.00
+      - item_symbol: "RTA"
+        price: 14650.00
+      - item_symbol: "TRU"
+        price: 350.00
+      - item_symbol: "INS"
+        price: 100.00
+      - item_symbol: "TSH"
+        price: 27500.00
+      - item_symbol: "HSE"
+        price: 9500.00
+      - item_symbol: "MHL"
+        price: 3500.00
+      - item_symbol: "RAT"
+        price: 120.00
+
+  - name: "Fortium"
+    user_name: "ManhimOne"
+    offers:
+      - item_symbol: "AL"
+        price: 700.00
+      - item_symbol: "PE"
+        price: 8.50
+      - item_symbol: "O"
+        price: 80.00
+      - item_symbol: "EPO"
+        price: 150.00
+      - item_symbol: "GL"
+        price: 400.00
+      - item_symbol: "INS"
+        price: 115.00

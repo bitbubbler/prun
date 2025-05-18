@@ -1,6 +1,7 @@
 import json
 import logging
 import traceback
+from datetime import datetime
 
 import click
 from rich.console import Console
@@ -10,15 +11,22 @@ from yaml import YAMLError
 from rich.align import Align
 from rich.text import Text
 from rich import box
+from pydantic import BaseModel
 
-from prun.config import Empire, EmpirePlanet
-from prun.di import container
-from prun.errors import (
+from fly.config import EmpireIn, EmpirePlanetIn, InternalOfferConfig, BuyListConfig
+from fly.models import Experts
+from fly.di import container
+from fly.errors import (
     MultipleRecipesError,
     RecipeNotFoundError,
     RecipeSymbolRequiredError,
 )
-from prun.services.cost_service import CalculatedRecipeOutputCOGM, CalculatedEmpireCOGM
+from fly.services.cost_service import (
+    CalculatedRecipeOutputCOGM,
+    CalculatedEmpireCOGM,
+    CostContext,
+)
+from fly.database import init_db
 
 
 def setup_logging() -> None:
@@ -82,19 +90,13 @@ def sync(username: str, password: str, apikey: str | None, all: bool) -> None:
         container.workforce_service().sync_workforce_needs()  # Workforce needs depend on materials
 
     logger.info("Syncing sites...")
-    container.site_service().sync_sites(
-        username
-    )  # Sites depend on planets and buildings
+    container.site_service().sync_sites(username)  # Sites depend on planets and buildings
 
     logger.info("Syncing warehouses...")
-    container.warehouse_service().sync_warehouses(
-        username
-    )  # Warehouses must be synced before storage
+    container.warehouse_service().sync_warehouses(username)  # Warehouses must be synced before storage
 
     logger.info("Syncing storage...")
-    container.storage_service().sync_storage(
-        username
-    )  # Storage depends on materials and warehouses
+    container.storage_service().sync_storage(username)  # Storage depends on materials and warehouses
 
     logger.info("Sync completed successfully")
     logger.info("Cleaning up resources")
@@ -141,14 +143,29 @@ def cogm(
     - cogm RAT -p 'KW-688c' -r 'FP:1xALG-1xMAI-1xNUT=>10xRAT'
     """
     stderr_console = Console(stderr=True)
+    cogm_price_cache: dict[str, float] = {}
 
     def get_buy_price(item_symbol: str) -> float:
-        buy_price = container.exchange_service().get_buy_price(
-            exchange_code="AI1", item_symbol=item_symbol
-        )
+        buy_price = container.exchange_service().get_buy_price(exchange_code="AI1", item_symbol=item_symbol)
         if not buy_price:
             raise ValueError(f"No exchange ask_price found for {item_symbol}")
         return buy_price
+
+    def set_cogm_price(item_symbol: str, price: float) -> None:
+        buy_price = get_buy_price(item_symbol)
+        cogm_price = cogm_price_cache.get(item_symbol)
+        # we don't store a cogm price if it's higher than the buy price
+        if buy_price < price:
+            return
+        # only store the new cogm price if it's lower than the existing cogm price
+        if cogm_price is None or price < cogm_price:
+            cogm_price_cache[item_symbol] = price
+
+    cost_context = CostContext(
+        get_buy_price=get_buy_price,
+        set_cogm_price=set_cogm_price,
+        cogm_price_cache=cogm_price_cache,
+    )
 
     try:
         cost_service = container.cost_service()
@@ -162,11 +179,7 @@ def cogm(
             raise ValueError("Planet is required")
 
         planet_resource = next(
-            (
-                resource
-                for resource in planet.resources
-                if resource.item.symbol == item_symbol
-            ),
+            (resource for resource in planet.resources if resource.item.symbol == item_symbol),
             None,
         )
 
@@ -181,23 +194,27 @@ def cogm(
                 raise RecipeSymbolRequiredError()
             raise RecipeNotFoundError(recipe_symbol)
 
+        experts = Experts()
+
+        setattr(experts, recipe.building.expertise.lower(), num_experts)
+
         if recipe.is_resource_extraction_recipe:
             efficient_recipe = recipe_service.get_efficient_planet_extraction_recipe(
                 recipe_symbol=recipe.symbol,
                 planet_resource=planet_resource,
-                num_experts=num_experts,
+                experts=experts,
             )
         else:
             efficient_recipe = recipe_service.get_efficient_recipe(
                 recipe_symbol=recipe.symbol,
-                num_experts=num_experts,
+                experts=experts,
             )
 
         result: CalculatedRecipeOutputCOGM = cost_service.calculate_cogm(
+            cost_context=cost_context,
             recipe=efficient_recipe,
             planet=planet,
             item_symbol=item_symbol,
-            get_buy_price=get_buy_price,
         )
         if json:
             print(result.model_dump_json())
@@ -220,6 +237,12 @@ def cogm(
         exit(1)
 
 
+class StockLinkOut(BaseModel):
+    company: str
+    user_name: str
+    stock_link: str
+
+
 @cli.command()
 @click.argument("config_file", type=click.Path(exists=True))
 @click.option(
@@ -234,13 +257,11 @@ def analyze_empire(config_file: str, json: bool) -> None:
     """
     cost_service = container.cost_service()
     exchange_service = container.exchange_service()
-    planet_service = container.planet_service()
-    recipe_service = container.recipe_service()
     console = Console()
 
     # Load and validate the configuration
     try:
-        empire = Empire.from_yaml(config_file)
+        empire = EmpireIn.from_yaml(config_file)
     except FileNotFoundError as e:
         if json:
             print(serialize_exception(e))
@@ -271,24 +292,249 @@ def analyze_empire(config_file: str, json: bool) -> None:
         if item_symbol in cogm_price_cache:
             return cogm_price_cache[item_symbol]
 
-        exchange_price = exchange_service.get_buy_price(
-            exchange_code="AI1", item_symbol=item_symbol
-        )
+        exchange_price = exchange_service.get_buy_price(exchange_code="AI1", item_symbol=item_symbol)
 
         if not exchange_price:
             raise ValueError(f"No exchange price found for {item_symbol}")
 
         return exchange_price
 
-    empire_cogm = cost_service.calculate_empire_cogm(
-        empire=empire,
+    def set_cogm_price(item_symbol: str, price: float) -> None:
+        cogm_price_cache[item_symbol] = price
+
+    cost_context = CostContext(
         get_buy_price=get_buy_price,
+        set_cogm_price=set_cogm_price,
+        cogm_price_cache=cogm_price_cache,
+    )
+
+    empire_cogm = cost_service.calculate_empire_cogm(
+        cost_context=cost_context,
+        empire=empire,
     )
 
     if json:
         print(empire_cogm.model_dump_json())
     else:
         print_empire_cogm_analysis(empire=empire, empire_cogm=empire_cogm)
+
+
+@cli.command()
+@click.argument("config_file", type=click.Path(exists=True))
+@click.option(
+    "--exchange",
+    "-e",
+    "exchange_code",
+    help="Override the exchange code from the config",
+    default="AI1",
+)
+@click.option(
+    "--json",
+    is_flag=True,
+    help="Output in JSON format",
+)
+def buy_list(config_file: str, exchange_code: str | None, json: bool) -> None:
+    """Process a buy list defined in a YAML configuration file and display as a table.
+
+    Calculates the best places to buy each material, prices, and totals.
+
+    Example: buy-list buy_list.yaml
+    """
+    console = Console()
+    exchange_service = container.exchange_service()
+    internal_offer_service = container.internal_offer_service()
+
+    # Load and validate the configuration
+    try:
+        buy_list = BuyListConfig.from_yaml(config_file)
+    except FileNotFoundError as e:
+        if json:
+            print(serialize_exception(e))
+        else:
+            console.print(f"[red]Error:[/red] {str(e)}")
+        exit(1)
+    except YAMLError as e:
+        if json:
+            print(serialize_exception(e))
+        else:
+            console.print(f"[red]Error: Invalid YAML file:[/red] {str(e)}")
+        exit(1)
+    except ValueError as e:
+        if json:
+            print(serialize_exception(e))
+        else:
+            console.print(f"[red]Error: Invalid configuration:[/red] {str(e)}")
+        exit(1)
+
+    # Use provided exchange_code if any, otherwise use the one from config
+    if exchange_code:
+        buy_list.exchange_code = exchange_code
+
+    # Process each item in the buy list
+    results = []
+    companies_linked: set[str] = set()
+    stock_links: list[StockLinkOut] = []
+    total_cost = 0.0
+
+    for planet in buy_list.planets:
+        for item_symbol, amount in planet.items.root.items():
+            result = {
+                "planet": planet.name,
+                "material": item_symbol,
+                "amount": amount,
+                "buy_from": None,
+                "buy_at": None,
+                "total": 0.0,
+            }
+
+            # Get exchange price
+            exchange_buy_price = exchange_service.get_buy_price(
+                exchange_code=buy_list.exchange_code, item_symbol=item_symbol
+            )
+
+            # Get internal price if available
+            best_internal_price: float | None = None
+            best_internal_seller: str | None = None
+            best_internal_seller_stock_link: str | None = None
+
+            internal_offers = internal_offer_service.find_offers_by_item(item_symbol)
+
+            if internal_offers:
+                for offer in internal_offers:
+                    offer_price = offer.price
+                    if not best_internal_price or offer_price < best_internal_price:
+                        best_internal_price = offer_price
+                        best_internal_seller = offer.company.user_name
+                        best_internal_seller_stock_link = offer.company.stock_link
+
+            # Determine where to buy based on price comparison
+            if best_internal_price and (not exchange_buy_price or best_internal_price < exchange_buy_price):
+                result["buy_from"] = best_internal_seller
+                result["buy_at"] = best_internal_price
+                if best_internal_seller not in companies_linked:
+                    companies_linked.add(best_internal_seller)
+                    if best_internal_seller_stock_link:
+                        stock_links.append(
+                            StockLinkOut(
+                                company=best_internal_seller,
+                                user_name=best_internal_seller,
+                                stock_link=best_internal_seller_stock_link,
+                            )
+                        )
+            else:
+                result["buy_from"] = buy_list.exchange_code
+                result["buy_at"] = exchange_buy_price
+
+            # Calculate total
+            result["total"] = result["buy_at"] * amount if result["buy_at"] else 0.0
+            total_cost += result["total"]
+
+            results.append(result)
+
+    # Display results
+    if json:
+        print(json.dumps({"buy_list": buy_list.name, "items": results, "total_cost": total_cost}))
+    else:
+        print_buy_list(buy_list.name, results, total_cost, stock_links)
+
+
+def print_buy_list(list_name: str, results: list, total_cost: float, stock_links: list[StockLinkOut]) -> None:
+    """Print buy list in a formatted table."""
+    console = Console()
+
+    console.print(Panel(f"Buy List: {list_name}", style="bold blue"))
+
+    table = Table(box=box.SIMPLE)
+    table.add_column("planet", style="cyan")
+    table.add_column("material", style="green")
+    table.add_column("amount", justify="right")
+    table.add_column("buy from", style="yellow")
+    table.add_column("buy at", justify="right", style="yellow")
+    table.add_column("total", justify="right", style="bold")
+
+    for item in results:
+        table.add_row(
+            item["planet"],
+            item["material"],
+            str(item["amount"]),
+            item["buy_from"] or "-",
+            f"${item['buy_at']:,.2f}" if item["buy_at"] else "-",
+            f"${item['total']:,.2f}" if item["total"] else "-",
+        )
+
+    # Add a grand total row
+    table.add_row("", "", "", "", "", "", "[bold]Grand Total:[/bold]", f"[bold]${total_cost:,.2f}[/bold]")
+
+    console.print(table)
+
+    company_links_shown: set[str] = set()
+
+    # Print stock links if available
+    if len(stock_links) > 0:
+        console.print("\n[bold]Stock Links:[/bold]")
+        stock_table = Table(box=box.SIMPLE)
+        stock_table.add_column("User", style="cyan")
+        stock_table.add_column("Stock Link", style="green")
+
+        for stock_link in stock_links:
+            if stock_link.user_name in company_links_shown:
+                continue
+            company_links_shown.add(stock_link.user_name)
+            stock_table.add_row(stock_link.user_name, stock_link.stock_link)
+
+        console.print(stock_table)
+
+
+@cli.command()
+@click.argument("config_file", type=click.Path(exists=True))
+@click.option("--force", "-f", is_flag=True, help="Force update of existing offers")
+def insert_offers(config_file: str, force: bool) -> None:
+    """Insert internal offers from a YAML configuration file.
+
+    The YAML file should define offers with item symbol, price, user name, and company name.
+    Companies can also include an optional stock_link field for stock market references.
+
+    Example: insert-offers internal_offers.yaml
+    """
+    logger = logging.getLogger(__name__)
+    console = Console()
+
+    # Initialize database
+    logger.info("Initializing database...")
+    init_db()
+
+    # Load and validate the configuration
+    try:
+        offer_config = InternalOfferConfig.from_yaml(config_file)
+    except FileNotFoundError as e:
+        console.print(f"[red]Error:[/red] {str(e)}")
+        exit(1)
+    except YAMLError as e:
+        console.print(f"[red]Error: Invalid YAML file:[/red] {str(e)}")
+        exit(1)
+    except ValueError as e:
+        console.print(f"[red]Error: Invalid configuration:[/red] {str(e)}")
+        exit(1)
+
+    # Calculate total number of offers across all companies
+    total_offers = sum(len(company.offers) for company in offer_config.companies)
+    console.print(f"Loaded {total_offers} offers from {len(offer_config.companies)} companies")
+
+    # Process offers using the service
+    internal_offer_service = container.internal_offer_service()
+
+    # Use a context manager session through the service
+    added, updated, skipped, errors = internal_offer_service.process_offer_config(
+        config=offer_config, force_update=force
+    )
+
+    # Print summary
+    console.print("\n[bold]Summary:[/bold]")
+    console.print(f"  Offers added: {added}")
+    console.print(f"  Offers updated: {updated}")
+    console.print(f"  Offers skipped (no changes): {skipped}")
+    console.print(f"  Errors (items not found): {errors}")
+    console.print(f"  Total processed: {added + updated + skipped + errors}")
 
 
 def print_recipe_cogm_analysis(
@@ -314,11 +560,7 @@ def print_recipe_cogm_analysis(
     else:
         runtime_str = "-"
         percent_per_day_str = "-"
-    efficiency = (
-        f"{cogm.expert_efficiency * 100:.2f} %"
-        if cogm.expert_efficiency is not None
-        else "-"
-    )
+    efficiency = f"{cogm.expert_efficiency * 100:.2f} %" if cogm.expert_efficiency is not None else "-"
     parameters_table.add_row("[b]Recipe Runtime[/b]", runtime_str, percent_per_day_str)
     parameters_table.add_row("[b]Efficiency[/b]", efficiency, "")
 
@@ -343,9 +585,7 @@ def print_recipe_cogm_analysis(
             f"{input_cost.price:,.2f}",
             f"{input_cost.total:,.2f}",
         )
-    materials_table.add_row(
-        "[b]Input Total[/b]", "", "", f"{cogm.input_costs.total:,.2f} $"
-    )
+    materials_table.add_row("[b]Input Total[/b]", "", "", f"{cogm.input_costs.total:,.2f} $")
 
     # --- Workforce Section ---
     workforce_table = Table(title="Workforce", expand=False, box=box.SIMPLE_HEAVY)
@@ -353,12 +593,8 @@ def print_recipe_cogm_analysis(
     workforce_table.add_column("Units")
     workforce_table.add_column("$ Total")
     for need in cogm.workforce_cost.needs:
-        workforce_table.add_row(
-            need.workforce_type.title(), str(need.workforce_count), f"{need.total:,.2f}"
-        )
-    workforce_table.add_row(
-        "[b]Workforce Total[/b]", "", f"{cogm.workforce_cost.total:,.2f} $"
-    )
+        workforce_table.add_row(need.workforce_type.title(), str(need.workforce_count), f"{need.total:,.2f}")
+    workforce_table.add_row("[b]Workforce Total[/b]", "", f"{cogm.workforce_cost.total:,.2f} $")
 
     # --- Total Section ---
     total_cost = cogm.total_cost
@@ -374,14 +610,10 @@ def print_recipe_cogm_analysis(
     summary_table.add_column("Units")
     summary_table.add_column("Cost / Split")
     summary_table.add_column("Cost / All Cost")
-    summary_table.add_row(
-        f"[b]{item_symbol}[/b]", "1", f"{total_cost:,.2f}", f"{total_cost:,.2f}"
-    )
+    summary_table.add_row(f"[b]{item_symbol}[/b]", "1", f"{total_cost:,.2f}", f"{total_cost:,.2f}")
 
     # --- Print All Sections ---
-    console.print(
-        Panel(parameters_table, title="Parameters", style="bold", expand=False)
-    )
+    console.print(Panel(parameters_table, title="Parameters", style="bold", expand=False))
     console.print(Panel(cost_table, title="Cost", style="bold", expand=False))
     console.print(materials_table)
     console.print(workforce_table)
@@ -390,7 +622,7 @@ def print_recipe_cogm_analysis(
 
 
 def print_empire_cogm_analysis(
-    empire: Empire,
+    empire: EmpireIn,
     empire_cogm: CalculatedEmpireCOGM,
 ) -> None:
     # Print the empire name

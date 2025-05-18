@@ -1,9 +1,10 @@
 import logging
 from typing import Callable, Optional, Sequence, ContextManager
+from datetime import datetime
 
 from sqlmodel import Session, select, desc, and_
 
-from prun.models import (
+from fly.models.db_models import (
     Item,
     Recipe,
     RecipeInput,
@@ -26,6 +27,8 @@ from prun.models import (
     PlanetProductionFee,
     COGCProgram,
     COGCVote,
+    InternalOffer,
+    Company,
 )
 
 logger = logging.getLogger(__name__)
@@ -124,9 +127,7 @@ class ExchangeRepository(BaseRepository):
         for price in prices:
             self.session.delete(price)
 
-    def get_exchange_price(
-        self, exchange_code: str, item_symbol: str
-    ) -> Optional[ExchangePrice]:
+    def get_exchange_price(self, exchange_code: str, item_symbol: str) -> Optional[ExchangePrice]:
         """Get an exchange price by item symbol and exchange code.
 
         Args:
@@ -238,9 +239,7 @@ class RecipeRepository(BaseRepository):
         self.session.add(recipe)
         return recipe
 
-    def get_recipe_with_prices(
-        self, symbol: str
-    ) -> tuple[Recipe, list[tuple[RecipeInput, ExchangePrice]]]:
+    def get_recipe_with_prices(self, symbol: str) -> tuple[Recipe, list[tuple[RecipeInput, ExchangePrice]]]:
         """Get a recipe with current prices for its inputs from AI1 exchange.
 
         Args:
@@ -290,11 +289,7 @@ class RecipeRepository(BaseRepository):
         Returns:
             List of recipes
         """
-        statement = (
-            select(Recipe)
-            .join(RecipeOutput)
-            .where(RecipeOutput.item_symbol == item_symbol)
-        )
+        statement = select(Recipe).join(RecipeOutput).where(RecipeOutput.item_symbol == item_symbol)
         recipes = self.session.exec(statement).all()
         return recipes
 
@@ -365,9 +360,7 @@ class SiteRepository(BaseRepository):
         self.session.add(site_building)
         return site_building
 
-    def create_site_building_material(
-        self, site_building_material: SiteBuildingMaterial
-    ) -> SiteBuildingMaterial:
+    def create_site_building_material(self, site_building_material: SiteBuildingMaterial) -> SiteBuildingMaterial:
         """Create a new site building material.
 
         Args:
@@ -396,9 +389,7 @@ class SiteRepository(BaseRepository):
         Args:
             site_building_id: Site building ID
         """
-        statement = select(SiteBuildingMaterial).where(
-            SiteBuildingMaterial.site_building_id == site_building_id
-        )
+        statement = select(SiteBuildingMaterial).where(SiteBuildingMaterial.site_building_id == site_building_id)
         materials = self.session.exec(statement).all()
         for material in materials:
             self.session.delete(material)
@@ -592,9 +583,7 @@ class SystemRepository(BaseRepository):
         Args:
             planet: Planet
         """
-        statement = select(PlanetResource).where(
-            PlanetResource.planet_natural_id == planet.natural_id
-        )
+        statement = select(PlanetResource).where(PlanetResource.planet_natural_id == planet.natural_id)
         resources = self.session.exec(statement).all()
         for resource in resources:
             self.session.delete(resource)
@@ -618,9 +607,7 @@ class SystemRepository(BaseRepository):
         Args:
             planet: Planet
         """
-        statement = select(PlanetProductionFee).where(
-            PlanetProductionFee.planet_natural_id == planet.natural_id
-        )
+        statement = select(PlanetProductionFee).where(PlanetProductionFee.planet_natural_id == planet.natural_id)
         fees = self.session.exec(statement).all()
         for fee in fees:
             self.session.delete(fee)
@@ -631,9 +618,7 @@ class SystemRepository(BaseRepository):
         Args:
             planet: Planet
         """
-        statement = select(COGCProgram).where(
-            COGCProgram.planet_natural_id == planet.natural_id
-        )
+        statement = select(COGCProgram).where(COGCProgram.planet_natural_id == planet.natural_id)
         programs = self.session.exec(statement).all()
         for program in programs:
             self.session.delete(program)
@@ -644,9 +629,7 @@ class SystemRepository(BaseRepository):
         Args:
             planet: Planet
         """
-        statement = select(COGCVote).where(
-            COGCVote.planet_natural_id == planet.natural_id
-        )
+        statement = select(COGCVote).where(COGCVote.planet_natural_id == planet.natural_id)
         votes = self.session.exec(statement).all()
         for vote in votes:
             self.session.delete(vote)
@@ -663,9 +646,7 @@ class SystemRepository(BaseRepository):
         self.session.add(resource)
         return resource
 
-    def create_planet_building_requirement(
-        self, requirement: PlanetBuildingRequirement
-    ) -> PlanetBuildingRequirement:
+    def create_planet_building_requirement(self, requirement: PlanetBuildingRequirement) -> PlanetBuildingRequirement:
         """Create a new planet building requirement.
 
         Args:
@@ -677,9 +658,7 @@ class SystemRepository(BaseRepository):
         self.session.add(requirement)
         return requirement
 
-    def create_planet_production_fee(
-        self, fee: PlanetProductionFee
-    ) -> PlanetProductionFee:
+    def create_planet_production_fee(self, fee: PlanetProductionFee) -> PlanetProductionFee:
         """Create a new planet production fee.
 
         Args:
@@ -762,9 +741,7 @@ class WarehouseRepository(BaseRepository):
 class WorkforceRepository(BaseRepository):
     """Repository for workforce-related operations."""
 
-    def get_workforce_needs(
-        self, workforce_type: Optional[str] = None
-    ) -> Sequence[WorkforceNeed]:
+    def get_workforce_needs(self, workforce_type: Optional[str] = None) -> Sequence[WorkforceNeed]:
         """Get workforce needs, optionally filtered by workforce type.
 
         Args:
@@ -802,3 +779,138 @@ class WorkforceRepository(BaseRepository):
         needs = self.session.exec(statement).all()
         for need in needs:
             self.session.delete(need)
+
+
+class CompanyRepository(BaseRepository):
+    """Repository for company-related operations."""
+
+    def get_company_by_name_and_user(self, company_name: str, user_name: str) -> Optional[Company]:
+        """Get a company by name and user.
+
+        Args:
+            company_name: Company name
+            user_name: User name
+
+        Returns:
+            Company if found, None otherwise
+        """
+        statement = select(Company).where(Company.name == company_name, Company.user_name == user_name)
+        return self.session.exec(statement).first()
+
+    def create_company(self, company: Company) -> Company:
+        """Create a new company.
+
+        Args:
+            company: Company to create
+
+        Returns:
+            Created company
+        """
+        self.session.add(company)
+        self.session.commit()
+        self.session.refresh(company)
+        return company
+
+    def update_company(self, company: Company) -> Company:
+        """Update an existing company.
+
+        Args:
+            company: Company to update
+
+        Returns:
+            Updated company
+        """
+        # Get the existing company from the database
+        db_company = self.session.get(Company, company.id)
+        if not db_company:
+            raise ValueError(f"Company with ID {company.id} not found")
+
+        # Update fields - manually update fields that need updating
+        if hasattr(company, "name"):
+            db_company.name = company.name
+        if hasattr(company, "user_name"):
+            db_company.user_name = company.user_name
+        if hasattr(company, "stock_link"):
+            db_company.stock_link = company.stock_link
+
+        self.session.commit()
+        self.session.refresh(db_company)
+        return db_company
+
+
+class InternalOfferRepository(BaseRepository):
+    """Repository for internal offer-related operations."""
+
+    def get_offers_by_item(self, item_symbol: str) -> list[InternalOffer]:
+        """Get all internal offers for a given item symbol.
+
+        Args:
+            item_symbol: Item symbol
+
+        Returns:
+            List of internal offers
+        """
+        statement = select(InternalOffer).where(InternalOffer.item_symbol == item_symbol)
+        return self.session.exec(statement).all()
+
+    def get_offer_by_item_and_user(self, item_symbol: str, user_name: str) -> Optional[InternalOffer]:
+        """Get an internal offer by item symbol and user name.
+
+        Args:
+            item_symbol: Item symbol
+            user_name: User name
+
+        Returns:
+            InternalOffer if found, None otherwise
+        """
+        statement = (
+            select(InternalOffer)
+            .join(Company)
+            .where(
+                InternalOffer.item_symbol == item_symbol,
+                Company.user_name == user_name,
+            )
+        )
+        return self.session.exec(statement).first()
+
+    def create_offer(self, offer: InternalOffer) -> InternalOffer:
+        """Create a new internal offer.
+
+        Args:
+            offer: Internal offer to create
+
+        Returns:
+            Created internal offer
+        """
+        self.session.add(offer)
+        self.session.commit()
+        self.session.refresh(offer)
+        return offer
+
+    def update_offer(self, offer: InternalOffer) -> InternalOffer:
+        """Update an existing internal offer.
+
+        Args:
+            offer: Internal offer to update
+
+        Returns:
+            Updated internal offer
+        """
+        # Get the existing offer from the database
+        db_offer = self.session.get(InternalOffer, offer.id)
+        if not db_offer:
+            raise ValueError(f"Offer with ID {offer.id} not found")
+
+        # Update fields - manually update fields that need updating
+        if hasattr(offer, "item_symbol"):
+            db_offer.item_symbol = offer.item_symbol
+        if hasattr(offer, "price"):
+            db_offer.price = offer.price
+        if hasattr(offer, "user_name"):
+            db_offer.user_name = offer.user_name
+        if hasattr(offer, "company_id"):
+            db_offer.company_id = offer.company_id
+
+        self.session.commit()
+        self.session.refresh(db_offer)
+        return db_offer

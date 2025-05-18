@@ -1,0 +1,17 @@
+name: "Origo Buildout + 10 days of consumables"
+description: "Materials needed for origo buildout + 10 days of consumables"
+exchange_code: "AI1"
+planets:
+  - name: "origo"
+    items:
+      BBH: 122
+      BDE: 64
+      BSE: 192
+      BTA: 16
+      LDE: 4
+      LSE: 4
+      LTA: 4
+      MCG: 1924
+      PSL: 12
+      SEA: 481
+      TRU: 8

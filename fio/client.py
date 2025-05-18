@@ -99,9 +99,7 @@ class FIOClient:
         data = response.json()
         return FIOAuthLoginResponse(**data).auth_token
 
-    def _map_csv_to_model(
-        self, data: Dict[str, Any], mapping: Dict[str, str]
-    ) -> Dict[str, Any]:
+    def _map_csv_to_model(self, data: Dict[str, Any], mapping: Dict[str, str]) -> Dict[str, Any]:
         """Map CSV column names to model field names.
 
         Args:
@@ -111,9 +109,7 @@ class FIOClient:
         Returns:
             Dict with model field names as keys
         """
-        result = {
-            model_field: data[csv_field] for csv_field, model_field in mapping.items()
-        }
+        result = {model_field: data[csv_field] for csv_field, model_field in mapping.items()}
         return result
 
     def _get_csv(self, endpoint: str, authenticated: bool = False) -> List[dict]:
@@ -206,9 +202,7 @@ class FIOClient:
         data = self._get_json("recipes/allrecipes")
         return [FIORecipe(**recipe) for recipe in data]
 
-    def get_prices(
-        self, material_ticker: Optional[str] = None, exchange: Optional[str] = None
-    ) -> List[FIOPrice]:
+    def get_prices(self, material_ticker: Optional[str] = None, exchange: Optional[str] = None) -> List[FIOPrice]:
         """Get prices from the FIO API.
 
         Args:
@@ -329,3 +323,324 @@ class FIOClient:
         """
         data = self._get_json("planet/allplanets/full")
         return [FIOPlanetFull(**planet) for planet in data]
+
+    def get_planet_by_id(self, planet_id: str) -> Optional[FIOPlanetFull]:
+        """Get a single planet by its natural ID.
+
+        Args:
+            planet_id: Planet natural ID (e.g., 'PG-241h')
+
+        Returns:
+            Planet details or None if not found
+
+        Raises:
+            requests.RequestException: If the request fails
+        """
+        try:
+            # First get all planets to find the one we want
+            planets = self.get_planets_full()
+            for planet in planets:
+                if planet.planet_natural_id == planet_id:
+                    return planet
+            logger.warning(f"Planet with ID {planet_id} not found")
+            return None
+        except requests.RequestException as e:
+            logger.error(f"Error fetching planet {planet_id}: {str(e)}")
+            raise
+
+    def get_exchange_by_ticker(self, exchange_ticker: str) -> Optional[Dict[str, Any]]:
+        """Get data for a single exchange by its ticker.
+
+        Args:
+            exchange_ticker: Exchange ticker (e.g., 'IC1', 'NC1')
+
+        Returns:
+            Exchange data or None if not found
+
+        Raises:
+            requests.RequestException: If the request fails
+        """
+        url = f"{self.base_url}/exchange/{exchange_ticker}"
+        logger.debug(f"Fetching exchange data from {url}")
+
+        headers = self.headers.copy()
+        headers["Accept"] = "application/json"
+
+        try:
+            response = self._session.get(url, headers=headers)
+            response.raise_for_status()
+            return response.json()
+        except requests.RequestException as e:
+            logger.error(f"Error fetching exchange {exchange_ticker}: {str(e)}")
+            raise
+
+    def get_company_by_code(self, company_code: str) -> Optional[Dict[str, Any]]:
+        """Get data for a single company by its code.
+
+        Args:
+            company_code: Company code (e.g., 'AI', 'ACC')
+
+        Returns:
+            Company data or None if not found
+
+        Raises:
+            requests.RequestException: If the request fails
+        """
+        url = f"{self.base_url}/company/code/{company_code}"
+        logger.debug(f"Fetching company data from {url}")
+
+        headers = self.headers.copy()
+        headers["Accept"] = "application/json"
+
+        try:
+            response = self._session.get(url, headers=headers)
+            response.raise_for_status()
+            return response.json()
+        except requests.RequestException as e:
+            logger.error(f"Error fetching company {company_code}: {str(e)}")
+            raise
+
+    def get_company_by_name(self, company_name: str) -> Optional[Dict[str, Any]]:
+        """Get data for a single company by its name.
+
+        Args:
+            company_name: Company name (e.g., 'Antares Initiative')
+
+        Returns:
+            Company data or None if not found
+
+        Raises:
+            requests.RequestException: If the request fails
+        """
+        url = f"{self.base_url}/company/name/{company_name}"
+        logger.debug(f"Fetching company data from {url}")
+
+        headers = self.headers.copy()
+        headers["Accept"] = "application/json"
+
+        try:
+            response = self._session.get(url, headers=headers)
+            response.raise_for_status()
+            return response.json()
+        except requests.RequestException as e:
+            logger.error(f"Error fetching company {company_name}: {str(e)}")
+            raise
+
+    def get_localmarket_by_planet(self, planet: str, market_type: Optional[str] = None) -> Optional[Dict[str, Any]]:
+        """Get local market data for a specific planet.
+
+        Args:
+            planet: Planet natural ID (e.g., 'PG-241h')
+            market_type: Optional market type filter
+
+        Returns:
+            Local market data or None if not found
+
+        Raises:
+            requests.RequestException: If the request fails
+        """
+        url = f"{self.base_url}/localmarket/planet/{planet}"
+        if market_type:
+            url = f"{url}/{market_type}"
+
+        logger.debug(f"Fetching local market data from {url}")
+
+        headers = self.headers.copy()
+        headers["Accept"] = "application/json"
+
+        try:
+            response = self._session.get(url, headers=headers)
+            response.raise_for_status()
+            return response.json()
+        except requests.RequestException as e:
+            logger.error(f"Error fetching local market for planet {planet}: {str(e)}")
+            raise
+
+    def get_infrastructure_by_planet(self, planet_id: str) -> Optional[Dict[str, Any]]:
+        """Get infrastructure data for a specific planet.
+
+        Args:
+            planet_id: Planet natural ID or infrastructure ID
+
+        Returns:
+            Infrastructure data or None if not found
+
+        Raises:
+            requests.RequestException: If the request fails
+        """
+        url = f"{self.base_url}/infrastructure/{planet_id}"
+        logger.debug(f"Fetching infrastructure data from {url}")
+
+        headers = self.headers.copy()
+        headers["Accept"] = "application/json"
+
+        try:
+            response = self._session.get(url, headers=headers)
+            response.raise_for_status()
+            return response.json()
+        except requests.RequestException as e:
+            logger.error(f"Error fetching infrastructure for planet {planet_id}: {str(e)}")
+            raise
+
+    def get_material_by_ticker(self, ticker: str) -> Optional[FIOMaterial]:
+        """Get a single material by its ticker.
+
+        Args:
+            ticker: Material ticker (e.g., 'H2O', 'RAT')
+
+        Returns:
+            Material details or None if not found
+        """
+        try:
+            materials = self.get_all_materials()
+            for material in materials:
+                if material.ticker.lower() == ticker.lower():
+                    return material
+            logger.warning(f"Material with ticker {ticker} not found")
+            return None
+        except Exception as e:
+            logger.error(f"Error fetching material {ticker}: {str(e)}")
+            raise
+
+    def get_building_by_ticker(self, ticker: str) -> Optional[FIOBuilding]:
+        """Get a single building by its ticker.
+
+        Args:
+            ticker: Building ticker (e.g., 'SMP', 'TNP')
+
+        Returns:
+            Building details or None if not found
+        """
+        try:
+            buildings = self.get_buildings()
+            for building in buildings:
+                if building.ticker.lower() == ticker.lower():
+                    return building
+            logger.warning(f"Building with ticker {ticker} not found")
+            return None
+        except Exception as e:
+            logger.error(f"Error fetching building {ticker}: {str(e)}")
+            raise
+
+    def get_workforce_by_planet(self, username: str, planet: str) -> Optional[Dict[str, Any]]:
+        """Get workforce data for a specific user on a specific planet.
+
+        Args:
+            username: FIO username
+            planet: Planet natural ID
+
+        Returns:
+            Workforce data or None if not found
+
+        Raises:
+            requests.RequestException: If the request fails
+        """
+        url = f"{self.base_url}/workforce/{username}/{planet}"
+        logger.debug(f"Fetching workforce data from {url}")
+
+        headers = self.headers.copy()
+        headers["Accept"] = "application/json"
+
+        if self._auth_token:
+            if self._useapitoken:
+                headers["Authorization"] = self._auth_token
+            else:
+                headers["Authorization"] = f"Bearer {self._auth_token}"
+
+        try:
+            response = self._session.get(url, headers=headers)
+            response.raise_for_status()
+            return response.json()
+        except requests.RequestException as e:
+            logger.error(f"Error fetching workforce for user {username} on planet {planet}: {str(e)}")
+            raise
+
+    def get_user_info(self, username: str) -> Optional[Dict[str, Any]]:
+        """Get user information.
+
+        Args:
+            username: FIO username
+
+        Returns:
+            User data or None if not found
+
+        Raises:
+            requests.RequestException: If the request fails
+        """
+        url = f"{self.base_url}/user/{username}"
+        logger.debug(f"Fetching user data from {url}")
+
+        headers = self.headers.copy()
+        headers["Accept"] = "application/json"
+
+        if self._auth_token:
+            if self._useapitoken:
+                headers["Authorization"] = self._auth_token
+            else:
+                headers["Authorization"] = f"Bearer {self._auth_token}"
+
+        try:
+            response = self._session.get(url, headers=headers)
+            response.raise_for_status()
+            return response.json()
+        except requests.RequestException as e:
+            logger.error(f"Error fetching user info for {username}: {str(e)}")
+            raise
+
+    def get_contracts(self, username: Optional[str] = None) -> Optional[List[Dict[str, Any]]]:
+        """Get contracts for a user.
+
+        Args:
+            username: Optional username, defaults to authenticated user if None
+
+        Returns:
+            List of contracts or None if not found
+
+        Raises:
+            requests.RequestException: If the request fails
+        """
+        if not username and not self._auth_token:
+            raise ValueError("Either username or authentication is required for get_contracts")
+
+        url = f"{self.base_url}/contract/allcontracts"
+        if username:
+            url = f"{url}/{username}"
+
+        logger.debug(f"Fetching contracts from {url}")
+
+        headers = self.headers.copy()
+        headers["Accept"] = "application/json"
+
+        if self._auth_token:
+            if self._useapitoken:
+                headers["Authorization"] = self._auth_token
+            else:
+                headers["Authorization"] = f"Bearer {self._auth_token}"
+
+        try:
+            response = self._session.get(url, headers=headers)
+            response.raise_for_status()
+            return response.json()
+        except requests.RequestException as e:
+            logger.error(f"Error fetching contracts: {str(e)}")
+            raise
+
+    def get_system_by_id(self, system_id: str) -> Optional[FIOSystem]:
+        """Get a single system by its natural ID.
+
+        Args:
+            system_id: System natural ID
+
+        Returns:
+            System details or None if not found
+        """
+        try:
+            systems = self.get_systems()
+            for system in systems:
+                if system.natural_id == system_id:
+                    return system
+            logger.warning(f"System with ID {system_id} not found")
+            return None
+        except Exception as e:
+            logger.error(f"Error fetching system {system_id}: {str(e)}")
+            raise

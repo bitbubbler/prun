@@ -3,8 +3,8 @@ from typing import List, Literal, Optional
 from pydantic import BaseModel
 
 from fio import FIOClientInterface
-from prun.interface import WorkforceRepositoryInterface
-from prun.models import WorkforceNeed, WorkforceFulfillment
+from fly.interface import WorkforceRepositoryInterface
+from fly.models import WorkforceNeed, WorkforceFulfillment
 
 WorkforceType = Literal["pioneer", "settler", "technician", "engineer", "scientist"]
 
@@ -25,9 +25,7 @@ class WorkforceService:
         self.fio_client = fio_client
         self.workforce_repository = workforce_repository
 
-    def get_workforce_needs(
-        self, workforce_type: str | None = None
-    ) -> List[WorkforceNeed]:
+    def get_workforce_needs(self, workforce_type: str | None = None) -> List[WorkforceNeed]:
         """Get workforce needs, optionally filtered by workforce type.
 
         Args:
