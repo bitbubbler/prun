@@ -647,15 +647,6 @@ def print_empire_cogm_analysis(
                 f"{planet_recipe_output_cogm.total_cost:,.2f}",
             )
 
-            # Print detailed analysis for this output
-            console.print(
-                f"\n[bold]Detailed Analysis for Step {planet_recipe_output_cogm.recipe_symbol} => {planet_recipe_output_cogm.item_symbol}:[/bold]"
-            )
-            print_recipe_cogm_analysis(
-                item_symbol=planet_recipe_output_cogm.item_symbol,
-                cogm=planet_recipe_output_cogm,
-            )
-
     # Print the summary table
     console.print(chain_table)
 

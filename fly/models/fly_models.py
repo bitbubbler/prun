@@ -73,28 +73,30 @@ class EfficientRecipe(BaseModel):
     inputs: list[RecipeInput]
     outputs: list[RecipeOutput]
     building: Building
-    expert_efficiency: float
+    efficiency: float
 
     is_resource_extraction_recipe: bool = False
 
     @classmethod
-    def efficient_recipe_from(cls, recipe: Recipe, expert_efficiency: float) -> "EfficientRecipe":
+    def efficient_recipe_from(cls, recipe: Recipe, efficiency: float) -> "EfficientRecipe":
         """Create an efficient recipe from a normal recipe."""
 
         # Calculate the new time_ms based on expert_efficiency
         # Efficiency reduces time, so we multiply by (1 - efficiency_factor)
         # Ensure time_ms is an integer
-        effective_time_ms = int(recipe.time_ms * (1.0 - expert_efficiency))
+        effective_time_ms = int(recipe.time_ms * (1.0 - efficiency))
 
-        return cls(
+        efficient_recipe = cls(
             symbol=recipe.symbol,
             building_symbol=recipe.building_symbol,
             time_ms=effective_time_ms,
             inputs=recipe.inputs,
             outputs=recipe.outputs,
             building=recipe.building,
-            expert_efficiency=expert_efficiency,
+            efficiency=efficiency,
         )
+
+        return efficient_recipe
 
     @property
     def hours_decimal(self) -> float:
@@ -167,9 +169,9 @@ class EfficientPlanetExtractionRecipe(PlanetExtractionRecipe, EfficientRecipe):
 
     @classmethod
     def efficient_recipe_from(
-        cls, recipe: PlanetExtractionRecipe, expert_efficiency: float
+        cls, recipe: PlanetExtractionRecipe, efficiency: float
     ) -> "EfficientPlanetExtractionRecipe":
-        return super().efficient_recipe_from(recipe, expert_efficiency)
+        return super().efficient_recipe_from(recipe, efficiency)
 
     @classmethod
     def extraction_recipe_from(

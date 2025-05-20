@@ -1,23 +1,26 @@
 name: "CorporateJester"
 planets:
-  - natural_id: "ZV-759c"
+  - name: "ZV-759c"
     experts:
       metallurgy: 5
+    cogc_program: "metallurgy"
     recipes:
       - building_symbol: "GF"
         recipe_symbol: "GF:1xNA-2xSIO=>10xGL"
 
-  - natural_id: "LS-300c"
+  - name: "LS-300c"
     experts:
       chemistry: 5
+    cogc_program: "chemistry"
     recipes:
       - building_symbol: "CHP"
         recipe_symbol: "CHP:1xH2O-3xHAL=>1xCL-2xNA"
 
-  - natural_id: "WU-070a"
+  - name: "WU-070a"
     experts:
       metallurgy: 5
       resource_extraction: 1
+    cogc_program: "metallurgy"
     recipes:
       - building_symbol: "EXT"
         recipe_symbol: "EXT:=>"
@@ -29,8 +32,11 @@ planets:
       - building_symbol: "GF"
         recipe_symbol: "GF:10xGL-15xPG=>10xRG"
 
-      - building_symbol: "LIT"
-        recipe_symbol: "GF:16xNE-8xRG=>1xLIT"
+      # - building_symbol: "LIT"
+      #   recipe_symbol: "GF:16xNE-8xRG=>1xLIT"
+
+      - building_symbol: "TUB"
+        recipe_symbol: "GF:10xGL=>20xTUB"
 
       # - building_symbol: "GCH"
       #   recipe_symbol: "GF:1xGV-20xRG=>1xGCH"
@@ -41,7 +47,7 @@ planets:
       # - building_symbol: "GEN"
       #   recipe_symbol: "GF:4xGNZ-4xLFP-1xMFK-50xNG-10xTHF=>1xGEN"
 
-  - natural_id: "QJ-650c"
+  - name: "QJ-650c"
     experts:
       manufacturing: 5
       resource_extraction: 1

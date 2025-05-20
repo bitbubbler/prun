@@ -504,7 +504,7 @@ class StorageRepository(BaseRepository):
 class SystemRepository(BaseRepository):
     """Repository for system-related operations."""
 
-    def get_planet(self, natural_id: str) -> Optional[Planet]:
+    def get_planet(self, natural_id: str) -> Planet | None:
         """Get a planet by natural ID.
 
         Args:
@@ -514,6 +514,19 @@ class SystemRepository(BaseRepository):
             Planet if found, None otherwise
         """
         return self.session.get(Planet, natural_id)
+
+    def get_planet_by_name(self, name: str) -> Planet | None:
+        """Get a planet by name.
+
+        Args:
+            name: Planet name
+
+        Returns:
+            Planet if found, None otherwise
+        """
+        print(f"Getting planet by name: {name}")
+        statement = select(Planet).where(Planet.name.like(name))
+        return self.session.exec(statement).first()
 
     def create_planet(self, planet: Planet) -> Planet:
         """Create a new planet.
@@ -539,7 +552,7 @@ class SystemRepository(BaseRepository):
         self.session.add(planet)
         return planet
 
-    def get_system(self, system_id: str) -> Optional[System]:
+    def get_system(self, system_id: str) -> System | None:
         """Get a system by ID.
 
         Args:
@@ -550,7 +563,7 @@ class SystemRepository(BaseRepository):
         """
         return self.session.get(System, system_id)
 
-    def get_system_by_natural_id(self, natural_id: str) -> Optional[System]:
+    def get_system_by_natural_id(self, natural_id: str) -> System | None:
         """Get a system by natural ID.
 
         Args:

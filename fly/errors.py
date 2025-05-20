@@ -43,8 +43,8 @@ class BuildingNotFoundError(ValueError):
 class PlanetNotFoundError(ValueError):
     """Raised when a planet is not found."""
 
-    def __init__(self, natural_id: str) -> None:
-        super().__init__(f"Planet {natural_id} not found")
+    def __init__(self, name_or_natural_id: str) -> None:
+        super().__init__(f"Planet {name_or_natural_id} not found")
 
 
 class PlanetResourceRequiredError(ValueError):

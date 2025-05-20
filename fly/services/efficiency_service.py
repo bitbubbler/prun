@@ -83,9 +83,9 @@ class EfficiencyService:
         return program in cls.COGC_PROGRAMS
 
     @classmethod
-    def get_cogc_efficiency_bonus(cls, program: str) -> float:
+    def get_cogc_efficiency(cls, program: str) -> float:
         """
-        Returns the efficiency bonus for a given COGC program.
+        Returns the efficiency percentage for a given COGC program.
         If the program is not valid, returns 0.0.
         """
         if cls.is_valid_cogc_program(program):

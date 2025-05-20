@@ -1,0 +1,37 @@
+name: "CorporateJester"
+material_buy_prices:
+  FLX: 90
+planets:
+  - name: "deimos"
+    experts:
+      metallurgy: 5
+    cogc_program: "metallurgy"
+    recipes:
+      - building_symbol: "SME"
+        recipe_symbol: "SME:6xALO-1xC-1xFLX-1xO=>4xAL"
+  - name: "deimos"
+    experts:
+      resource_extraction: 5
+    cogc_program: "metallurgy"
+    recipes:
+      - building_symbol: "EXT"
+        recipe_symbol: "EXT:=>"
+        item_symbol: "ALO"
+
+      - building_symbol: "COL"
+        recipe_symbol: "COL:=>"
+        item_symbol: "O"
+  - name: "harmonia"
+    experts:
+      agriculture: 5
+    cogc_program: "agriculture"
+    recipes:
+      - building_symbol: "FRM"
+        recipe_symbol: "FRM:4xH2O=>4xGRN"
+  - name: "nascent"
+    experts:
+      resource_extraction: 5
+    cogc_program: "resource_extraction"
+    recipes:
+      - building_symbol: "INC"
+        recipe_symbol: "INC:4xGRN=>4xC"

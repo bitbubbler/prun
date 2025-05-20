@@ -201,8 +201,6 @@ class CostService:
         empire: EmpireIn,
     ) -> CalculatedEmpireCOGM:
         planet_cogms: List[CalculatedPlanetCOGM] = []
-        # cache of cogm prices for each item symbol
-        cogm_price_cache: dict[str, float] = {}
 
         # get all planets and their recipes
         empire_planet_planets = self.get_empire_planet_planets(empire)
@@ -262,11 +260,13 @@ class CostService:
                     recipe_symbol=recipe.symbol,
                     planet_resource=planet_resource,
                     experts=empire_planet.experts,
+                    cogc_program=empire_planet.cogc_program,
                 )
             else:
                 efficient_recipe = recipe_service.get_efficient_recipe(
                     recipe_symbol=recipe.symbol,
                     experts=empire_planet.experts,
+                    cogc_program=empire_planet.cogc_program,
                 )
 
             recipe_cost = self.calculate_recipe_cost(
@@ -342,7 +342,7 @@ class CostService:
                 recipe_symbol=recipe.symbol,
                 building_symbol=recipe.building_symbol,
                 time_ms=recipe.time_ms,
-                expert_efficiency=recipe.expert_efficiency,
+                expert_efficiency=recipe.efficiency,
                 input_costs=CalculatedInputCosts(
                     inputs=inputs,
                     total=sum(input.total for input in inputs),
@@ -485,7 +485,6 @@ class CostService:
         Returns:
             Tuple of (total_input_cost, total_workforce_cost, scaled_input_costs)
         """
-        print(f"recipe: {recipe}")
         recipe_output = next(output for output in recipe.outputs if output.item_symbol == item_symbol)
 
         output_quantity = recipe_output.quantity
@@ -495,7 +494,7 @@ class CostService:
             item_symbol=item_symbol,
             building_symbol=recipe.building_symbol,
             time_ms=recipe.time_ms,
-            expert_efficiency=recipe.expert_efficiency,
+            expert_efficiency=recipe.efficiency,
             input_costs=CalculatedInputCosts(
                 inputs=[
                     CalculatedInput(
@@ -535,9 +534,9 @@ class CostService:
     def get_empire_planet_planets(self, empire: EmpireIn) -> list[tuple[Planet, EmpirePlanetIn]]:
         empire_planet_planets: list[tuple[Planet, EmpirePlanetIn]] = []
         for empire_planet in empire.planets:
-            planet = self.planet_service.get_planet(empire_planet.natural_id)
+            planet = self.planet_service.find_planet(empire_planet.name)
             if not planet:
-                raise PlanetNotFoundError(empire_planet.natural_id)
+                raise PlanetNotFoundError(empire_planet.name)
 
             empire_planet_planets.append(
                 (

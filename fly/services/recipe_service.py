@@ -86,7 +86,9 @@ class RecipeService:
 
         return recipe
 
-    def get_efficient_recipe(self, recipe_symbol: str, experts: Experts) -> EfficientRecipe:
+    def get_efficient_recipe(
+        self, recipe_symbol: str, experts: Experts, cogc_program: str | None = None
+    ) -> EfficientRecipe:
         """Get an efficient recipe by its symbol.
 
         Args:
@@ -101,9 +103,14 @@ class RecipeService:
         if not recipe:
             raise RecipeNotFoundError(recipe_symbol)
 
-        expert_efficiency = self.efficiency_service.get_expert_efficiency(experts, recipe.building.expertise)
+        expert_efficiency: float = self.efficiency_service.get_expert_efficiency(experts, recipe.building.expertise)
+        cogc_efficiency = self.efficiency_service.get_cogc_efficiency(cogc_program)
+        efficiency = expert_efficiency + cogc_efficiency
 
-        return EfficientRecipe.efficient_recipe_from(recipe, expert_efficiency)
+        return EfficientRecipe.efficient_recipe_from(
+            recipe=recipe,
+            efficiency=efficiency,
+        )
 
     def get_planet_extraction_recipe(
         self, recipe_symbol: str, planet_resource: PlanetResource
@@ -131,7 +138,7 @@ class RecipeService:
         return PlanetExtractionRecipe.extraction_recipe_from(recipe, planet_resource)
 
     def get_efficient_planet_extraction_recipe(
-        self, recipe_symbol: str, planet_resource: PlanetResource, experts: Experts
+        self, recipe_symbol: str, planet_resource: PlanetResource, experts: Experts, cogc_program: Optional[str] = None
     ) -> EfficientPlanetExtractionRecipe:
         """Get an efficient planet extraction recipe by its symbol.
 
@@ -151,9 +158,11 @@ class RecipeService:
             raise ValueError("Recipe is not an extraction recipe")
 
         expert_efficiency = self.efficiency_service.get_expert_efficiency(experts, extraction_recipe.building.expertise)
+        cogc_efficiency = self.efficiency_service.get_cogc_efficiency(cogc_program)
+        efficiency = expert_efficiency + cogc_efficiency
 
         efficient_recipe = EfficientPlanetExtractionRecipe.efficient_recipe_from(
-            recipe=extraction_recipe, expert_efficiency=expert_efficiency
+            recipe=extraction_recipe, efficiency=efficiency
         )
 
         return efficient_recipe

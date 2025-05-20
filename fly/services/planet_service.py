@@ -46,6 +46,14 @@ class PlanetService:
 
         return PlanetBuilding.planet_building_from(building, planet)
 
+    def find_planet(self, name: str) -> Planet | None:
+        """Find a planet by name."""
+        planet = self.get_planet(name)
+        if planet:
+            return planet
+
+        return self.system_repository.get_planet_by_name(name)
+
     def sync_planets(self) -> None:
         """Sync planets from the FIO API to the database.
 

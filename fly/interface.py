@@ -219,6 +219,11 @@ class SystemRepositoryInterface(ABC):
         pass
 
     @abstractmethod
+    def get_planet_by_name(self, name: str) -> Planet | None:
+        """Get a planet by its name."""
+        pass
+
+    @abstractmethod
     def create_planet(self, planet: Planet) -> None:
         """Create a new planet."""
         pass

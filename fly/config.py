@@ -34,9 +34,10 @@ class EmpireExpertsIn(Experts):
 class EmpirePlanetIn(BaseModel):
     """A single planet configuration."""
 
-    natural_id: str = Field(..., description="The natural ID of the planet")
+    name: str = Field(..., description="The name of the planet (can be a natural ID, passed to find_planet)")
     recipes: List[EmpireProductionRecipeIn] = Field(..., description="List of production recipes in order")
     experts: EmpireExpertsIn
+    cogc_program: Optional[str] = Field(default=None, description="The COGC program to use for the planet")
 
 
 class EmpireIn(BaseModel):
