@@ -37,6 +37,10 @@ companies:
     offers:
       - item_symbol: "BDE"
         price: 2000.00
+      - item_symbol: "BBH"
+        price: 2000.00
+      - item_symbol: "BSE"
+        price: 1500.00
       - item_symbol: "BTA"
         price: 1300.00
 
@@ -80,6 +84,7 @@ companies:
 
   - name: "Short Term Grains Ltd"
     user_name: "sidepipe"
+    stock_link: "https://docs.google.com/spreadsheets/u/3/d/e/2PACX-1vTlFz9sVjemfJphZxv0JIeS8vJBM3m5s6obwtYthhLurZBIknqCTV1eC7CBcYOZVZICbEhfXbOoy2vg/pubhtml?gid=1964780185&single=true"
     offers:
       - item_symbol: "RAT"
         price: 80.00

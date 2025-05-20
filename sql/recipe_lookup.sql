@@ -1,1 +1,1 @@
-select * from recipes where symbol LIKE '%CHP%CL%';
+select * from recipes where symbol LIKE '%GNZ%';

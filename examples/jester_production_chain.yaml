@@ -2,43 +2,20 @@ name: "CorporateJester"
 planets:
   - natural_id: "ZV-759c"
     experts:
-      agriculture: 0
-      chemistry: 0
-      construction: 0
-      electronics: 0
-      food_industry: 0
-      fuel_refining: 0
-      manufacturing: 0
       metallurgy: 5
-      resource_extraction: 0
     recipes:
       - building_symbol: "GF"
         recipe_symbol: "GF:1xNA-2xSIO=>10xGL"
 
   - natural_id: "LS-300c"
     experts:
-      agriculture: 0
       chemistry: 5
-      construction: 0
-      electronics: 0
-      food_industry: 0
-      fuel_refining: 0
-      manufacturing: 0
-      metallurgy: 0
-      resource_extraction: 0
     recipes:
       - building_symbol: "CHP"
         recipe_symbol: "CHP:1xH2O-3xHAL=>1xCL-2xNA"
 
   - natural_id: "WU-070a"
     experts:
-      agriculture: 0
-      chemistry: 0
-      construction: 0
-      electronics: 0
-      food_industry: 0
-      fuel_refining: 0
-      manufacturing: 0
       metallurgy: 5
       resource_extraction: 1
     recipes:
@@ -52,8 +29,26 @@ planets:
       - building_symbol: "GF"
         recipe_symbol: "GF:10xGL-15xPG=>10xRG"
 
-      - building_symbol: "GCH"
-        recipe_symbol: "GF:1xGV-20xRG=>1xGCH"
-
       - building_symbol: "LIT"
         recipe_symbol: "GF:16xNE-8xRG=>1xLIT"
+
+      # - building_symbol: "GCH"
+      #   recipe_symbol: "GF:1xGV-20xRG=>1xGCH"
+
+      # - building_symbol: "GNZ"
+      #   recipe_symbol: "GF:1xGCH-20xRG-1xTI=>1xGNZ"
+
+      # - building_symbol: "GEN"
+      #   recipe_symbol: "GF:4xGNZ-4xLFP-1xMFK-50xNG-10xTHF=>1xGEN"
+
+  - natural_id: "QJ-650c"
+    experts:
+      manufacturing: 5
+      resource_extraction: 1
+    recipes:
+      - building_symbol: "EXT"
+        recipe_symbol: "EXT:=>"
+        item_symbol: "MGS"
+
+      - building_symbol: "BMP"
+        recipe_symbol: "BMP:1xMGS=>6xMG"

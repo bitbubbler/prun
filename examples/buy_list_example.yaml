@@ -2,8 +2,31 @@ name: "Origo Buildout + 10 days of consumables"
 description: "Materials needed for origo buildout + 10 days of consumables"
 exchange_code: "AI1"
 planets:
+  - name: "deimos"
+    items:
+      DW: 640
+      RAT: 757
+      OVE: 0
+      EXO: 20
+      PT: 20
+      COF: 0
+      PWO: 0
+      KOM: 39
+      REP: 9
+  - name: "griffonstone"
+    items:
+      DW: 0
+      RAT: 0
+      OVE: 0
+      EXO: 0
+      PT: 0
+      COF: 23
+      PWO: 9
+      KOM: 127
+      REP: 24
   - name: "origo"
     items:
+      # construction
       BBH: 122
       BDE: 64
       BSE: 192
@@ -14,4 +37,28 @@ planets:
       MCG: 1924
       PSL: 12
       SEA: 481
+      TRU: 8
+      # consumables
+      DW: 960
+      RAT: 960
+      OVE: 120
+      COF: 120
+      PWO: 48
+  - name: "hq-upgrade"
+    items:
+      MCG: 48
+      TRU: 20
+      LBH: 16
+      LDE: 12
+      LSE: 12
+      LTA: 6
+      SP: 2
+      "OFF": 60
+  - name: "skiedude"
+    items:
+      BBH: 55
+      BSE: 151
+      LDE: 4
+      MCG: 1976
+      PSL: 12
       TRU: 8
