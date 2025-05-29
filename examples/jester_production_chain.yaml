@@ -1,6 +1,9 @@
 name: "CorporateJester"
+material_buy_prices:
+  FLX: 120
+  PG: 30
 planets:
-  - name: "ZV-759c"
+  - name: "deimos"
     experts:
       metallurgy: 5
     cogc_program: "metallurgy"
@@ -8,7 +11,7 @@ planets:
       - building_symbol: "GF"
         recipe_symbol: "GF:1xNA-2xSIO=>10xGL"
 
-  - name: "LS-300c"
+  - name: "griffonstone"
     experts:
       chemistry: 5
     cogc_program: "chemistry"
@@ -16,7 +19,7 @@ planets:
       - building_symbol: "CHP"
         recipe_symbol: "CHP:1xH2O-3xHAL=>1xCL-2xNA"
 
-  - name: "WU-070a"
+  - name: "hyalos"
     experts:
       metallurgy: 5
       resource_extraction: 1
@@ -26,11 +29,16 @@ planets:
         recipe_symbol: "EXT:=>"
         item_symbol: "SIO"
 
+      # - building_symbol: "GF"
+      #   recipe_symbol: "GF:1xNA-2xSIO=>10xGL"
       - building_symbol: "GF"
-        recipe_symbol: "GF:1xNA-2xSIO=>10xGL"
+        recipe_symbol: "GF:1xFLX-1xNA-2xSIO=>12xGL"
 
       - building_symbol: "GF"
         recipe_symbol: "GF:10xGL-15xPG=>10xRG"
+
+      - building_symbol: "GF"
+        recipe_symbol: "GF:10xGL-10xNCS=>10xNG"
 
       # - building_symbol: "LIT"
       #   recipe_symbol: "GF:16xNE-8xRG=>1xLIT"
@@ -47,7 +55,7 @@ planets:
       # - building_symbol: "GEN"
       #   recipe_symbol: "GF:4xGNZ-4xLFP-1xMFK-50xNG-10xTHF=>1xGEN"
 
-  - name: "QJ-650c"
+  - name: "origo"
     experts:
       manufacturing: 5
       resource_extraction: 1
@@ -58,3 +66,13 @@ planets:
 
       - building_symbol: "BMP"
         recipe_symbol: "BMP:1xMGS=>6xMG"
+
+  - name: "norwick"
+    experts:
+      food_industries: 5
+    recipes:
+      - building_symbol: "FER"
+        recipe_symbol: "FER:1xAMM-4xDW-1xHER=>6xKOM"
+
+      - building_symbol: "FP"
+        recipe_symbol: "FP:1xMAI-1xMUS-1xVEG=>10xRAT"

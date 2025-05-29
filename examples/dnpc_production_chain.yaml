@@ -27,7 +27,7 @@ planets:
     cogc_program: "agriculture"
     recipes:
       - building_symbol: "FRM"
-        recipe_symbol: "FRM:4xH2O=>4xGRN"
+        recipe_symbol: "FRM:1xH2O=>4xGRN"
   - name: "nascent"
     experts:
       resource_extraction: 5

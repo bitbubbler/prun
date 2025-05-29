@@ -34,7 +34,7 @@ class Experts(BaseModel):
     chemistry: int = Field(default=0, description="The number of chemistry experts", max_value=5)
     construction: int = Field(default=0, description="The number of construction experts", max_value=5)
     electronics: int = Field(default=0, description="The number of electronics experts", max_value=5)
-    food_industry: int = Field(default=0, description="The number of food industry experts", max_value=5)
+    food_industries: int = Field(default=0, description="The number of food industry experts", max_value=5)
     fuel_refining: int = Field(default=0, description="The number of fuel refining experts", max_value=5)
     manufacturing: int = Field(default=0, description="The number of manufacturing experts", max_value=5)
     metallurgy: int = Field(default=0, description="The number of metallurgy experts", max_value=5)
@@ -49,7 +49,7 @@ class Experts(BaseModel):
                 v.chemistry,
                 v.construction,
                 v.electronics,
-                v.food_industry,
+                v.food_industries,
                 v.fuel_refining,
                 v.manufacturing,
                 v.metallurgy,
