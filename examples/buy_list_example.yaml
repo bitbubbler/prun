@@ -32,44 +32,27 @@ planets:
   #     OVE: 120
   #     COF: 120
   #     PWO: 48
-  - name: "norwick"
-    items:
-      #     # construction
-      #     BBH: 51
-      #     BDE: 43
-      #     BSE: 39
-      #     BTA: 6
-      #     LBH: 2
-      #     LDE: 6
-      # LSE: 6
-      #     LTA: 4
-      #     MCG: 900
-      # PSL: 12
-      #     TRU: 15
-      #     # consumables
-      AMM: 32
-      CAF: 78
-      #     DW: 484
-      EXO: 2
-      HER: 32
-      MAI: 311
-      MUS: 311
-      #     OVE: 13
-      #     PT: 2
-      PWO: 5
-      REP: 1
-      VEG: 311
+  # - name: "norwick"
+  # items:
+  # AMM: 32
+  # CAF: 78
+  # DW: 484
+  # EXO: 2
+  # HER: 32
+  # MAI: 311
+  # MUS: 311
+  # OVE: 13
+  # PT: 2
+  # PWO: 5
+  # REP: 1
+  # VEG: 311
 
-  # - name: "hq-upgrade"
-  #   items:
-  #     MCG: 60
-  #     TRU: 24
-  #     LBH: 24
-  #     LDE: 16
-  #     LSE: 16
-  #     LTA: 8
-  #     POW: 10
-  #     SP: 10
+  - name: "ship-two-repair"
+    items:
+      LHP: 10
+      SSC: 11
+      MFK: 12
+      FLP: 8
 
   # - name: "harmonia"
   #   items:

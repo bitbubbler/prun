@@ -46,8 +46,8 @@ planets:
       - building_symbol: "TUB"
         recipe_symbol: "GF:10xGL=>20xTUB"
 
-      # - building_symbol: "GCH"
-      #   recipe_symbol: "GF:1xGV-20xRG=>1xGCH"
+      - building_symbol: "GCH"
+        recipe_symbol: "GF:1xGV-20xRG=>1xGCH"
 
       # - building_symbol: "GNZ"
       #   recipe_symbol: "GF:1xGCH-20xRG-1xTI=>1xGNZ"
