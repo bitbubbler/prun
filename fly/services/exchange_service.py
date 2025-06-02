@@ -43,7 +43,14 @@ class ExchangeService:
             exchange_code=exchange_code, item_symbol=item_symbol
         )
         if exchange_price:
-            return exchange_price.ask_price
+            if exchange_price.ask_price:
+                return exchange_price.ask_price
+            elif exchange_price.mm_buy:
+                return exchange_price.mm_buy
+            elif exchange_price.average_price:
+                return exchange_price.average_price
+            elif exchange_price.bid_price:
+                return exchange_price.bid_price
         return None
 
     def get_sell_price(self, exchange_code: str, item_symbol: str) -> Optional[float]:
