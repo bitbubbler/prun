@@ -4,8 +4,8 @@ from pydantic import BaseModel
 from typing import List, Optional
 
 from fio import FIOClientInterface
-from fly.interface import SiteRepositoryInterface
-from fly.models import Site, SiteBuilding, SiteBuildingMaterial
+from prun.interface import SiteRepositoryInterface
+from prun.models import Site, SiteBuilding, SiteBuildingMaterial
 
 logger = logging.getLogger(__name__)
 

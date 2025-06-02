@@ -4,7 +4,7 @@ from pathlib import Path
 import yaml
 from pydantic import BaseModel, Field, RootModel
 
-from fly.models import Experts
+from prun.models import Experts
 
 
 class ProductionMaterialPriceIn(BaseModel):

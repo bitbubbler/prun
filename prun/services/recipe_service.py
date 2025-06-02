@@ -3,14 +3,14 @@ import logging
 from typing import List, Optional
 
 from fio import FIOClientInterface
-from fly.errors import (
+from prun.errors import (
     MultipleRecipesError,
     RecipeNotFoundError,
     PlanetResourceRequiredError,
     RecipeSymbolRequiredError,
 )
-from fly.interface import RecipeRepositoryInterface
-from fly.models import (
+from prun.interface import RecipeRepositoryInterface
+from prun.models import (
     EfficientPlanetExtractionRecipe,
     EfficientRecipe,
     ExchangePrice,
@@ -21,7 +21,7 @@ from fly.models import (
     RecipeInput,
     RecipeOutput,
 )
-from fly.services.efficiency_service import EfficiencyService
+from prun.services.efficiency_service import EfficiencyService
 
 logger = logging.getLogger(__name__)
 

@@ -2,9 +2,9 @@ import logging
 from typing import Dict, List, Optional, Tuple
 from datetime import datetime
 
-from fly.config import InternalOfferConfig, InternalOfferIn, CompanyIn
-from fly.models.db_models import InternalOffer, Company
-from fly.repository import InternalOfferRepository, ItemRepository, CompanyRepository
+from prun.config import InternalOfferConfig, InternalOfferIn, CompanyIn
+from prun.models.db_models import InternalOffer, Company
+from prun.repository import InternalOfferRepository, ItemRepository, CompanyRepository
 
 logger = logging.getLogger(__name__)
 

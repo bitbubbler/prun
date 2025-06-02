@@ -4,8 +4,8 @@ from typing import Callable
 
 from pydantic import BaseModel
 
-from fly.config import EmpireConfig
-from fly.models import (
+from prun.config import EmpireConfig
+from prun.models import (
     Transaction,
     ConsumeTransaction,
     ProduceTransaction,

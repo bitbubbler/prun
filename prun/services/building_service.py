@@ -3,8 +3,8 @@ import logging
 from typing import Optional
 
 from fio import FIOClientInterface
-from fly.interface import BuildingRepositoryInterface
-from fly.models import Building, BuildingCost
+from prun.interface import BuildingRepositoryInterface
+from prun.models import Building, BuildingCost
 
 logger = logging.getLogger(__name__)
 

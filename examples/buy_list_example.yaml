@@ -54,11 +54,11 @@ planets:
       MFK: 12
       FLP: 8
 
-  # - name: "harmonia"
-  #   items:
-  #     # construction
-  #     BBH: 86
-  #     BDE: 20
+      # - name: "harmonia"
+      #   items:
+      #     # construction
+      #     BBH: 86
+      BDE: 20
   #     BSE: 68
   #     BTA: 7
   #     LDE: 4

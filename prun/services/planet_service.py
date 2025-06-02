@@ -1,9 +1,9 @@
 import logging
 
 from fio import FIOClientInterface
-from fly.errors import BuildingNotFoundError, PlanetNotFoundError
-from fly.interface import SystemRepositoryInterface
-from fly.models import (
+from prun.errors import BuildingNotFoundError, PlanetNotFoundError
+from prun.interface import SystemRepositoryInterface
+from prun.models import (
     Building,
     COGCProgram,
     COGCVote,

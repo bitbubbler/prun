@@ -4,7 +4,7 @@ from datetime import datetime
 
 from sqlmodel import Session, select, desc, and_
 
-from fly.models.db_models import (
+from prun.models.db_models import (
     Item,
     Recipe,
     RecipeInput,
@@ -29,6 +29,7 @@ from fly.models.db_models import (
     COGCVote,
     InternalOffer,
     Company,
+    LocalMarketAd,
 )
 
 logger = logging.getLogger(__name__)
@@ -927,3 +928,30 @@ class InternalOfferRepository(BaseRepository):
         self.session.commit()
         self.session.refresh(db_offer)
         return db_offer
+
+
+class LocalMarketAdRepository(BaseRepository):
+    """Repository for local market ads."""
+
+    def get_ads_by_planet(self, planet_natural_id: str) -> list[LocalMarketAd]:
+        statement = select(LocalMarketAd).where(LocalMarketAd.planet_natural_id == planet_natural_id)
+        return list(self.session.exec(statement).all())
+
+    def delete_ads_by_planet(self, planet_natural_id: str) -> None:
+        statement = select(LocalMarketAd).where(LocalMarketAd.planet_natural_id == planet_natural_id)
+        for ad in self.session.exec(statement):
+            self.session.delete(ad)
+
+    def upsert_ads(self, ads: list[LocalMarketAd]) -> None:
+        for ad in ads:
+            existing = self.session.exec(
+                select(LocalMarketAd).where(
+                    (LocalMarketAd.contract_natural_id == ad.contract_natural_id)
+                    & (LocalMarketAd.ad_type == ad.ad_type)
+                )
+            ).first()
+            if existing:
+                for field, value in ad.dict(exclude_unset=True).items():
+                    setattr(existing, field, value)
+            else:
+                self.session.add(ad)

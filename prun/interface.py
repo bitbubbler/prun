@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import List, Dict, Any, Optional
 
-from fly.models import (
+from prun.models import (
     Building,
     Exchange,
     ExchangePrice,

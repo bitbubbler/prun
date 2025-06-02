@@ -1,6 +1,6 @@
 import logging
 
-from fly.models import Experts
+from prun.models import Experts
 
 
 logger = logging.getLogger(__name__)

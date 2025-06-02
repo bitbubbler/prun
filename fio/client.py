@@ -21,6 +21,9 @@ from .models import (
     FIOSite,
     FIOStorage,
     FIOWarehouse,
+    FIOLocalMarketAds,
+    FIOAd,
+    FIOShippingAd,
 )
 from datetime import datetime, UTC
 
@@ -644,3 +647,12 @@ class FIOClient:
         except Exception as e:
             logger.error(f"Error fetching system {system_id}: {str(e)}")
             raise
+
+    def get_localmarket_ads(self, planet: str) -> FIOLocalMarketAds:
+        """Get local market ads for a specific planet from the FIO API."""
+        data = self.get_localmarket_by_planet(planet)
+        return FIOLocalMarketAds(
+            BuyingAds=[FIOAd(**ad) for ad in data.get("BuyingAds", [])],
+            SellingAds=[FIOAd(**ad) for ad in data.get("SellingAds", [])],
+            ShippingAds=[FIOShippingAd(**ad) for ad in data.get("ShippingAds", [])],
+        )

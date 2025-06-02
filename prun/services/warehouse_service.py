@@ -1,8 +1,8 @@
 import logging
 
 from fio import FIOClientInterface
-from fly.interface import WarehouseRepositoryInterface
-from fly.models import Warehouse
+from prun.interface import WarehouseRepositoryInterface
+from prun.models import Warehouse
 
 logger = logging.getLogger(__name__)
 

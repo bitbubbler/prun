@@ -5,7 +5,7 @@ from sqlalchemy.engine import Engine
 from sqlmodel import create_engine, Session, SQLModel
 
 from fio import FIOClient
-from fly.repository import (
+from prun.repository import (
     BuildingRepository,
     ExchangeRepository,
     ItemRepository,
@@ -18,19 +18,19 @@ from fly.repository import (
     InternalOfferRepository,
     CompanyRepository,
 )
-from fly.services.building_service import BuildingService
-from fly.services.cost_service import CostService
-from fly.services.efficiency_service import EfficiencyService
-from fly.services.exchange_service import ExchangeService
-from fly.services.item_service import ItemService
-from fly.services.planet_service import PlanetService
-from fly.services.recipe_service import RecipeService
-from fly.services.site_service import SiteService
-from fly.services.storage_service import StorageService
-from fly.services.system_service import SystemService
-from fly.services.warehouse_service import WarehouseService
-from fly.services.workforce_service import WorkforceService
-from fly.services.internal_offer_service import InternalOfferService
+from prun.services.building_service import BuildingService
+from prun.services.cost_service import CostService
+from prun.services.efficiency_service import EfficiencyService
+from prun.services.exchange_service import ExchangeService
+from prun.services.item_service import ItemService
+from prun.services.planet_service import PlanetService
+from prun.services.recipe_service import RecipeService
+from prun.services.site_service import SiteService
+from prun.services.storage_service import StorageService
+from prun.services.system_service import SystemService
+from prun.services.warehouse_service import WarehouseService
+from prun.services.workforce_service import WorkforceService
+from prun.services.internal_offer_service import InternalOfferService
 
 
 def session_resource_factory(engine: Engine) -> Generator[Session, None, None]:

@@ -3,9 +3,9 @@ from typing import List, Optional, Callable
 
 from pydantic import BaseModel, Field
 
-from fly.config import EmpireIn, EmpireProductionRecipeIn, EmpirePlanetIn
-from fly.errors import PlanetNotFoundError, RecipeNotFoundError
-from fly.models import (
+from prun.config import EmpireIn, EmpireProductionRecipeIn, EmpirePlanetIn
+from prun.errors import PlanetNotFoundError, RecipeNotFoundError
+from prun.models import (
     EfficientRecipe,
     EfficientPlanetExtractionRecipe,
     PlanetExtractionRecipe,
@@ -14,13 +14,13 @@ from fly.models import (
     PlanetResource,
     Recipe,
 )
-from fly.services.building_service import BuildingService
-from fly.services.efficiency_service import EfficiencyService
-from fly.services.exchange_service import ExchangeService
-from fly.services.planet_service import PlanetService
-from fly.services.recipe_service import RecipeService
-from fly.services.workforce_service import WorkforceService
-from fly.util import round_half_up
+from prun.services.building_service import BuildingService
+from prun.services.efficiency_service import EfficiencyService
+from prun.services.exchange_service import ExchangeService
+from prun.services.planet_service import PlanetService
+from prun.services.recipe_service import RecipeService
+from prun.services.workforce_service import WorkforceService
+from prun.util import round_half_up
 
 logger = logging.getLogger(__name__)
 

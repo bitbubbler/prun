@@ -1,6 +1,6 @@
 from typing import List, Optional
 
-from fly.models import Recipe, PlanetResource
+from prun.models import Recipe, PlanetResource
 
 
 class MultipleRecipesError(ValueError):

@@ -15,6 +15,7 @@ from .models import (
     FIOSite,
     FIOStorage,
     FIOWarehouse,
+    FIOLocalMarketAds,
 )
 
 
@@ -84,4 +85,9 @@ class FIOClientInterface(ABC):
     @abstractmethod
     def get_warehouses(self, username: str) -> List[FIOWarehouse]:
         """Get all warehouses for a user from the FIO API."""
+        pass
+
+    @abstractmethod
+    def get_localmarket_ads(self, planet: str) -> FIOLocalMarketAds:
+        """Get local market ads for a specific planet from the FIO API."""
         pass

@@ -3,8 +3,8 @@ from typing import List, Literal, Optional
 from pydantic import BaseModel
 
 from fio import FIOClientInterface
-from fly.interface import WorkforceRepositoryInterface
-from fly.models import WorkforceNeed, WorkforceFulfillment
+from prun.interface import WorkforceRepositoryInterface
+from prun.models import WorkforceNeed, WorkforceFulfillment
 
 WorkforceType = Literal["pioneer", "settler", "technician", "engineer", "scientist"]
 

@@ -3,8 +3,8 @@ import logging
 from typing import List, Optional
 
 from fio import FIOClientInterface
-from fly.interface import ExchangeRepositoryInterface
-from fly.models import ExchangePrice, Exchange
+from prun.interface import ExchangeRepositoryInterface
+from prun.models import ExchangePrice, Exchange
 
 logger = logging.getLogger(__name__)
 

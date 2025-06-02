@@ -7,8 +7,8 @@ from sqlmodel import select
 from typing import List, Dict, Any, Optional
 
 from fio import FIOClientInterface
-from fly.interface import StorageRepositoryInterface
-from fly.models import ExchangePrice, Storage, StorageItem
+from prun.interface import StorageRepositoryInterface
+from prun.models import ExchangePrice, Storage, StorageItem
 
 logger = logging.getLogger(__name__)
 

@@ -13,20 +13,20 @@ from rich.text import Text
 from rich import box
 from pydantic import BaseModel
 
-from fly.config import EmpireIn, EmpirePlanetIn, InternalOfferConfig, BuyListConfig
-from fly.models import Experts
-from fly.di import container
-from fly.errors import (
+from prun.config import EmpireIn, EmpirePlanetIn, InternalOfferConfig, BuyListConfig
+from prun.models import Experts
+from prun.di import container
+from prun.errors import (
     MultipleRecipesError,
     RecipeNotFoundError,
     RecipeSymbolRequiredError,
 )
-from fly.services.cost_service import (
+from prun.services.cost_service import (
     CalculatedRecipeOutputCOGM,
     CalculatedEmpireCOGM,
     CostContext,
 )
-from fly.database import init_db
+from prun.database import init_db
 
 
 def setup_logging() -> None:

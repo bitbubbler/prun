@@ -2,8 +2,8 @@ import logging
 from typing import Optional
 
 from fio import FIOClientInterface
-from fly.interface import ItemRepositoryInterface
-from fly.models import Item
+from prun.interface import ItemRepositoryInterface
+from prun.models import Item
 
 logger = logging.getLogger(__name__)
 

@@ -530,3 +530,46 @@ class InternalOffer(SQLModel, table=True):
     # Relationships
     item: "Item" = Relationship()
     company: "Company" = Relationship(back_populates="internal_offers")
+
+
+class LocalMarketAd(SQLModel, table=True):
+    """Database model for local market ads (buy, sell, shipping)."""
+
+    __tablename__ = "local_market_ads"
+
+    id: int = Field(default=None, primary_key=True)
+    ad_type: str = Field(index=True)  # 'buy', 'sell', 'shipping'
+    contract_natural_id: int = Field(index=True)
+    planet_id: str = Field(index=True)
+    planet_natural_id: str = Field(index=True)
+    planet_name: str
+    creator_company_id: str = Field(index=True)
+    creator_company_name: str
+    creator_company_code: str
+    delivery_time: int
+    creation_time_epoch_ms: datetime
+    expiry_time_epoch_ms: datetime
+    minimum_rating: str
+
+    # Material fields (for buy/sell ads)
+    material_id: Optional[str] = Field(default=None, index=True)
+    material_name: Optional[str] = None
+    material_ticker: Optional[str] = None
+    material_category: Optional[str] = None
+    material_weight: Optional[float] = None
+    material_volume: Optional[float] = None
+    material_amount: Optional[int] = None
+    price: Optional[float] = None
+    price_currency: Optional[str] = None
+
+    # Shipping fields (for shipping ads)
+    origin_planet_id: Optional[str] = Field(default=None, index=True)
+    origin_planet_natural_id: Optional[str] = None
+    origin_planet_name: Optional[str] = None
+    destination_planet_id: Optional[str] = Field(default=None, index=True)
+    destination_planet_natural_id: Optional[str] = None
+    destination_planet_name: Optional[str] = None
+    cargo_weight: Optional[float] = None
+    cargo_volume: Optional[float] = None
+    payout_price: Optional[int] = None
+    payout_currency: Optional[str] = None
