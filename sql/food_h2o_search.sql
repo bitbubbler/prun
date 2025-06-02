@@ -21,7 +21,7 @@ WITH RECURSIVE jump_paths AS (
     JOIN systemconnection sc ON jp.target_system = sc.system_id
     JOIN systems s2 ON sc.connecting_id = s2.system_id
     WHERE 
-        jp.jumps < 14  -- Only look for paths up to 5 jumps
+        jp.jumps < 10  -- Only look for paths up to 10 jumps
         AND jp.path NOT LIKE '%' || s2.system_id || '%'  -- Prevent cycles
 ),
 min_jumps AS (
@@ -58,6 +58,42 @@ food_planets AS (
         AND p.temperature >= -25 AND p.temperature <= 75
         AND p.pressure >= 0.25 AND p.pressure <= 2.0
 ),
+zv307_jump_paths AS (
+    -- Base case: direct connections (1 jump)
+    SELECT 
+        s1.system_id as source_system,
+        s2.system_id as target_system,
+        1 as jumps,
+        s1.system_id || ',' || s2.system_id as path
+    FROM systems s1
+    JOIN systemconnection sc ON s1.system_id = sc.system_id
+    JOIN systems s2 ON sc.connecting_id = s2.system_id
+    WHERE s1.system_id IN (SELECT system_id FROM food_planets)
+
+    UNION ALL
+
+    -- Recursive case: find paths with more jumps
+    SELECT 
+        jp.source_system,
+        s2.system_id as target_system,
+        jp.jumps + 1 as jumps,
+        jp.path || ',' || s2.system_id as path
+    FROM zv307_jump_paths jp
+    JOIN systemconnection sc ON jp.target_system = sc.system_id
+    JOIN systems s2 ON sc.connecting_id = s2.system_id
+    WHERE 
+        jp.jumps < 10  -- Look for longer paths to ZV-307
+        AND jp.path NOT LIKE '%' || s2.system_id || '%'  -- Prevent cycles
+),
+zv307_distances AS (
+    -- Calculate distances to ZV-307 system
+    SELECT 
+        source_system,
+        MIN(jumps) as jumps_to_zv307
+    FROM zv307_jump_paths
+    WHERE target_system = (SELECT system_id FROM systems WHERE name = 'Antares I')
+    GROUP BY source_system
+),
 h2o_planets AS (
     -- Find triple green planets with extractable H2O
     SELECT DISTINCT
@@ -78,7 +114,7 @@ h2o_planets AS (
         AND p.temperature >= -25 AND p.temperature <= 75
         AND p.pressure >= 0.25 AND p.pressure <= 2.0
 )
--- Find food planets within 5 jumps of H2O planets
+-- Find food planets within 20 jumps of H2O planets
 SELECT 
     fp.planet_id as food_planet_id,
     fp.planet_name as food_planet_name,
@@ -88,9 +124,11 @@ SELECT
     hp.system_name as h2o_system_name,
     hp.resource_type as h2o_type,
     hp.daily_extraction,
-    mj.min_jumps as jumps_apart
+    mj.min_jumps as jumps_apart,
+    COALESCE(zd.jumps_to_zv307, 999) as jumps_to_zv307
 FROM food_planets fp
 JOIN min_jumps mj ON fp.system_id = mj.source_system
 JOIN h2o_planets hp ON hp.system_id = mj.target_system
-WHERE mj.min_jumps <= 20 and hp.daily_extraction > 30
-ORDER BY mj.min_jumps, hp.daily_extraction DESC, fp.planet_name; 
+LEFT JOIN zv307_distances zd ON fp.system_id = zd.source_system
+WHERE mj.min_jumps <= 20 and hp.daily_extraction > 30 and zd.jumps_to_zv307 < 10
+ORDER BY zd.jumps_to_zv307 asc, mj.min_jumps, hp.daily_extraction asc, fp.planet_name; 
