@@ -90,6 +90,6 @@ class EfficiencyService:
         """
         if not cls.is_valid_cogc_program(program):
             raise ValueError(f"Invalid program: {program}")
-        if building.expertise == program:
+        if building.expertise.lower() == program:
             return cls.COGC_BONUS
         return 0.0

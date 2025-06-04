@@ -525,7 +525,6 @@ class SystemRepository(BaseRepository):
         Returns:
             Planet if found, None otherwise
         """
-        print(f"Getting planet by name: {name}")
         statement = select(Planet).where(Planet.name.like(name))
         return self.session.exec(statement).first()
 
