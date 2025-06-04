@@ -23,7 +23,7 @@ class EfficiencyService:
         "chemistry",
         "construction",
         "electronics",
-        "food industry",
+        "food industries",
         "fuel refining",
         "manufacturing",
         "metallurgy",

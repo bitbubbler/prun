@@ -175,8 +175,8 @@ def cogm(
         recipe_service = container.recipe_service()
 
         # try to find the planet, it's required
-        planet = planet_service.get_planet(planet_natural_id)
-        cogc_program = planet_service.get_cogc_program(planet_natural_id).program
+        planet = planet_service.find_planet(planet_natural_id)
+        cogc_program = planet_service.get_cogc_program(planet.natural_id).program
 
         if not planet:
             raise ValueError("Planet is required")

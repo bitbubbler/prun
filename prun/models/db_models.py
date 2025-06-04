@@ -76,13 +76,13 @@ class COGCProgram(SQLModel, table=True):
     @property
     def program(self) -> str:
         """Get the program type."""
-        program = self.program_type.replace("ADVERTISING_", "").lower()
+        program = self.program_type.replace("ADVERTISING_", "").replace("_", " ").lower()
         if program not in [
             "agriculture",
             "chemistry",
             "construction",
             "electronics",
-            "food industry",
+            "food industries",
             "fuel refining",
             "manufacturing",
             "metallurgy",
