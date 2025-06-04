@@ -83,11 +83,13 @@ class EfficiencyService:
         return program in cls.COGC_PROGRAMS
 
     @classmethod
-    def get_cogc_efficiency(cls, building: Building, program: str) -> float:
+    def get_cogc_efficiency(cls, building: Building, program: str | None = None) -> float:
         """
         Returns the efficiency percentage for a given COGC program.
         If the program is not valid, returns 0.0.
         """
+        if program is None:
+            return 0.0
         if not cls.is_valid_cogc_program(program):
             raise ValueError(f"Invalid program: {program}")
         if building.expertise.lower() == program:
