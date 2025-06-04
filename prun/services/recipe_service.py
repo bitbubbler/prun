@@ -104,7 +104,7 @@ class RecipeService:
             raise RecipeNotFoundError(recipe_symbol)
 
         expert_efficiency: float = self.efficiency_service.get_expert_efficiency(experts, recipe.building.expertise)
-        cogc_efficiency = self.efficiency_service.get_cogc_efficiency(cogc_program)
+        cogc_efficiency = self.efficiency_service.get_cogc_efficiency(building=recipe.building, program=cogc_program)
         efficiency = expert_efficiency + cogc_efficiency
 
         return EfficientRecipe.efficient_recipe_from(
@@ -158,7 +158,9 @@ class RecipeService:
             raise ValueError("Recipe is not an extraction recipe")
 
         expert_efficiency = self.efficiency_service.get_expert_efficiency(experts, extraction_recipe.building.expertise)
-        cogc_efficiency = self.efficiency_service.get_cogc_efficiency(cogc_program)
+        cogc_efficiency = self.efficiency_service.get_cogc_efficiency(
+            building=extraction_recipe.building, program=cogc_program
+        )
         efficiency = expert_efficiency + cogc_efficiency
 
         efficient_recipe = EfficientPlanetExtractionRecipe.efficient_recipe_from(
