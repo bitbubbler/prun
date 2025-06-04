@@ -47,31 +47,24 @@ planets:
   # REP: 1
   # VEG: 311
 
-  - name: "ship-two-repair"
+  - name: "harmonia"
     items:
-      LHP: 10
-      SSC: 11
-      MFK: 12
-      FLP: 8
-
-      # - name: "harmonia"
-      #   items:
-      #     # construction
-      #     BBH: 86
+      # construction
+      BBH: 86
       BDE: 20
-  #     BSE: 68
-  #     BTA: 7
-  #     LDE: 4
-  #     LSE: 4
-  #     LTA: 4
-  #     MCG: 2000
-  #     PSL: 12
-  #     TRU: 8
-  #     # consumables
-  #     COF: 49
-  #     DDT: 30
-  #     DW: 390
-  #     H2O: 1921
-  #     OVE: 49
-  #     PWO: 20
-  #     RAT: 390
+      BSE: 68
+      BTA: 7
+      LDE: 4
+      LSE: 4
+      LTA: 4
+      MCG: 2000
+      PSL: 12
+      TRU: 8
+      # consumables
+      COF: 49
+      DDT: 41
+      DW: 390
+      H2O: 1059
+      OVE: 49
+      PWO: 20
+      RAT: 390

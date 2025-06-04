@@ -174,6 +174,7 @@ def cogm(
 
         # try to find the planet, it's required
         planet = planet_service.get_planet(planet_natural_id)
+        cogc_program = planet_service.get_cogc_program(planet_natural_id).program
 
         if not planet:
             raise ValueError("Planet is required")
@@ -203,11 +204,13 @@ def cogm(
                 recipe_symbol=recipe.symbol,
                 planet_resource=planet_resource,
                 experts=experts,
+                cogc_program=cogc_program,
             )
         else:
             efficient_recipe = recipe_service.get_efficient_recipe(
                 recipe_symbol=recipe.symbol,
                 experts=experts,
+                cogc_program=cogc_program,
             )
 
         result: CalculatedRecipeOutputCOGM = cost_service.calculate_cogm(

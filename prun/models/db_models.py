@@ -73,6 +73,24 @@ class COGCProgram(SQLModel, table=True):
     # Relationships
     planet: "Planet" = Relationship(back_populates="cogc_programs")
 
+    @property
+    def program(self) -> str:
+        """Get the program type."""
+        program = self.program_type.replace("ADVERTISING_", "").lower()
+        if program not in [
+            "agriculture",
+            "chemistry",
+            "construction",
+            "electronics",
+            "food industry",
+            "fuel refining",
+            "manufacturing",
+            "metallurgy",
+            "resource extraction",
+        ]:
+            raise ValueError(f"Invalid program type: {self.program_type}")
+        return program
+
 
 class COGCVote(SQLModel, table=True):
     """Database model for COGC votes."""

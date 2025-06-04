@@ -46,6 +46,14 @@ class PlanetService:
 
         return PlanetBuilding.planet_building_from(building, planet)
 
+    def get_cogc_program(self, natural_id: str) -> COGCProgram | None:
+        """Get a COGC program by natural ID."""
+        cogc_program = self.system_repository.get_cogc_program(natural_id)
+        print(f"cogc_program: {cogc_program}")
+        if not cogc_program:
+            return None
+        return COGCProgram.model_validate(cogc_program)
+
     def find_planet(self, name: str) -> Planet | None:
         """Find a planet by name."""
         planet = self.get_planet(name)

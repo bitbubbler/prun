@@ -283,6 +283,11 @@ class SystemRepositoryInterface(ABC):
         """Create a new COGC vote."""
         pass
 
+    @abstractmethod
+    def get_cogc_program(self, natural_id: str) -> COGCProgram | None:
+        """Get COGC programs for a planet by natural ID."""
+        pass
+
 
 class WarehouseRepositoryInterface(ABC):
     """Interface for warehouse-related operations."""

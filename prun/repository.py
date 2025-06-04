@@ -708,6 +708,22 @@ class SystemRepository(BaseRepository):
         self.session.add(vote)
         return vote
 
+    def get_cogc_program(self, natural_id: str) -> COGCProgram | None:
+        """Get COGC programs for a planet by natural ID.
+
+        Args:
+            natural_id: Planet natural ID
+
+        Returns:
+            Latest COGCProgram by start epoch if found, None otherwise
+        """
+        statement = (
+            select(COGCProgram)
+            .where(COGCProgram.planet_natural_id == natural_id)
+            .order_by(COGCProgram.start_epoch_ms.desc())
+        )
+        return self.session.exec(statement).first()
+
 
 class WarehouseRepository(BaseRepository):
     """Repository for warehouse-related operations."""
