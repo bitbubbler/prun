@@ -138,9 +138,11 @@ def cogm(
 ) -> None:
     """Calculate Cost of Goods Manufactured (COGM) for an item.
 
-    Example:
-    - cogm CL -p LS-300c
-    - cogm RAT -p 'KW-688c' -r 'FP:1xALG-1xMAI-1xNUT=>10xRAT'
+    Example usage:
+      cogm CL -p LS-300c
+      cogm RAT -p KW-688c -r FP:1xALG-1xMAI-1xNUT=>10xRAT
+
+    Note: Only one planet (-p/--planet) should be specified per command.
     """
     stderr_console = Console(stderr=True)
     cogm_price_cache: dict[str, float] = {}

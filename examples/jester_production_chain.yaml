@@ -76,3 +76,6 @@ planets:
 
       - building_symbol: "FP"
         recipe_symbol: "FP:1xMAI-1xMUS-1xVEG=>10xRAT"
+
+      - building_symbol: "FP"
+        recipe_symbol: "FP:1xCAF-3xDW=>3xCOF"
