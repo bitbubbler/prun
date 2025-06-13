@@ -91,13 +91,17 @@ class RecipeService:
         return recipe
 
     def get_efficient_recipe(
-        self, recipe_symbol: str, experts: Experts, cogc_program: str | None = None
+        self,
+        recipe_symbol: str,
+        experts: Experts,
+        cogc_program: COGCProgram | None = None,
     ) -> EfficientRecipe:
         """Get an efficient recipe by its symbol.
 
         Args:
             recipe_symbol: Recipe symbol
-            planet_resource: Planet resource to use for extraction recipes
+            experts: Experts to use for the recipe
+            cogc_program: COGC program to use for the recipe
 
         Returns:
             Efficient recipe

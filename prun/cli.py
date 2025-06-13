@@ -187,15 +187,12 @@ def cogm(
         if not item:
             raise ValueError(f"No item found named {item_pattern}")
 
-        planet = planet_service.find_planet(planet_pattern)
-        if planet_pattern and not planet:
-            raise ValueError(f"No planet found named {planet_pattern}")
-
-        cogc_program = planet_service.get_cogc_program(planet.natural_id).program
+        planet = planet_service.find_planet(planet_pattern) if planet_pattern else None
 
         if not planet:
             raise ValueError("Planet is required")
 
+        cogc_program = planet_service.get_cogc_program(planet.natural_id)
         planet_resource = next(
             (
                 resource
