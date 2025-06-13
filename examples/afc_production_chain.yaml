@@ -29,6 +29,14 @@ planets:
     recipes:
       - building_symbol: "FP"
         recipe_symbol: "FP:1xALG-1xMAI-1xVEG=>10xRAT"
+      - building_symbol: "FP"
+        recipe_symbol: "FP:10xH2O-1xPG=>10xDW"
+
+      - building_symbol: "FP"
+        recipe_symbol: "FP:1xHER-2xRAT=>2xFIM"
+
+      - building_symbol: "FP"
+        recipe_symbol: "FP:2xFIM-1xMTP=>2xMEA"
 
   - name: "ZV-896b"
     experts:
