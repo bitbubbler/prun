@@ -1,28 +1,57 @@
 name: "AFC"
 material_buy_prices:
   RAT: 81
-recipes:
-  - recipe_symbol: "RIG:=>"
-    item_symbol: "H2O"
-    planet_natural_id: "FK-794b"
+planets:
+  - name: "FK-794b"
+    experts:
+      resource_extraction: 1
+    recipes:
+      - building_symbol: "RIG"
+        recipe_symbol: "RIG:=>"
+        item_symbol: "H2O"
 
-  - recipe_symbol: "HYF:16xH2O-2xNS=>12xALG"
-    planet_natural_id: "ZV-896c"
+  - name: "ZV-896c"
+    experts:
+      food_industries: 5
+    cogc_program: "food industries"
+    recipes:
+      - building_symbol: "HYF"
+        recipe_symbol: "HYF:16xH2O-2xNS=>12xALG"
 
-  - recipe_symbol: "HYF:20xH2O-2xNS=>12xMAI"
-    planet_natural_id: "ZV-896c"
+      - building_symbol: "HYF"
+        recipe_symbol: "HYF:20xH2O-2xNS=>12xMAI"
 
-  - recipe_symbol: "HYF:16xH2O-1xNS=>6xVEG"
-    planet_natural_id: "ZV-896c"
+      - building_symbol: "HYF"
+        recipe_symbol: "HYF:16xH2O-1xNS=>6xVEG"
 
-  - recipe_symbol: "FP:1xALG-1xMAI-1xVEG=>10xRAT"
-    planet_natural_id: "YK-649b"
+  - name: "YK-649b"
+    experts:
+      food_industries: 5
+    cogc_program: "food industries"
+    recipes:
+      - building_symbol: "FP"
+        recipe_symbol: "FP:1xALG-1xMAI-1xVEG=>10xRAT"
 
-  - recipe_symbol: "FRM:1xDDT-4xH2O=>4xHER"
-    planet_natural_id: "ZV-896b"
+  - name: "ZV-896b"
+    experts:
+      chemistry: 5
+    cogc_program: "chemistry"
+    recipes:
+      - building_symbol: "FRM"
+        recipe_symbol: "FRM:1xDDT-4xH2O=>4xHER"
 
-  - recipe_symbol: "LAB:1xC-1xCL-1xH=>3xDDT"
-    planet_natural_id: ZV-307b
+  - name: "ZV-307b"
+    experts:
+      chemistry: 5
+    cogc_program: "chemistry"
+    recipes:
+      - building_symbol: "LAB"
+        recipe_symbol: "LAB:1xC-1xCL-1xH=>3xDDT"
 
-  - recipe_symbol: "CHP:2xH2O-1xLST-2xN=>4xNS"
-    planet_natural_id: LS-300c
+  - name: "LS-300c"
+    experts:
+      chemistry: 5
+    cogc_program: "chemistry"
+    recipes:
+      - building_symbol: "CHP"
+        recipe_symbol: "CHP:2xH2O-1xLST-2xN=>4xNS"

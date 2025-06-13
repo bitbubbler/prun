@@ -265,7 +265,7 @@ class CostService:
             recipe = recipe_service.find_recipe(
                 item_symbol=production_recipe.item_symbol,
                 recipe_symbol=production_recipe.recipe_symbol,
-                planet_resource=planet_resource,
+                planet=planet,
             )
 
             if not recipe:
