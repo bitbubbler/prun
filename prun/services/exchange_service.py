@@ -66,7 +66,14 @@ class ExchangeService:
             exchange_code=exchange_code, item_symbol=item_symbol
         )
         if exchange_price:
-            return exchange_price.sell_price
+            if exchange_price.bid_price:
+                return exchange_price.bid_price
+            elif exchange_price.mm_sell:
+                return exchange_price.mm_sell
+            elif exchange_price.average_price:
+                return exchange_price.average_price
+            elif exchange_price.ask_price:
+                return exchange_price.ask_price
         return None
 
     def delete_exchange_prices(self) -> None:

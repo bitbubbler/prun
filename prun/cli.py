@@ -683,6 +683,9 @@ def print_empire_cogm_analysis(
     console = Console()
     console.print(Panel(f"Analyzing Empire: {empire.name}", style="bold blue"))
 
+    # Get exchange service for market prices
+    exchange_service = container.exchange_service()
+
     # Create a table for the chain analysis
     chain_table = Table(title="Empire COGM")
     chain_table.add_column("Step", style="cyan")
@@ -691,6 +694,8 @@ def print_empire_cogm_analysis(
     chain_table.add_column("Output", style="green")
     chain_table.add_column("Time", style="blue")
     chain_table.add_column("COGM", justify="right", style="bold")
+    chain_table.add_column("Profit Margin", justify="right", style="cyan")
+    chain_table.add_column("Price/COGM", justify="right", style="magenta")
 
     for planet_cogm in empire_cogm.planets:
         for planet_recipe_output_cogm in planet_cogm.recipes:
@@ -700,6 +705,33 @@ def print_empire_cogm_analysis(
             minutes = total_minutes % 60
             time_str = f"{hours}h {minutes:02d}m"
 
+            # Calculate price to COGM ratio and profit margin
+            market_price = exchange_service.get_sell_price(
+                exchange_code="AI1", item_symbol=planet_recipe_output_cogm.item_symbol
+            )
+
+            if market_price and market_price > 0:
+                # Price/COGM ratio
+                price_cogm_ratio = market_price / planet_recipe_output_cogm.total_cost
+                ratio_str = f"{price_cogm_ratio:.1f}x"
+                if price_cogm_ratio > 2.0:
+                    ratio_str = f"[green]{ratio_str}[/green]"
+                elif price_cogm_ratio > 1.0:
+                    ratio_str = f"[yellow]{ratio_str}[/yellow]"
+                else:
+                    ratio_str = f"[red]{ratio_str}[/red]"
+
+                # Profit margin
+                profit_margin = ((market_price - planet_recipe_output_cogm.total_cost) / market_price) * 100
+                margin_str = f"{profit_margin:.1f}%"
+                if profit_margin > 0:
+                    margin_str = f"[green]{margin_str}[/green]"
+                else:
+                    margin_str = f"[red]{margin_str}[/red]"
+            else:
+                ratio_str = "[dim]N/A[/dim]"
+                margin_str = "[dim]N/A[/dim]"
+
             chain_table.add_row(
                 f"{planet_cogm.planet_name} => {planet_recipe_output_cogm.item_symbol}",
                 planet_cogm.planet_name,
@@ -707,6 +739,8 @@ def print_empire_cogm_analysis(
                 planet_recipe_output_cogm.item_symbol,
                 time_str,
                 f"{planet_recipe_output_cogm.total_cost:,.2f}",
+                margin_str,
+                ratio_str,
             )
 
     # Print the summary table
