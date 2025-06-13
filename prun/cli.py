@@ -110,11 +110,11 @@ def sync(username: str, password: str, apikey: str | None, all: bool) -> None:
 
 
 @cli.command()
-@click.argument("item_symbol")
+@click.argument("item_pattern")
 @click.option(
     "--planet",
     "-p",
-    "planet_natural_id",
+    "planet_pattern",
     help="Planet ID (required)",
 )
 @click.option(
@@ -136,8 +136,8 @@ def sync(username: str, password: str, apikey: str | None, all: bool) -> None:
     help="Output in JSON format",
 )
 def cogm(
-    item_symbol: str,
-    planet_natural_id: str,
+    item_pattern: str,
+    planet_pattern: str | None,
     recipe_symbol: str | None,
     num_experts: int,
     json: bool,
@@ -179,11 +179,18 @@ def cogm(
 
     try:
         cost_service = container.cost_service()
+        item_service = container.item_service()
         planet_service = container.planet_service()
         recipe_service = container.recipe_service()
 
-        # try to find the planet, it's required
-        planet = planet_service.find_planet(planet_natural_id)
+        item = item_service.find_item(item_pattern)
+        if not item:
+            raise ValueError(f"No item found named {item_pattern}")
+
+        planet = planet_service.find_planet(planet_pattern)
+        if planet_pattern and not planet:
+            raise ValueError(f"No planet found named {planet_pattern}")
+
         cogc_program = planet_service.get_cogc_program(planet.natural_id).program
 
         if not planet:
@@ -193,15 +200,15 @@ def cogm(
             (
                 resource
                 for resource in planet.resources
-                if resource.item.symbol == item_symbol
+                if resource.item.symbol == item.symbol
             ),
             None,
         )
 
         recipe = recipe_service.find_recipe(
-            item_symbol=item_symbol,
+            item_symbol=item.symbol,
             recipe_symbol=recipe_symbol,
-            planet_resource=planet_resource,
+            planet=planet,
         )
 
         if not recipe:
@@ -231,12 +238,12 @@ def cogm(
             cost_context=cost_context,
             recipe=efficient_recipe,
             planet=planet,
-            item_symbol=item_symbol,
+            item_symbol=item.symbol,
         )
         if json:
             print(result.model_dump_json())
         else:
-            print_recipe_cogm_analysis(item_symbol=item_symbol, cogm=result)
+            print_recipe_cogm_analysis(item_symbol=item.symbol, cogm=result)
 
     except MultipleRecipesError as e:
         if json:
