@@ -784,13 +784,15 @@ def recipe_search(
             console.print("[yellow]No item found[/yellow]")
             return
 
-        recipe = recipe_service.find_recipe(item_symbol=item.symbol, planet=planet)
-        if not recipe:
+        recipes = recipe_service.find_all_recipes(
+            item_symbol=item.symbol, planet=planet
+        )
+        if not recipes:
             console.print("[yellow]No recipe found, try including a planet[/yellow]")
             return
 
         if json:
-            print(json.dumps(recipe))
+            print(json.dumps(recipes))
             return
 
         recipe_table = Table(title="Recipes")
@@ -799,9 +801,12 @@ def recipe_search(
         recipe_table.add_column("Inputs", style="green")
         recipe_table.add_column("Outputs", style="green")
 
-        inputs = ", ".join(f"{i.quantity}x {i.item_symbol}" for i in recipe.inputs)
-        outputs = ", ".join(f"{o.quantity}x {o.item_symbol}" for o in recipe.outputs)
-        recipe_table.add_row(recipe.symbol, recipe.building_symbol, inputs, outputs)
+        for recipe in recipes:
+            inputs = ", ".join(f"{i.quantity}x {i.item_symbol}" for i in recipe.inputs)
+            outputs = ", ".join(
+                f"{o.quantity}x {o.item_symbol}" for o in recipe.outputs
+            )
+            recipe_table.add_row(recipe.symbol, recipe.building_symbol, inputs, outputs)
 
         console.print(recipe_table)
 

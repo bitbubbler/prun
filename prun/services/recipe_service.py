@@ -359,3 +359,81 @@ class RecipeService:
                 f"Error finding recipe for {item_symbol}: {str(e)}", exc_info=True
             )
             raise
+
+    def find_all_recipes(
+        self,
+        item_symbol: str | None,
+        recipe_symbol: str | None = None,
+        planet: Planet | None = None,
+    ) -> list[Recipe | PlanetExtractionRecipe] | None:
+        """Find a recipe for an item.
+
+        Args:
+            item_symbol: Symbol of the item to find a recipe for
+            recipe_symbol: Optional specific recipe to use
+            planet_resource: Optional specific planet resource to use
+
+        Returns:
+            List of recipes
+
+        Raises:
+            ValueError: If recipe not found by symbol and no item symbol is provided
+        """
+        try:
+            if recipe_symbol:
+                return self.get_recipe(recipe_symbol)
+
+            if not item_symbol:
+                raise ValueError(
+                    "Item symbol is required to find a recipe without a specific recipe symbol"
+                )
+
+            recipes = self.recipe_repository.get_recipes_for_item(item_symbol)
+
+            if len(recipes) == 0 and planet:
+                planet_resource = next(
+                    (
+                        resource
+                        for resource in planet.resources
+                        if resource.item.symbol == item_symbol
+                    ),
+                    None,
+                )
+
+                if not planet_resource:
+                    raise PlanetResourceNotFoundError(item_symbol, planet.natural_id)
+
+                return [
+                    self.get_planet_extraction_recipe(
+                        planet_resource.recipe_symbol, planet_resource
+                    )
+                ]
+
+            if not recipes:
+                return None
+
+            return recipes
+
+        except PlanetResourceRequiredError:
+            print("Planet resource required")
+            if not planet:
+                raise PlanetRequiredError()
+            planet_resource = next(
+                (
+                    resource
+                    for resource in planet.resources
+                    if resource.item.symbol == item_symbol
+                ),
+                None,
+            )
+            if not planet_resource:
+                raise PlanetResourceNotFoundError(item_symbol, planet.natural_id)
+
+            return self.get_planet_extraction_recipe(
+                planet_resource.recipe_symbol, planet_resource
+            )
+        except Exception as e:
+            logger.error(
+                f"Error finding recipe for {item_symbol}: {str(e)}", exc_info=True
+            )
+            raise
