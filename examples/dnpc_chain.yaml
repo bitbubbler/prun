@@ -1,0 +1,48 @@
+name: "DNPC"
+planets:
+  - name: "ZV-759c"
+    experts:
+      metallurgy: 5
+    cogc_program: "metallurgy"
+    recipes:
+      - building_symbol: "SME"
+        recipe_symbol: "SME:6xALO-1xC-1xFLX-1xO=>4xAL"
+
+      - building_symbol: "EXT"
+        recipe_symbol: "EXT:=>"
+        item_symbol: "ALO"
+
+      - building_symbol: "COL"
+        recipe_symbol: "COL:=>"
+        item_symbol: "O"
+
+  - name: "ZV-194a"
+    experts:
+      construction: 5
+    cogc_program: "construction"
+    recipes:
+      - building_symbol: "PP2"
+        recipe_symbol: "PP2:2xAL-1xLST=>1xBBH"
+
+      - building_symbol: "PP2"
+        recipe_symbol: "PP2:1xAL-2xLST=>1xBSE"
+
+      - building_symbol: "EXT"
+        recipe_symbol: "EXT:=>"
+        item_symbol: "LST"
+
+  - name: "ZV-896b"
+    experts:
+      agriculture: 5
+    cogc_program: "agriculture"
+    recipes:
+      - building_symbol: "FRM"
+        recipe_symbol: "FRM:4xH2O=>4xGRN"
+
+  - name: "QJ-149c"
+    experts:
+      resource_extraction: 5
+    cogc_program: "resource extraction"
+    recipes:
+      - building_symbol: "INC"
+        recipe_symbol: "INC:4xGRN=>4xC"

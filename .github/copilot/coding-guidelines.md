@@ -1,0 +1,1 @@
+../../.copilot/coding-guidelines.md
