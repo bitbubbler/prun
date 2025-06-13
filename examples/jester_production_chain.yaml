@@ -37,8 +37,8 @@ planets:
       - building_symbol: "GF"
         recipe_symbol: "GF:10xGL-15xPG=>10xRG"
 
-      - building_symbol: "GF"
-        recipe_symbol: "GF:10xGL-15xPG-1xSEN=>10xRG"
+      # - building_symbol: "GF"
+      #   recipe_symbol: "GF:10xGL-15xPG-1xSEN=>10xRG"
 
       - building_symbol: "GF"
         recipe_symbol: "GF:10xGL-10xNCS=>10xNG"

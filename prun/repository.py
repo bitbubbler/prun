@@ -102,6 +102,18 @@ class BuildingRepository(BaseRepository):
         )
         return list(self.session.exec(statement).all())
 
+    def find_building(self, symbol: str) -> Building:
+        """Find a building by symbol.
+
+        Args:
+            symbol: Building symbol
+
+        Returns:
+            Building if found, None otherwise
+        """
+        statement = select(Building).where(Building.symbol.like(symbol))
+        return self.session.exec(statement).first()
+
 
 class ExchangeRepository(BaseRepository):
     """Repository for exchange and price-related operations."""
@@ -209,6 +221,18 @@ class ItemRepository(BaseRepository):
         """
         self.session.add(item)
         return item
+
+    def find_item(self, pattern: str) -> Optional[Item]:
+        """Find an item by symbol.
+
+        Args:
+            pattern: Item symbol
+
+        Returns:
+            Item if found, None otherwise
+        """
+        statement = select(Item).where(Item.symbol.like(pattern))
+        return self.session.exec(statement).first()
 
 
 class RecipeRepository(BaseRepository):

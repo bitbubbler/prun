@@ -39,6 +39,11 @@ class BuildingRepositoryInterface(ABC):
         """Create a new building."""
         pass
 
+    @abstractmethod
+    def find_building(self, symbol: str) -> Building:
+        """Find a building by symbol."""
+        pass
+
 
 class ItemRepositoryInterface(ABC):
     """Interface for item-related operations."""
@@ -51,6 +56,11 @@ class ItemRepositoryInterface(ABC):
     @abstractmethod
     def create_item(self, item: Item) -> None:
         """Create a new item."""
+        pass
+
+    @abstractmethod
+    def find_item(self, pattern: str) -> Optional[Item]:
+        """Find an item by symbol."""
         pass
 
 

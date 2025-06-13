@@ -74,3 +74,14 @@ class BuildingService:
 
                 # Create building with construction costs
                 self.building_repository.create_building(building)
+
+    def find_building(self, symbol: str) -> Building:
+        """Search for buildings using SQL-like patterns.
+
+        Args:
+            pattern: SQL LIKE pattern to search for (e.g. "%FP%")
+
+        Returns:
+            List of matching buildings
+        """
+        return self.building_repository.find_building(symbol)

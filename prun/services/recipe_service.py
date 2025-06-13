@@ -8,6 +8,8 @@ from prun.errors import (
     RecipeNotFoundError,
     PlanetResourceRequiredError,
     RecipeSymbolRequiredError,
+    PlanetRequiredError,
+    PlanetResourceNotFoundError,
 )
 from prun.interface import RecipeRepositoryInterface
 from prun.models import (
@@ -15,6 +17,7 @@ from prun.models import (
     EfficientRecipe,
     ExchangePrice,
     Experts,
+    Planet,
     PlanetExtractionRecipe,
     PlanetResource,
     Recipe,
@@ -278,7 +281,7 @@ class RecipeService:
         self,
         item_symbol: str | None,
         recipe_symbol: str | None = None,
-        planet_resource: PlanetResource | None = None,
+        planet: Planet | None = None,
     ) -> Recipe | PlanetExtractionRecipe | None:
         """Find a recipe for an item.
 
@@ -305,6 +308,23 @@ class RecipeService:
 
             recipes = self.recipe_repository.get_recipes_for_item(item_symbol)
 
+            if len(recipes) == 0 and planet:
+                planet_resource = next(
+                    (
+                        resource
+                        for resource in planet.resources
+                        if resource.item.symbol == item_symbol
+                    ),
+                    None,
+                )
+
+                if not planet_resource:
+                    raise PlanetResourceNotFoundError(item_symbol, planet.natural_id)
+
+                return self.get_planet_extraction_recipe(
+                    planet_resource.recipe_symbol, planet_resource
+                )
+
             if not recipes:
                 return None
 
@@ -316,12 +336,24 @@ class RecipeService:
 
             return recipes[0]
 
-        except PlanetResourceRequiredError as e:
+        except PlanetResourceRequiredError:
+            print("Planet resource required")
+            if not planet:
+                raise PlanetRequiredError()
+            planet_resource = next(
+                (
+                    resource
+                    for resource in planet.resources
+                    if resource.item.symbol == item_symbol
+                ),
+                None,
+            )
             if not planet_resource:
-                raise PlanetResourceRequiredError()
-            if not recipe_symbol:
-                raise RecipeSymbolRequiredError()
-            return self.get_planet_extraction_recipe(recipe_symbol, planet_resource)
+                raise PlanetResourceNotFoundError(item_symbol, planet.natural_id)
+
+            return self.get_planet_extraction_recipe(
+                planet_resource.recipe_symbol, planet_resource
+            )
         except Exception as e:
             logger.error(
                 f"Error finding recipe for {item_symbol}: {str(e)}", exc_info=True

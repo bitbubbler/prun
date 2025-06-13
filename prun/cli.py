@@ -685,15 +685,23 @@ def print_empire_cogm_analysis(
     chain_table.add_column("Planet", style="yellow")
     chain_table.add_column("Recipe", style="green")
     chain_table.add_column("Output", style="green")
+    chain_table.add_column("Time", style="blue")
     chain_table.add_column("COGM", justify="right", style="bold")
 
     for planet_cogm in empire_cogm.planets:
         for planet_recipe_output_cogm in planet_cogm.recipes:
+            # Convert time_ms to hours and minutes
+            total_minutes = int(planet_recipe_output_cogm.time_ms // 60000)
+            hours = total_minutes // 60
+            minutes = total_minutes % 60
+            time_str = f"{hours}h {minutes:02d}m"
+
             chain_table.add_row(
                 f"{planet_cogm.planet_name} => {planet_recipe_output_cogm.item_symbol}",
                 planet_cogm.planet_name,
                 planet_recipe_output_cogm.recipe_symbol,
                 planet_recipe_output_cogm.item_symbol,
+                time_str,
                 f"{planet_recipe_output_cogm.total_cost:,.2f}",
             )
 
@@ -740,6 +748,65 @@ def serialize_exception(exc: Exception) -> str:
         "traceback": traceback.format_exc().splitlines(),  # or leave as one string
     }
     return json.dumps(payload)
+
+
+@cli.command()
+@click.argument("item_pattern", required=True)
+@click.option("-p", "planet_pattern", required=False)
+@click.option(
+    "--json",
+    is_flag=True,
+    help="Output in JSON format",
+)
+def recipe_search(
+    item_pattern: str | None, planet_pattern: str | None, json: bool
+) -> None:
+    """Search for recipes by item symbol.
+
+    Examples:
+        prun.cli recipe-search h2o
+        prun.cli recipe-search CL
+    """
+    console = Console()
+    item_service = container.item_service()
+    recipe_service = container.recipe_service()
+    planet_service = container.planet_service()
+
+    try:
+        item = item_service.find_item(item_pattern)
+        planet = planet_service.find_planet(planet_pattern) if planet_pattern else None
+
+        if planet_pattern and not planet:
+            console.print(f"[yellow]No planet found named {planet_pattern}[/yellow]")
+            return
+
+        if not item:
+            console.print("[yellow]No item found[/yellow]")
+            return
+
+        recipe = recipe_service.find_recipe(item_symbol=item.symbol, planet=planet)
+        if not recipe:
+            console.print("[yellow]No recipe found, try including a planet[/yellow]")
+            return
+
+        if json:
+            print(json.dumps(recipe))
+            return
+
+        recipe_table = Table(title="Recipes")
+        recipe_table.add_column("Symbol", style="cyan")
+        recipe_table.add_column("Building", style="yellow")
+        recipe_table.add_column("Inputs", style="green")
+        recipe_table.add_column("Outputs", style="green")
+
+        inputs = ", ".join(f"{i.quantity}x {i.item_symbol}" for i in recipe.inputs)
+        outputs = ", ".join(f"{o.quantity}x {o.item_symbol}" for o in recipe.outputs)
+        recipe_table.add_row(recipe.symbol, recipe.building_symbol, inputs, outputs)
+
+        console.print(recipe_table)
+
+    except (RecipeNotFoundError, RecipeSymbolRequiredError):
+        console.print("[yellow]No recipe found[/yellow]")
 
 
 if __name__ == "__main__":

@@ -299,6 +299,19 @@ class PlanetResource(SQLModel, table=True):
     planet: "Planet" = Relationship(back_populates="resources")
     item: "Item" = Relationship()
 
+    @property
+    def recipe_symbol(self) -> str | None:
+        """Get the recipe symbol for the planet resource."""
+        match self.resource_type:
+            case "LIQUID":
+                return "RIG:=>"
+            case "GASEOUS":
+                return "COL:=>"
+            case "MINERAL":
+                return "EXT:=>"
+            case _:
+                raise ValueError(f"Invalid resource type: {self.resource_type}")
+
 
 class Recipe(SQLModel, table=True):
     """Database model for recipes in Prosperous Universe."""

@@ -53,3 +53,14 @@ class ItemService:
                     }
                 )
                 self.item_repository.create_item(item)
+
+    def find_item(self, pattern: str) -> Optional[Item]:
+        """Find an item by symbol.
+
+        Args:
+            pattern: Item symbol
+
+        Returns:
+            Item if found, None otherwise
+        """
+        return self.item_repository.find_item(pattern)

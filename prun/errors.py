@@ -58,6 +58,13 @@ class PlanetResourceRequiredError(ValueError):
         super().__init__("A planet resource is required to calculate the COGM")
 
 
+class PlanetRequiredError(ValueError):
+    """Raised when a planet is required."""
+
+    def __init__(self) -> None:
+        super().__init__("A planet is required to calculate the COGM")
+
+
 class RecipeSymbolRequiredError(ValueError):
     """Raised when a recipe symbol is required."""
 
