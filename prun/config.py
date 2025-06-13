@@ -34,18 +34,29 @@ class EmpireExpertsIn(Experts):
 class EmpirePlanetIn(BaseModel):
     """A single planet configuration."""
 
-    name: str = Field(..., description="The name of the planet (can be a natural ID, passed to find_planet)")
-    recipes: List[EmpireProductionRecipeIn] = Field(..., description="List of production recipes in order")
+    name: str = Field(
+        ...,
+        description="The name of the planet (can be a natural ID, passed to find_planet)",
+    )
+    recipes: List[EmpireProductionRecipeIn] = Field(
+        ..., description="List of production recipes in order"
+    )
     experts: EmpireExpertsIn
-    cogc_program: Optional[str] = Field(default=None, description="The COGC program to use for the planet")
+    cogc_program: Optional[str] = Field(
+        default=None, description="The COGC program to use for the planet"
+    )
 
 
 class EmpireIn(BaseModel):
     """A complete empire configuration."""
 
     name: str = Field(..., description="Name of the empire")
-    planets: List[EmpirePlanetIn] = Field(..., description="List of planets in the empire")
-    material_buy_prices: Optional[Dict[str, float]] = Field(default=None, description="Optional material buy prices")
+    planets: List[EmpirePlanetIn] = Field(
+        ..., description="List of planets in the empire"
+    )
+    material_buy_prices: Optional[Dict[str, float]] = Field(
+        default=None, description="Optional material buy prices"
+    )
 
     @classmethod
     def from_yaml(cls, yaml_path: str | Path) -> "EmpireIn":
@@ -84,16 +95,24 @@ class CompanyIn(BaseModel):
 
     name: str = Field(..., description="Name of the company")
     user_name: str = Field(..., description="Username of the company representative")
-    stock_link: Optional[str] = Field(default=None, description="Optional stock link for the company")
-    offers: List[InternalOfferIn] = Field(..., description="List of offers from this company")
+    stock_link: Optional[str] = Field(
+        default=None, description="Optional stock link for the company"
+    )
+    offers: List[InternalOfferIn] = Field(
+        ..., description="List of offers from this company"
+    )
 
 
 class InternalOfferConfig(BaseModel):
     """Configuration for loading internal offers."""
 
     name: str = Field(..., description="Name of the offer collection")
-    description: Optional[str] = Field(default=None, description="Description of the offer collection")
-    companies: List[CompanyIn] = Field(..., description="List of companies with internal offers")
+    description: Optional[str] = Field(
+        default=None, description="Description of the offer collection"
+    )
+    companies: List[CompanyIn] = Field(
+        ..., description="List of companies with internal offers"
+    )
 
     @classmethod
     def from_yaml(cls, yaml_path: str | Path) -> "InternalOfferConfig":
@@ -129,7 +148,9 @@ class BuyListItemsIn(RootModel[Dict[str, int]]):
 class BuyListPlanetIn(BaseModel):
     """Configuration for a planet in a buy list."""
 
-    name: str = Field(..., description="The planet name or natural id where the items are needed")
+    name: str = Field(
+        ..., description="The planet name or natural id where the items are needed"
+    )
     items: BuyListItemsIn = Field(..., description="The items to buy and their amounts")
 
 
@@ -138,7 +159,9 @@ class BuyListConfig(BaseModel):
 
     name: str = Field(..., description="Name of the buy list")
     exchange_code: str = Field(..., description="Exchange code for pricing")
-    planets: List[BuyListPlanetIn] = Field(..., description="List of planets to buy items from")
+    planets: List[BuyListPlanetIn] = Field(
+        ..., description="List of planets to buy items from"
+    )
 
     @classmethod
     def from_yaml(cls, yaml_path: str | Path) -> "BuyListConfig":

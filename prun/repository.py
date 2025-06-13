@@ -128,7 +128,9 @@ class ExchangeRepository(BaseRepository):
         for price in prices:
             self.session.delete(price)
 
-    def get_exchange_price(self, exchange_code: str, item_symbol: str) -> Optional[ExchangePrice]:
+    def get_exchange_price(
+        self, exchange_code: str, item_symbol: str
+    ) -> Optional[ExchangePrice]:
         """Get an exchange price by item symbol and exchange code.
 
         Args:
@@ -240,7 +242,9 @@ class RecipeRepository(BaseRepository):
         self.session.add(recipe)
         return recipe
 
-    def get_recipe_with_prices(self, symbol: str) -> tuple[Recipe, list[tuple[RecipeInput, ExchangePrice]]]:
+    def get_recipe_with_prices(
+        self, symbol: str
+    ) -> tuple[Recipe, list[tuple[RecipeInput, ExchangePrice]]]:
         """Get a recipe with current prices for its inputs from AI1 exchange.
 
         Args:
@@ -290,7 +294,11 @@ class RecipeRepository(BaseRepository):
         Returns:
             List of recipes
         """
-        statement = select(Recipe).join(RecipeOutput).where(RecipeOutput.item_symbol == item_symbol)
+        statement = (
+            select(Recipe)
+            .join(RecipeOutput)
+            .where(RecipeOutput.item_symbol == item_symbol)
+        )
         recipes = self.session.exec(statement).all()
         return recipes
 
@@ -361,7 +369,9 @@ class SiteRepository(BaseRepository):
         self.session.add(site_building)
         return site_building
 
-    def create_site_building_material(self, site_building_material: SiteBuildingMaterial) -> SiteBuildingMaterial:
+    def create_site_building_material(
+        self, site_building_material: SiteBuildingMaterial
+    ) -> SiteBuildingMaterial:
         """Create a new site building material.
 
         Args:
@@ -390,7 +400,9 @@ class SiteRepository(BaseRepository):
         Args:
             site_building_id: Site building ID
         """
-        statement = select(SiteBuildingMaterial).where(SiteBuildingMaterial.site_building_id == site_building_id)
+        statement = select(SiteBuildingMaterial).where(
+            SiteBuildingMaterial.site_building_id == site_building_id
+        )
         materials = self.session.exec(statement).all()
         for material in materials:
             self.session.delete(material)
@@ -596,7 +608,9 @@ class SystemRepository(BaseRepository):
         Args:
             planet: Planet
         """
-        statement = select(PlanetResource).where(PlanetResource.planet_natural_id == planet.natural_id)
+        statement = select(PlanetResource).where(
+            PlanetResource.planet_natural_id == planet.natural_id
+        )
         resources = self.session.exec(statement).all()
         for resource in resources:
             self.session.delete(resource)
@@ -620,7 +634,9 @@ class SystemRepository(BaseRepository):
         Args:
             planet: Planet
         """
-        statement = select(PlanetProductionFee).where(PlanetProductionFee.planet_natural_id == planet.natural_id)
+        statement = select(PlanetProductionFee).where(
+            PlanetProductionFee.planet_natural_id == planet.natural_id
+        )
         fees = self.session.exec(statement).all()
         for fee in fees:
             self.session.delete(fee)
@@ -631,7 +647,9 @@ class SystemRepository(BaseRepository):
         Args:
             planet: Planet
         """
-        statement = select(COGCProgram).where(COGCProgram.planet_natural_id == planet.natural_id)
+        statement = select(COGCProgram).where(
+            COGCProgram.planet_natural_id == planet.natural_id
+        )
         programs = self.session.exec(statement).all()
         for program in programs:
             self.session.delete(program)
@@ -642,7 +660,9 @@ class SystemRepository(BaseRepository):
         Args:
             planet: Planet
         """
-        statement = select(COGCVote).where(COGCVote.planet_natural_id == planet.natural_id)
+        statement = select(COGCVote).where(
+            COGCVote.planet_natural_id == planet.natural_id
+        )
         votes = self.session.exec(statement).all()
         for vote in votes:
             self.session.delete(vote)
@@ -659,7 +679,9 @@ class SystemRepository(BaseRepository):
         self.session.add(resource)
         return resource
 
-    def create_planet_building_requirement(self, requirement: PlanetBuildingRequirement) -> PlanetBuildingRequirement:
+    def create_planet_building_requirement(
+        self, requirement: PlanetBuildingRequirement
+    ) -> PlanetBuildingRequirement:
         """Create a new planet building requirement.
 
         Args:
@@ -671,7 +693,9 @@ class SystemRepository(BaseRepository):
         self.session.add(requirement)
         return requirement
 
-    def create_planet_production_fee(self, fee: PlanetProductionFee) -> PlanetProductionFee:
+    def create_planet_production_fee(
+        self, fee: PlanetProductionFee
+    ) -> PlanetProductionFee:
         """Create a new planet production fee.
 
         Args:
@@ -770,7 +794,9 @@ class WarehouseRepository(BaseRepository):
 class WorkforceRepository(BaseRepository):
     """Repository for workforce-related operations."""
 
-    def get_workforce_needs(self, workforce_type: Optional[str] = None) -> Sequence[WorkforceNeed]:
+    def get_workforce_needs(
+        self, workforce_type: Optional[str] = None
+    ) -> Sequence[WorkforceNeed]:
         """Get workforce needs, optionally filtered by workforce type.
 
         Args:
@@ -813,7 +839,9 @@ class WorkforceRepository(BaseRepository):
 class CompanyRepository(BaseRepository):
     """Repository for company-related operations."""
 
-    def get_company_by_name_and_user(self, company_name: str, user_name: str) -> Optional[Company]:
+    def get_company_by_name_and_user(
+        self, company_name: str, user_name: str
+    ) -> Optional[Company]:
         """Get a company by name and user.
 
         Args:
@@ -823,7 +851,9 @@ class CompanyRepository(BaseRepository):
         Returns:
             Company if found, None otherwise
         """
-        statement = select(Company).where(Company.name == company_name, Company.user_name == user_name)
+        statement = select(Company).where(
+            Company.name == company_name, Company.user_name == user_name
+        )
         return self.session.exec(statement).first()
 
     def create_company(self, company: Company) -> Company:
@@ -879,10 +909,14 @@ class InternalOfferRepository(BaseRepository):
         Returns:
             List of internal offers
         """
-        statement = select(InternalOffer).where(InternalOffer.item_symbol == item_symbol)
+        statement = select(InternalOffer).where(
+            InternalOffer.item_symbol == item_symbol
+        )
         return self.session.exec(statement).all()
 
-    def get_offer_by_item_and_user(self, item_symbol: str, user_name: str) -> Optional[InternalOffer]:
+    def get_offer_by_item_and_user(
+        self, item_symbol: str, user_name: str
+    ) -> Optional[InternalOffer]:
         """Get an internal offer by item symbol and user name.
 
         Args:
@@ -949,11 +983,15 @@ class LocalMarketAdRepository(BaseRepository):
     """Repository for local market ads."""
 
     def get_ads_by_planet(self, planet_natural_id: str) -> list[LocalMarketAd]:
-        statement = select(LocalMarketAd).where(LocalMarketAd.planet_natural_id == planet_natural_id)
+        statement = select(LocalMarketAd).where(
+            LocalMarketAd.planet_natural_id == planet_natural_id
+        )
         return list(self.session.exec(statement).all())
 
     def delete_ads_by_planet(self, planet_natural_id: str) -> None:
-        statement = select(LocalMarketAd).where(LocalMarketAd.planet_natural_id == planet_natural_id)
+        statement = select(LocalMarketAd).where(
+            LocalMarketAd.planet_natural_id == planet_natural_id
+        )
         for ad in self.session.exec(statement):
             self.session.delete(ad)
 

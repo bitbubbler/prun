@@ -76,6 +76,7 @@ class FIOClient:
             if not username:
                 raise ValueError("Username is required to authenticate with password")
             self._auth_token = self._get_auth_token(username, password)
+            print(self._auth_token)
             self.headers["Authorization"] = f"Bearer {self._auth_token}"
         elif not self._auth_token:
             raise ValueError("No authentication token provided")
@@ -102,7 +103,9 @@ class FIOClient:
         data = response.json()
         return FIOAuthLoginResponse(**data).auth_token
 
-    def _map_csv_to_model(self, data: Dict[str, Any], mapping: Dict[str, str]) -> Dict[str, Any]:
+    def _map_csv_to_model(
+        self, data: Dict[str, Any], mapping: Dict[str, str]
+    ) -> Dict[str, Any]:
         """Map CSV column names to model field names.
 
         Args:
@@ -112,7 +115,9 @@ class FIOClient:
         Returns:
             Dict with model field names as keys
         """
-        result = {model_field: data[csv_field] for csv_field, model_field in mapping.items()}
+        result = {
+            model_field: data[csv_field] for csv_field, model_field in mapping.items()
+        }
         return result
 
     def _get_csv(self, endpoint: str, authenticated: bool = False) -> List[dict]:
@@ -205,7 +210,9 @@ class FIOClient:
         data = self._get_json("recipes/allrecipes")
         return [FIORecipe(**recipe) for recipe in data]
 
-    def get_prices(self, material_ticker: Optional[str] = None, exchange: Optional[str] = None) -> List[FIOPrice]:
+    def get_prices(
+        self, material_ticker: Optional[str] = None, exchange: Optional[str] = None
+    ) -> List[FIOPrice]:
         """Get prices from the FIO API.
 
         Args:
@@ -429,7 +436,9 @@ class FIOClient:
             logger.error(f"Error fetching company {company_name}: {str(e)}")
             raise
 
-    def get_localmarket_by_planet(self, planet: str, market_type: Optional[str] = None) -> Optional[Dict[str, Any]]:
+    def get_localmarket_by_planet(
+        self, planet: str, market_type: Optional[str] = None
+    ) -> Optional[Dict[str, Any]]:
         """Get local market data for a specific planet.
 
         Args:
@@ -482,7 +491,9 @@ class FIOClient:
             response.raise_for_status()
             return response.json()
         except requests.RequestException as e:
-            logger.error(f"Error fetching infrastructure for planet {planet_id}: {str(e)}")
+            logger.error(
+                f"Error fetching infrastructure for planet {planet_id}: {str(e)}"
+            )
             raise
 
     def get_material_by_ticker(self, ticker: str) -> Optional[FIOMaterial]:
@@ -525,7 +536,9 @@ class FIOClient:
             logger.error(f"Error fetching building {ticker}: {str(e)}")
             raise
 
-    def get_workforce_by_planet(self, username: str, planet: str) -> Optional[Dict[str, Any]]:
+    def get_workforce_by_planet(
+        self, username: str, planet: str
+    ) -> Optional[Dict[str, Any]]:
         """Get workforce data for a specific user on a specific planet.
 
         Args:
@@ -555,7 +568,9 @@ class FIOClient:
             response.raise_for_status()
             return response.json()
         except requests.RequestException as e:
-            logger.error(f"Error fetching workforce for user {username} on planet {planet}: {str(e)}")
+            logger.error(
+                f"Error fetching workforce for user {username} on planet {planet}: {str(e)}"
+            )
             raise
 
     def get_user_info(self, username: str) -> Optional[Dict[str, Any]]:
@@ -590,7 +605,9 @@ class FIOClient:
             logger.error(f"Error fetching user info for {username}: {str(e)}")
             raise
 
-    def get_contracts(self, username: Optional[str] = None) -> Optional[List[Dict[str, Any]]]:
+    def get_contracts(
+        self, username: Optional[str] = None
+    ) -> Optional[List[Dict[str, Any]]]:
         """Get contracts for a user.
 
         Args:
@@ -603,7 +620,9 @@ class FIOClient:
             requests.RequestException: If the request fails
         """
         if not username and not self._auth_token:
-            raise ValueError("Either username or authentication is required for get_contracts")
+            raise ValueError(
+                "Either username or authentication is required for get_contracts"
+            )
 
         url = f"{self.base_url}/contract/allcontracts"
         if username:

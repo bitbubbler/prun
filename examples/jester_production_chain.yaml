@@ -9,7 +9,7 @@ planets:
     cogc_program: "metallurgy"
     recipes:
       - building_symbol: "GF"
-        recipe_symbol: "GF:1xNA-2xSIO=>10xGL"
+        recipe_symbol: "GF:1xFLX-1xNA-2xSIO=>12xGL"
 
   - name: "griffonstone"
     experts:
@@ -38,6 +38,9 @@ planets:
         recipe_symbol: "GF:10xGL-15xPG=>10xRG"
 
       - building_symbol: "GF"
+        recipe_symbol: "GF:10xGL-15xPG-1xSEN=>10xRG"
+
+      - building_symbol: "GF"
         recipe_symbol: "GF:10xGL-10xNCS=>10xNG"
 
       # - building_symbol: "LIT"
@@ -49,11 +52,11 @@ planets:
       - building_symbol: "GCH"
         recipe_symbol: "GF:1xGV-20xRG=>1xGCH"
 
-      # - building_symbol: "GNZ"
-      #   recipe_symbol: "GF:1xGCH-20xRG-1xTI=>1xGNZ"
+      - building_symbol: "GNZ"
+        recipe_symbol: "GF:1xGCH-20xRG-1xTI=>1xGNZ"
 
-      # - building_symbol: "GEN"
-      #   recipe_symbol: "GF:4xGNZ-4xLFP-1xMFK-50xNG-10xTHF=>1xGEN"
+      - building_symbol: "GEN"
+        recipe_symbol: "GF:4xGNZ-4xLFP-1xMFK-50xNG-10xTHF=>1xGEN"
 
   - name: "origo"
     experts:

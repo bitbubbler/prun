@@ -30,15 +30,33 @@ from .db_models import (
 class Experts(BaseModel):
     """Count of experts for each industry."""
 
-    agriculture: int = Field(default=0, description="The number of agriculture experts", max_value=5)
-    chemistry: int = Field(default=0, description="The number of chemistry experts", max_value=5)
-    construction: int = Field(default=0, description="The number of construction experts", max_value=5)
-    electronics: int = Field(default=0, description="The number of electronics experts", max_value=5)
-    food_industries: int = Field(default=0, description="The number of food industry experts", max_value=5)
-    fuel_refining: int = Field(default=0, description="The number of fuel refining experts", max_value=5)
-    manufacturing: int = Field(default=0, description="The number of manufacturing experts", max_value=5)
-    metallurgy: int = Field(default=0, description="The number of metallurgy experts", max_value=5)
-    resource_extraction: int = Field(default=0, description="The number of resource extraction experts", max_value=5)
+    agriculture: int = Field(
+        default=0, description="The number of agriculture experts", max_value=5
+    )
+    chemistry: int = Field(
+        default=0, description="The number of chemistry experts", max_value=5
+    )
+    construction: int = Field(
+        default=0, description="The number of construction experts", max_value=5
+    )
+    electronics: int = Field(
+        default=0, description="The number of electronics experts", max_value=5
+    )
+    food_industries: int = Field(
+        default=0, description="The number of food industry experts", max_value=5
+    )
+    fuel_refining: int = Field(
+        default=0, description="The number of fuel refining experts", max_value=5
+    )
+    manufacturing: int = Field(
+        default=0, description="The number of manufacturing experts", max_value=5
+    )
+    metallurgy: int = Field(
+        default=0, description="The number of metallurgy experts", max_value=5
+    )
+    resource_extraction: int = Field(
+        default=0, description="The number of resource extraction experts", max_value=5
+    )
 
     @model_validator(mode="after")
     def validate_total_experts(cls, v: "Experts") -> "Experts":
@@ -78,7 +96,9 @@ class EfficientRecipe(BaseModel):
     is_resource_extraction_recipe: bool = False
 
     @classmethod
-    def efficient_recipe_from(cls, recipe: Recipe, efficiency: float) -> "EfficientRecipe":
+    def efficient_recipe_from(
+        cls, recipe: Recipe, efficiency: float
+    ) -> "EfficientRecipe":
         """Create an efficient recipe from a normal recipe."""
 
         # Calculate the new time_ms based on expert_efficiency
@@ -122,7 +142,9 @@ class PlanetExtractionRecipe(BaseModel):
     is_resource_extraction_recipe: bool = True
 
     @classmethod
-    def extraction_recipe_from(cls, recipe: Recipe, planet_resource: PlanetResource) -> "PlanetExtractionRecipe":
+    def extraction_recipe_from(
+        cls, recipe: Recipe, planet_resource: PlanetResource
+    ) -> "PlanetExtractionRecipe":
         """Create an extraction recipe from a normal recipe."""
 
         if not recipe.is_resource_extraction_recipe:
@@ -136,7 +158,9 @@ class PlanetExtractionRecipe(BaseModel):
 
         fractional_units_per_run = daily_extraction / (24 / recipe.hours_decimal)
 
-        remainder_units_per_run = math.ceil(fractional_units_per_run) - fractional_units_per_run
+        remainder_units_per_run = (
+            math.ceil(fractional_units_per_run) - fractional_units_per_run
+        )
 
         extraction_units_per_run = math.ceil(fractional_units_per_run)
 
@@ -192,7 +216,9 @@ class PlanetBuilding(BaseModel):
     building_costs: list[BuildingCost]
 
     @classmethod
-    def planet_building_from(cls, building: Building, planet: Planet) -> "PlanetBuilding":
+    def planet_building_from(
+        cls, building: Building, planet: Planet
+    ) -> "PlanetBuilding":
         """Create a building from a planet."""
         building_costs = building.building_costs.copy()
         if planet.surface:
@@ -210,7 +236,9 @@ class PlanetBuilding(BaseModel):
                 )
             )
         if planet.pressure < 0.25:
-            building_costs.append(BuildingCost(item_symbol="SEA", amount=building.area_cost))
+            building_costs.append(
+                BuildingCost(item_symbol="SEA", amount=building.area_cost)
+            )
         elif planet.pressure > 2:
             building_costs.append(BuildingCost(item_symbol="HSE", amount=1))
         if planet.gravity < 0.25:
@@ -218,7 +246,9 @@ class PlanetBuilding(BaseModel):
         elif planet.gravity > 2.5:
             building_costs.append(BuildingCost(item_symbol="BL", amount=1))
         if planet.temperature < -25:
-            building_costs.append(BuildingCost(item_symbol="INS", amount=building.area_cost * 10))
+            building_costs.append(
+                BuildingCost(item_symbol="INS", amount=building.area_cost * 10)
+            )
         elif planet.temperature > 75:
             building_costs.append(BuildingCost(item_symbol="TSH", amount=1))
         return cls(
@@ -284,7 +314,9 @@ class QueueItem(BaseModel):
 
     @field_validator("ratio")
     @classmethod
-    def ratio_must_be_positive_and_not_with_quantity(cls, v: float | None, info) -> float | None:
+    def ratio_must_be_positive_and_not_with_quantity(
+        cls, v: float | None, info
+    ) -> float | None:
         if v is not None:
             if v <= 0:
                 raise ValueError("Ratio must be positive")
@@ -296,7 +328,9 @@ class QueueItem(BaseModel):
 
     @field_validator("quantity")
     @classmethod
-    def quantity_must_be_positive_and_not_with_ratio(cls, v: int | None, info) -> int | None:
+    def quantity_must_be_positive_and_not_with_ratio(
+        cls, v: int | None, info
+    ) -> int | None:
         if v is not None:
             if v <= 0:
                 raise ValueError("Quantity must be positive")

@@ -50,7 +50,9 @@ class EfficiencyService:
         return cls.EXPERT_BONUSES[num_experts - 1]
 
     @classmethod
-    def get_days_to_next_expert(cls, current_experts: int, num_buildings: int = 1) -> float:
+    def get_days_to_next_expert(
+        cls, current_experts: int, num_buildings: int = 1
+    ) -> float:
         """
         Returns the days required to spawn the next expert, given the current number of experts
         and the number of buildings in the industry. If max experts reached, returns 0.
@@ -60,7 +62,9 @@ class EfficiencyService:
         return cls.EXPERT_DAYS[current_experts] / max(1, num_buildings)
 
     @classmethod
-    def get_total_days_for_experts(cls, target_experts: int, num_buildings: int = 1) -> float:
+    def get_total_days_for_experts(
+        cls, target_experts: int, num_buildings: int = 1
+    ) -> float:
         """
         Returns the total days required to reach a given number of experts from 0,
         given the number of buildings in the industry.
@@ -83,7 +87,9 @@ class EfficiencyService:
         return program in cls.COGC_PROGRAMS
 
     @classmethod
-    def get_cogc_efficiency(cls, building: Building, program: str | None = None) -> float:
+    def get_cogc_efficiency(
+        cls, building: Building, program: str | None = None
+    ) -> float:
         """
         Returns the efficiency percentage for a given COGC program.
         If the program is not valid, returns 0.0.

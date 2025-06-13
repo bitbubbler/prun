@@ -25,7 +25,9 @@ class WorkforceService:
         self.fio_client = fio_client
         self.workforce_repository = workforce_repository
 
-    def get_workforce_needs(self, workforce_type: str | None = None) -> List[WorkforceNeed]:
+    def get_workforce_needs(
+        self, workforce_type: str | None = None
+    ) -> List[WorkforceNeed]:
         """Get workforce needs, optionally filtered by workforce type.
 
         Args:

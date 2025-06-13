@@ -51,7 +51,9 @@ class BuildingCost(SQLModel, table=True):
     def reclaimable_amount(self, days_since_last_repair: int) -> float:
         """Get the reclaimable cost of the building."""
         # https://pct.fnar.net/building-degradation/index.html#repair-costs-and-reclaimables
-        return math.floor(self.amount * ((180 - min(days_since_last_repair, 180)) / 180))
+        return math.floor(
+            self.amount * ((180 - min(days_since_last_repair, 180)) / 180)
+        )
 
     def repair_amount(self, days_since_last_repair: int) -> float:
         """Get the repair cost of the building."""
@@ -76,7 +78,9 @@ class COGCProgram(SQLModel, table=True):
     @property
     def program(self) -> str:
         """Get the program type."""
-        program = self.program_type.replace("ADVERTISING_", "").replace("_", " ").lower()
+        program = (
+            self.program_type.replace("ADVERTISING_", "").replace("_", " ").lower()
+        )
         if program not in [
             "agriculture",
             "chemistry",
@@ -239,7 +243,9 @@ class Planet(SQLModel, table=True):
     system: "System" = Relationship(back_populates="planets")
     site: "Site" = Relationship(back_populates="planet")
     resources: list["PlanetResource"] = Relationship(back_populates="planet")
-    building_requirements: list["PlanetBuildingRequirement"] = Relationship(back_populates="planet")
+    building_requirements: list["PlanetBuildingRequirement"] = Relationship(
+        back_populates="planet"
+    )
     production_fees: list["PlanetProductionFee"] = Relationship(back_populates="planet")
     cogc_programs: list["COGCProgram"] = Relationship(back_populates="planet")
     cogc_votes: list["COGCVote"] = Relationship(back_populates="planet")
@@ -384,7 +390,9 @@ class SiteBuilding(SQLModel, table=True):
 
     # Relationships
     site: "Site" = Relationship(back_populates="buildings")
-    materials: list["SiteBuildingMaterial"] = Relationship(back_populates="site_building")
+    materials: list["SiteBuildingMaterial"] = Relationship(
+        back_populates="site_building"
+    )
     building: "Building" = Relationship()
 
 
@@ -416,7 +424,9 @@ class Storage(SQLModel, table=True):
     weight_capacity: int
     volume_capacity: int
     site_id: str | None = Field(default=None, foreign_key="sites.site_id")
-    warehouse_id: str | None = Field(default=None, foreign_key="warehouses.warehouse_id")
+    warehouse_id: str | None = Field(
+        default=None, foreign_key="warehouses.warehouse_id"
+    )
 
     # Relationships
     stored_items: list["StorageItem"] = Relationship(back_populates="storage")
@@ -458,11 +468,15 @@ class System(SQLModel, table=True):
     # Relationships
     connections: list["SystemConnection"] = Relationship(
         back_populates="system",
-        sa_relationship_kwargs={"primaryjoin": "System.system_id == SystemConnection.system_id"},
+        sa_relationship_kwargs={
+            "primaryjoin": "System.system_id == SystemConnection.system_id"
+        },
     )
     connected_to: list["SystemConnection"] = Relationship(
         back_populates="connecting_system",
-        sa_relationship_kwargs={"primaryjoin": "System.system_id == SystemConnection.connecting_id"},
+        sa_relationship_kwargs={
+            "primaryjoin": "System.system_id == SystemConnection.connecting_id"
+        },
     )
     planets: list["Planet"] = Relationship(back_populates="system")
 
@@ -477,11 +491,15 @@ class SystemConnection(SQLModel, table=True):
     # Relationships
     system: "System" = Relationship(
         back_populates="connections",
-        sa_relationship_kwargs={"primaryjoin": "SystemConnection.system_id == System.system_id"},
+        sa_relationship_kwargs={
+            "primaryjoin": "SystemConnection.system_id == System.system_id"
+        },
     )
     connecting_system: "System" = Relationship(
         back_populates="connected_to",
-        sa_relationship_kwargs={"primaryjoin": "SystemConnection.connecting_id == System.system_id"},
+        sa_relationship_kwargs={
+            "primaryjoin": "SystemConnection.connecting_id == System.system_id"
+        },
     )
 
 

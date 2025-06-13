@@ -70,7 +70,12 @@ class InternalOfferService:
 
         return added_count, updated_count, skipped_count, errors_count
 
-    def process_single_offer(self, company: CompanyIn, offer_item: InternalOfferIn, force_update: bool = False) -> str:
+    def process_single_offer(
+        self,
+        company: CompanyIn,
+        offer_item: InternalOfferIn,
+        force_update: bool = False,
+    ) -> str:
         """Process a single internal offer.
 
         Args:
@@ -83,7 +88,9 @@ class InternalOfferService:
         # Check if the item exists
         item = self.item_repository.get_item(offer_item.item_symbol)
         if not item:
-            logger.warning(f"Item {offer_item.item_symbol} not found in database. Skipping offer.")
+            logger.warning(
+                f"Item {offer_item.item_symbol} not found in database. Skipping offer."
+            )
             return "error"
 
         # Get or create the company
@@ -100,9 +107,15 @@ class InternalOfferService:
         )
 
         if existing_offer:
-            logger.info(f"Offer for {offer_item.item_symbol} from {company.user_name} already exists.")
+            logger.info(
+                f"Offer for {offer_item.item_symbol} from {company.user_name} already exists."
+            )
             # Update price and company if they've changed or if force flag is set
-            if force_update or existing_offer.price != offer_item.price or existing_offer.company_id != company.id:
+            if (
+                force_update
+                or existing_offer.price != offer_item.price
+                or existing_offer.company_id != company.id
+            ):
                 logger.info(
                     f"Updating price from {existing_offer.price} to {offer_item.price} and company to {company.name}"
                 )
@@ -125,10 +138,14 @@ class InternalOfferService:
 
         # Add to database
         self.offer_repository.create_offer(new_offer)
-        logger.info(f"Added offer: {offer_item.item_symbol} at {offer_item.price} from {company.user_name}")
+        logger.info(
+            f"Added offer: {offer_item.item_symbol} at {offer_item.price} from {company.user_name}"
+        )
         return "added"
 
-    def _get_or_create_company(self, company_name: str, user_name: str, stock_link: Optional[str] = None) -> Company:
+    def _get_or_create_company(
+        self, company_name: str, user_name: str, stock_link: Optional[str] = None
+    ) -> Company:
         """Get or create a company by name and user.
 
         Args:
@@ -140,7 +157,9 @@ class InternalOfferService:
             Company instance
         """
         # Use the company repository instead of the offer repository
-        company = self.company_repository.get_company_by_name_and_user(company_name, user_name)
+        company = self.company_repository.get_company_by_name_and_user(
+            company_name, user_name
+        )
 
         if company:
             # Update stock_link if provided and different

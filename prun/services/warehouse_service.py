@@ -29,7 +29,8 @@ class WarehouseService:
         warehouses = self.fio_client.get_warehouses(username)
         # Get all existing warehouses
         existing_warehouses = {
-            warehouse.warehouse_id: warehouse for warehouse in self.warehouse_repository.get_all_warehouses()
+            warehouse.warehouse_id: warehouse
+            for warehouse in self.warehouse_repository.get_all_warehouses()
         }
 
         # Process each warehouse from API
@@ -41,14 +42,18 @@ class WarehouseService:
                 existing_warehouse.units = fio_warehouse.units
                 existing_warehouse.weight_capacity = fio_warehouse.weight_capacity
                 existing_warehouse.volume_capacity = fio_warehouse.volume_capacity
-                existing_warehouse.next_payment_timestamp_epoch_ms = fio_warehouse.next_payment_timestamp_epoch_ms
+                existing_warehouse.next_payment_timestamp_epoch_ms = (
+                    fio_warehouse.next_payment_timestamp_epoch_ms
+                )
                 existing_warehouse.fee_amount = fio_warehouse.fee_amount
                 existing_warehouse.fee_currency = fio_warehouse.fee_currency
                 existing_warehouse.fee_collector_id = fio_warehouse.fee_collector_id
                 existing_warehouse.fee_collector_name = fio_warehouse.fee_collector_name
                 existing_warehouse.fee_collector_code = fio_warehouse.fee_collector_code
                 existing_warehouse.location_name = fio_warehouse.location_name
-                existing_warehouse.location_natural_id = fio_warehouse.location_natural_id
+                existing_warehouse.location_natural_id = (
+                    fio_warehouse.location_natural_id
+                )
             else:
                 # Create new warehouse
                 warehouse = Warehouse.model_validate(

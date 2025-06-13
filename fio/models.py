@@ -7,9 +7,13 @@ class FIOMaterial(BaseModel):
     """Material from the /csv/materials endpoint."""
 
     material_id: str = Field(..., description="Material ID", alias="MaterialId")
-    ticker: str = Field(..., description="Material ticker symbol (e.g. 'H2O')", alias="Ticker")
+    ticker: str = Field(
+        ..., description="Material ticker symbol (e.g. 'H2O')", alias="Ticker"
+    )
     name: str = Field(..., description="Material name (e.g. 'Water')", alias="Name")
-    category: str = Field(..., description="Material category (e.g. 'Resources')", alias="CategoryName")
+    category: str = Field(
+        ..., description="Material category (e.g. 'Resources')", alias="CategoryName"
+    )
     weight: float = Field(..., description="Material weight in tons", alias="Weight")
     volume: float = Field(..., description="Material volume in m³", alias="Volume")
 
@@ -49,23 +53,47 @@ class FIOBuildingRecipe(BaseModel):
 class FIOPrice(BaseModel):
     """Price from the /exchange/all endpoint."""
 
-    material_ticker: str = Field(..., description="Material ticker symbol (e.g. 'H2O')", alias="MaterialTicker")
-    exchange: str = Field(..., description="Exchange code (e.g. 'IC1')", alias="ExchangeCode")
-    mm_buy: Optional[float] = Field(None, description="Market maker buy price", alias="MMBuy")
-    mm_sell: Optional[float] = Field(None, description="Market maker sell price", alias="MMSell")
-    average_price: float = Field(..., description="Current market average price in A$", alias="PriceAverage")
+    material_ticker: str = Field(
+        ..., description="Material ticker symbol (e.g. 'H2O')", alias="MaterialTicker"
+    )
+    exchange: str = Field(
+        ..., description="Exchange code (e.g. 'IC1')", alias="ExchangeCode"
+    )
+    mm_buy: Optional[float] = Field(
+        None, description="Market maker buy price", alias="MMBuy"
+    )
+    mm_sell: Optional[float] = Field(
+        None, description="Market maker sell price", alias="MMSell"
+    )
+    average_price: float = Field(
+        ..., description="Current market average price in A$", alias="PriceAverage"
+    )
 
     # Ask data
-    ask_amount: Optional[int] = Field(None, description="Total amount available for sale", alias="AskCount")
-    ask_price: Optional[float] = Field(None, description="Current ask price", alias="Ask")
-    ask_available: Optional[int] = Field(None, description="Amount available at ask price", alias="Supply")
+    ask_amount: Optional[int] = Field(
+        None, description="Total amount available for sale", alias="AskCount"
+    )
+    ask_price: Optional[float] = Field(
+        None, description="Current ask price", alias="Ask"
+    )
+    ask_available: Optional[int] = Field(
+        None, description="Amount available at ask price", alias="Supply"
+    )
 
     # Bid data
-    bid_amount: Optional[int] = Field(None, description="Total amount requested for purchase", alias="BidCount")
-    bid_price: Optional[float] = Field(None, description="Current bid price", alias="Bid")
-    bid_available: Optional[int] = Field(None, description="Amount available at bid price", alias="Demand")
+    bid_amount: Optional[int] = Field(
+        None, description="Total amount requested for purchase", alias="BidCount"
+    )
+    bid_price: Optional[float] = Field(
+        None, description="Current bid price", alias="Bid"
+    )
+    bid_available: Optional[int] = Field(
+        None, description="Amount available at bid price", alias="Demand"
+    )
 
-    timestamp: datetime = Field(default_factory=datetime.now, description="Price timestamp")
+    timestamp: datetime = Field(
+        default_factory=datetime.now, description="Price timestamp"
+    )
 
     model_config = ConfigDict(from_attributes=True, populate_by_name=True)
 
@@ -73,7 +101,9 @@ class FIOPrice(BaseModel):
 class FIORecipeInputOutput(BaseModel):
     """Recipe input from the /csv/recipeinputs endpoint."""
 
-    ticker: str = Field(..., description="Input material ticker (e.g. 'H2O')", alias="Ticker")
+    ticker: str = Field(
+        ..., description="Input material ticker (e.g. 'H2O')", alias="Ticker"
+    )
     amount: float = Field(..., description="Input amount per batch", alias="Amount")
 
     model_config = ConfigDict(from_attributes=True)
@@ -92,12 +122,18 @@ class FIORecipe(BaseModel):
         description="Standard Recipe Name (e.g. 'TNP:4xFLX-4xREA-1xTC=>1xETC')",
         alias="StandardRecipeName",
     )
-    building_ticker: str = Field(..., description="Building ticker symbol (e.g. 'FFP')", alias="BuildingTicker")
-    inputs: List[FIORecipeInputOutput] = Field(..., description="List of input materials and amounts", alias="Inputs")
+    building_ticker: str = Field(
+        ..., description="Building ticker symbol (e.g. 'FFP')", alias="BuildingTicker"
+    )
+    inputs: List[FIORecipeInputOutput] = Field(
+        ..., description="List of input materials and amounts", alias="Inputs"
+    )
     outputs: List[FIORecipeInputOutput] = Field(
         ..., description="List of output materials and amounts", alias="Outputs"
     )
-    time_ms: int = Field(..., description="Recipe duration in milliseconds", alias="TimeMs")
+    time_ms: int = Field(
+        ..., description="Recipe duration in milliseconds", alias="TimeMs"
+    )
 
     model_config = ConfigDict(
         from_attributes=True,
@@ -120,8 +156,12 @@ class FIORecipe(BaseModel):
 class FIOBuildingCost(BaseModel):
     """Building cost from the /building/allbuildings endpoint."""
 
-    commodity_name: str = Field(..., description="Commodity name", alias="CommodityName")
-    commodity_ticker: str = Field(..., description="Commodity ticker", alias="CommodityTicker")
+    commodity_name: str = Field(
+        ..., description="Commodity name", alias="CommodityName"
+    )
+    commodity_ticker: str = Field(
+        ..., description="Commodity ticker", alias="CommodityTicker"
+    )
     weight: float = Field(..., description="Weight of the commodity", alias="Weight")
     volume: float = Field(..., description="Volume of the commodity", alias="Volume")
     amount: int = Field(..., description="Amount required", alias="Amount")
@@ -132,8 +172,12 @@ class FIOBuildingCost(BaseModel):
 class FIOBuildingRecipeInputOutput(BaseModel):
     """Recipe input/output from the /building/allbuildings endpoint."""
 
-    commodity_name: str = Field(..., description="Commodity name", alias="CommodityName")
-    commodity_ticker: str = Field(..., description="Commodity ticker", alias="CommodityTicker")
+    commodity_name: str = Field(
+        ..., description="Commodity name", alias="CommodityName"
+    )
+    commodity_ticker: str = Field(
+        ..., description="Commodity ticker", alias="CommodityTicker"
+    )
     weight: float = Field(..., description="Weight of the commodity", alias="Weight")
     volume: float = Field(..., description="Volume of the commodity", alias="Volume")
     amount: int = Field(..., description="Amount required", alias="Amount")
@@ -144,12 +188,22 @@ class FIOBuildingRecipeInputOutput(BaseModel):
 class FIOBuildingRecipeDetail(BaseModel):
     """Detailed recipe from the /building/allbuildings endpoint."""
 
-    inputs: List[FIOBuildingRecipeInputOutput] = Field(..., description="List of input materials", alias="Inputs")
-    outputs: List[FIOBuildingRecipeInputOutput] = Field(..., description="List of output materials", alias="Outputs")
-    building_recipe_id: str = Field(..., description="Building recipe ID", alias="BuildingRecipeId")
-    duration_ms: int = Field(..., description="Recipe duration in milliseconds", alias="DurationMs")
+    inputs: List[FIOBuildingRecipeInputOutput] = Field(
+        ..., description="List of input materials", alias="Inputs"
+    )
+    outputs: List[FIOBuildingRecipeInputOutput] = Field(
+        ..., description="List of output materials", alias="Outputs"
+    )
+    building_recipe_id: str = Field(
+        ..., description="Building recipe ID", alias="BuildingRecipeId"
+    )
+    duration_ms: int = Field(
+        ..., description="Recipe duration in milliseconds", alias="DurationMs"
+    )
     recipe_name: str = Field(..., description="Recipe name", alias="RecipeName")
-    standard_recipe_name: str = Field(..., description="Standard recipe name", alias="StandardRecipeName")
+    standard_recipe_name: str = Field(
+        ..., description="Standard recipe name", alias="StandardRecipeName"
+    )
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -157,24 +211,42 @@ class FIOBuildingRecipeDetail(BaseModel):
 class FIOBuilding(BaseModel):
     """Detailed building information from the /building/allbuildings endpoint."""
 
-    building_costs: List[FIOBuildingCost] = Field(..., description="List of building costs", alias="BuildingCosts")
-    recipes: List[FIOBuildingRecipeDetail] = Field(..., description="List of recipes", alias="Recipes")
+    building_costs: List[FIOBuildingCost] = Field(
+        ..., description="List of building costs", alias="BuildingCosts"
+    )
+    recipes: List[FIOBuildingRecipeDetail] = Field(
+        ..., description="List of recipes", alias="Recipes"
+    )
     building_id: str = Field(..., description="Building ID", alias="BuildingId")
     name: str = Field(..., description="Building name", alias="Name")
     ticker: str = Field(..., description="Building ticker", alias="Ticker")
-    expertise: str | None = Field(None, description="Required expertise", alias="Expertise")
-    pioneers: int = Field(..., description="Number of pioneers required", alias="Pioneers")
-    settlers: int = Field(..., description="Number of settlers required", alias="Settlers")
-    technicians: int = Field(..., description="Number of technicians required", alias="Technicians")
-    engineers: int = Field(..., description="Number of engineers required", alias="Engineers")
-    scientists: int = Field(..., description="Number of scientists required", alias="Scientists")
+    expertise: str | None = Field(
+        None, description="Required expertise", alias="Expertise"
+    )
+    pioneers: int = Field(
+        ..., description="Number of pioneers required", alias="Pioneers"
+    )
+    settlers: int = Field(
+        ..., description="Number of settlers required", alias="Settlers"
+    )
+    technicians: int = Field(
+        ..., description="Number of technicians required", alias="Technicians"
+    )
+    engineers: int = Field(
+        ..., description="Number of engineers required", alias="Engineers"
+    )
+    scientists: int = Field(
+        ..., description="Number of scientists required", alias="Scientists"
+    )
     area_cost: int = Field(..., description="Area cost", alias="AreaCost")
     user_name_submitted: str = Field(
         ...,
         description="Username who submitted the building",
         alias="UserNameSubmitted",
     )
-    timestamp: datetime = Field(..., description="Timestamp when the building was submitted", alias="Timestamp")
+    timestamp: datetime = Field(
+        ..., description="Timestamp when the building was submitted", alias="Timestamp"
+    )
 
     model_config = ConfigDict(from_attributes=True, populate_by_name=True)
 
@@ -182,8 +254,12 @@ class FIOBuilding(BaseModel):
 class FIOPlanet(BaseModel):
     """Planet from the /planet/allplanets endpoint."""
 
-    planet_natural_id: str = Field(..., description="Planet natural ID (e.g. 'PG-241h')", alias="PlanetNaturalId")
-    planet_name: str = Field(..., description="Planet name (e.g. 'PG-241h')", alias="PlanetName")
+    planet_natural_id: str = Field(
+        ..., description="Planet natural ID (e.g. 'PG-241h')", alias="PlanetNaturalId"
+    )
+    planet_name: str = Field(
+        ..., description="Planet name (e.g. 'PG-241h')", alias="PlanetName"
+    )
 
     model_config = ConfigDict(from_attributes=True, populate_by_name=True)
 
@@ -191,8 +267,12 @@ class FIOPlanet(BaseModel):
 class FIOSystemConnection(BaseModel):
     """System connection from the /systemstarts endpoint."""
 
-    system_connection_id: str = Field(..., description="System connection ID", alias="SystemConnectionId")
-    connecting_id: str = Field(..., description="Connecting system ID", alias="ConnectingId")
+    system_connection_id: str = Field(
+        ..., description="System connection ID", alias="SystemConnectionId"
+    )
+    connecting_id: str = Field(
+        ..., description="Connecting system ID", alias="ConnectingId"
+    )
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -200,18 +280,30 @@ class FIOSystemConnection(BaseModel):
 class FIOSystem(BaseModel):
     """System from the /systemstarts endpoint."""
 
-    connections: List[FIOSystemConnection] = Field(..., description="List of system connections", alias="Connections")
+    connections: List[FIOSystemConnection] = Field(
+        ..., description="List of system connections", alias="Connections"
+    )
     system_id: str = Field(..., description="System ID", alias="SystemId")
     name: str = Field(..., description="System name", alias="Name")
     natural_id: str = Field(..., description="System natural ID", alias="NaturalId")
     type: str = Field(..., description="System type", alias="Type")
-    position_x: float = Field(..., description="X position coordinate", alias="PositionX")
-    position_y: float = Field(..., description="Y position coordinate", alias="PositionY")
-    position_z: float = Field(..., description="Z position coordinate", alias="PositionZ")
+    position_x: float = Field(
+        ..., description="X position coordinate", alias="PositionX"
+    )
+    position_y: float = Field(
+        ..., description="Y position coordinate", alias="PositionY"
+    )
+    position_z: float = Field(
+        ..., description="Z position coordinate", alias="PositionZ"
+    )
     sector_id: str = Field(..., description="Sector ID", alias="SectorId")
     sub_sector_id: str = Field(..., description="Sub-sector ID", alias="SubSectorId")
-    user_name_submitted: str = Field(..., description="Username who submitted the system", alias="UserNameSubmitted")
-    timestamp: datetime = Field(..., description="Timestamp when the system was submitted", alias="Timestamp")
+    user_name_submitted: str = Field(
+        ..., description="Username who submitted the system", alias="UserNameSubmitted"
+    )
+    timestamp: datetime = Field(
+        ..., description="Timestamp when the system was submitted", alias="Timestamp"
+    )
 
     model_config = ConfigDict(from_attributes=True, populate_by_name=True)
 
@@ -221,8 +313,12 @@ class FIOWorkforceNeed(BaseModel):
 
     material_id: str = Field(..., description="Material ID", alias="MaterialId")
     material_name: str = Field(..., description="Material name", alias="MaterialName")
-    material_ticker: str = Field(..., description="Material ticker", alias="MaterialTicker")
-    material_category: str = Field(..., description="Material category ID", alias="MaterialCategory")
+    material_ticker: str = Field(
+        ..., description="Material ticker", alias="MaterialTicker"
+    )
+    material_category: str = Field(
+        ..., description="Material category ID", alias="MaterialCategory"
+    )
     amount: float = Field(..., description="Amount needed per worker", alias="Amount")
 
     model_config = ConfigDict(from_attributes=True, populate_by_name=True)
@@ -231,7 +327,9 @@ class FIOWorkforceNeed(BaseModel):
 class FIOWorkforceNeeds(BaseModel):
     """Workforce needs for a specific workforce type from the /global/workforceneeds endpoint."""
 
-    needs: List[FIOWorkforceNeed] = Field(..., description="List of material needs", alias="Needs")
+    needs: List[FIOWorkforceNeed] = Field(
+        ..., description="List of material needs", alias="Needs"
+    )
     workforce_type: str = Field(
         ...,
         description="Type of workforce (e.g. PIONEER, SETTLER, TECHNICIAN)",
@@ -244,14 +342,28 @@ class FIOWorkforceNeeds(BaseModel):
 class FIOComexExchange(BaseModel):
     """Commodity exchange from the /global/comexexchanges endpoint."""
 
-    comex_exchange_id: str = Field(..., description="Exchange ID", alias="ComexExchangeId")
+    comex_exchange_id: str = Field(
+        ..., description="Exchange ID", alias="ComexExchangeId"
+    )
     exchange_name: str = Field(..., description="Exchange name", alias="ExchangeName")
-    exchange_code: str = Field(..., description="Exchange code (e.g. 'IC1')", alias="ExchangeCode")
-    exchange_operator_id: str | None = Field(None, description="Exchange operator ID", alias="ExchangeOperatorId")
-    exchange_operator_code: str | None = Field(None, description="Exchange operator code", alias="ExchangeOperatorCode")
-    exchange_operator_name: str | None = Field(None, description="Exchange operator name", alias="ExchangeOperatorName")
-    currency_numeric_code: int = Field(..., description="Currency numeric code", alias="CurrencyNumericCode")
-    currency_code: str = Field(..., description="Currency code (e.g. 'ICA')", alias="CurrencyCode")
+    exchange_code: str = Field(
+        ..., description="Exchange code (e.g. 'IC1')", alias="ExchangeCode"
+    )
+    exchange_operator_id: str | None = Field(
+        None, description="Exchange operator ID", alias="ExchangeOperatorId"
+    )
+    exchange_operator_code: str | None = Field(
+        None, description="Exchange operator code", alias="ExchangeOperatorCode"
+    )
+    exchange_operator_name: str | None = Field(
+        None, description="Exchange operator name", alias="ExchangeOperatorName"
+    )
+    currency_numeric_code: int = Field(
+        ..., description="Currency numeric code", alias="CurrencyNumericCode"
+    )
+    currency_code: str = Field(
+        ..., description="Currency code (e.g. 'ICA')", alias="CurrencyCode"
+    )
     currency_name: str = Field(..., description="Currency name", alias="CurrencyName")
     currency_decimals: int = Field(
         ...,
@@ -260,7 +372,9 @@ class FIOComexExchange(BaseModel):
     )
     location_id: str = Field(..., description="Location ID", alias="LocationId")
     location_name: str = Field(..., description="Location name", alias="LocationName")
-    location_natural_id: str = Field(..., description="Location natural ID (e.g. 'HRT')", alias="LocationNaturalId")
+    location_natural_id: str = Field(
+        ..., description="Location natural ID (e.g. 'HRT')", alias="LocationNaturalId"
+    )
 
     model_config = ConfigDict(from_attributes=True, populate_by_name=True)
 
@@ -268,10 +382,18 @@ class FIOComexExchange(BaseModel):
 class FIOSimulation(BaseModel):
     """Simulation settings from the FIO API."""
 
-    simulation_interval: int = Field(..., description="Simulation interval in seconds", alias="SimulationInterval")
-    flight_stl_factor: float = Field(..., description="Flight STL factor", alias="FlightSTLFactor")
-    flight_ftl_factor: float = Field(..., description="Flight FTL factor", alias="FlightFTLFactor")
-    planetary_motion_factor: float = Field(..., description="Planetary motion factor", alias="PlanetaryMotionFactor")
+    simulation_interval: int = Field(
+        ..., description="Simulation interval in seconds", alias="SimulationInterval"
+    )
+    flight_stl_factor: float = Field(
+        ..., description="Flight STL factor", alias="FlightSTLFactor"
+    )
+    flight_ftl_factor: float = Field(
+        ..., description="Flight FTL factor", alias="FlightFTLFactor"
+    )
+    planetary_motion_factor: float = Field(
+        ..., description="Planetary motion factor", alias="PlanetaryMotionFactor"
+    )
     parsec_length: float = Field(..., description="Parsec length", alias="ParsecLength")
 
     model_config = ConfigDict(from_attributes=True, populate_by_name=True)
@@ -285,14 +407,18 @@ class FIOAuthLoginRequest(BaseModel):
 
     model_config = ConfigDict(
         from_attributes=True,
-        json_schema_extra={"example": {"username": "your_username", "password": "your_password"}},
+        json_schema_extra={
+            "example": {"username": "your_username", "password": "your_password"}
+        },
     )
 
 
 class FIOAuthLoginResponse(BaseModel):
     """Login response model from the /auth/login endpoint."""
 
-    auth_token: str = Field(..., description="Authentication token (GUID)", alias="AuthToken")
+    auth_token: str = Field(
+        ..., description="Authentication token (GUID)", alias="AuthToken"
+    )
 
     model_config = ConfigDict(from_attributes=True, populate_by_name=True)
 
@@ -302,8 +428,12 @@ class FIOSiteBuildingMaterial(BaseModel):
 
     material_id: str = Field(..., description="Material ID", alias="MaterialId")
     material_name: str = Field(..., description="Material name", alias="MaterialName")
-    material_ticker: str = Field(..., description="Material ticker", alias="MaterialTicker")
-    material_amount: int = Field(..., description="Material amount", alias="MaterialAmount")
+    material_ticker: str = Field(
+        ..., description="Material ticker", alias="MaterialTicker"
+    )
+    material_amount: int = Field(
+        ..., description="Material amount", alias="MaterialAmount"
+    )
 
     model_config = ConfigDict(from_attributes=True, populate_by_name=True)
 
@@ -317,7 +447,9 @@ class FIOSiteBuilding(BaseModel):
     repair_materials: List[FIOSiteBuildingMaterial] = Field(
         ..., description="List of repair materials", alias="RepairMaterials"
     )
-    site_building_id: str = Field(..., description="Site building ID", alias="SiteBuildingId")
+    site_building_id: str = Field(
+        ..., description="Site building ID", alias="SiteBuildingId"
+    )
     building_id: str = Field(..., description="Building ID", alias="BuildingId")
     building_created: int = Field(
         ...,
@@ -325,13 +457,17 @@ class FIOSiteBuilding(BaseModel):
         alias="BuildingCreated",
     )
     building_name: str = Field(..., description="Building name", alias="BuildingName")
-    building_ticker: str = Field(..., description="Building ticker", alias="BuildingTicker")
+    building_ticker: str = Field(
+        ..., description="Building ticker", alias="BuildingTicker"
+    )
     building_last_repair: Optional[int] = Field(
         None,
         description="Last repair timestamp in milliseconds",
         alias="BuildingLastRepair",
     )
-    condition: float = Field(..., description="Building condition (0-1)", alias="Condition")
+    condition: float = Field(
+        ..., description="Building condition (0-1)", alias="Condition"
+    )
 
     model_config = ConfigDict(from_attributes=True, populate_by_name=True)
 
@@ -339,20 +475,32 @@ class FIOSiteBuilding(BaseModel):
 class FIOSite(BaseModel):
     """Site information."""
 
-    buildings: List[FIOSiteBuilding] = Field(..., description="List of buildings", alias="Buildings")
+    buildings: List[FIOSiteBuilding] = Field(
+        ..., description="List of buildings", alias="Buildings"
+    )
     site_id: str = Field(..., description="Site ID", alias="SiteId")
     planet_id: str = Field(..., description="Planet ID", alias="PlanetId")
-    planet_identifier: str = Field(..., description="Planet identifier", alias="PlanetIdentifier")
+    planet_identifier: str = Field(
+        ..., description="Planet identifier", alias="PlanetIdentifier"
+    )
     planet_name: str = Field(..., description="Planet name", alias="PlanetName")
     planet_founded_epoch_ms: int = Field(
         ...,
         description="Planet founding timestamp in milliseconds",
         alias="PlanetFoundedEpochMs",
     )
-    invested_permits: int = Field(..., description="Number of invested permits", alias="InvestedPermits")
-    maximum_permits: int = Field(..., description="Maximum number of permits", alias="MaximumPermits")
-    user_name_submitted: str = Field(..., description="Username who submitted the site", alias="UserNameSubmitted")
-    timestamp: datetime = Field(..., description="Timestamp when the site was submitted", alias="Timestamp")
+    invested_permits: int = Field(
+        ..., description="Number of invested permits", alias="InvestedPermits"
+    )
+    maximum_permits: int = Field(
+        ..., description="Maximum number of permits", alias="MaximumPermits"
+    )
+    user_name_submitted: str = Field(
+        ..., description="Username who submitted the site", alias="UserNameSubmitted"
+    )
+    timestamp: datetime = Field(
+        ..., description="Timestamp when the site was submitted", alias="Timestamp"
+    )
 
     model_config = ConfigDict(from_attributes=True, populate_by_name=True)
 
@@ -361,13 +509,27 @@ class FIOStorageItem(BaseModel):
     """Storage item from the /storage/{UserName} endpoint."""
 
     material_id: str = Field(..., description="Material ID", alias="MaterialId")
-    material_name: Optional[str] = Field(None, description="Material name", alias="MaterialName")
-    material_ticker: Optional[str] = Field(None, description="Material ticker", alias="MaterialTicker")
-    material_category: Optional[str] = Field(None, description="Material category ID", alias="MaterialCategory")
-    material_weight: float = Field(..., description="Material weight per unit", alias="MaterialWeight")
-    material_volume: float = Field(..., description="Material volume per unit", alias="MaterialVolume")
-    material_amount: int = Field(..., description="Amount of material", alias="MaterialAmount")
-    material_value: float = Field(..., description="Total value of material", alias="MaterialValue")
+    material_name: Optional[str] = Field(
+        None, description="Material name", alias="MaterialName"
+    )
+    material_ticker: Optional[str] = Field(
+        None, description="Material ticker", alias="MaterialTicker"
+    )
+    material_category: Optional[str] = Field(
+        None, description="Material category ID", alias="MaterialCategory"
+    )
+    material_weight: float = Field(
+        ..., description="Material weight per unit", alias="MaterialWeight"
+    )
+    material_volume: float = Field(
+        ..., description="Material volume per unit", alias="MaterialVolume"
+    )
+    material_amount: int = Field(
+        ..., description="Amount of material", alias="MaterialAmount"
+    )
+    material_value: float = Field(
+        ..., description="Total value of material", alias="MaterialValue"
+    )
     material_value_currency: Optional[str] = Field(
         None, description="Currency of material value", alias="MaterialValueCurrency"
     )
@@ -376,8 +538,12 @@ class FIOStorageItem(BaseModel):
         description="Type of storage item (e.g. INVENTORY, SHIPMENT, BLOCKED)",
         alias="Type",
     )
-    total_weight: float = Field(..., description="Total weight of material", alias="TotalWeight")
-    total_volume: float = Field(..., description="Total volume of material", alias="TotalVolume")
+    total_weight: float = Field(
+        ..., description="Total weight of material", alias="TotalWeight"
+    )
+    total_volume: float = Field(
+        ..., description="Total volume of material", alias="TotalVolume"
+    )
 
     model_config = ConfigDict(from_attributes=True, populate_by_name=True)
 
@@ -385,22 +551,40 @@ class FIOStorageItem(BaseModel):
 class FIOStorage(BaseModel):
     """Storage from the /storage/{UserName} endpoint."""
 
-    storage_items: List[FIOStorageItem] = Field(..., description="List of storage items", alias="StorageItems")
+    storage_items: List[FIOStorageItem] = Field(
+        ..., description="List of storage items", alias="StorageItems"
+    )
     storage_id: str = Field(..., description="Storage ID", alias="StorageId")
-    addressable_id: str = Field(..., description="Addressable ID", alias="AddressableId")
+    addressable_id: str = Field(
+        ..., description="Addressable ID", alias="AddressableId"
+    )
     name: Optional[str] = Field(None, description="Storage name", alias="Name")
-    weight_load: float = Field(..., description="Current weight load", alias="WeightLoad")
-    weight_capacity: float = Field(..., description="Maximum weight capacity", alias="WeightCapacity")
-    volume_load: float = Field(..., description="Current volume load", alias="VolumeLoad")
-    volume_capacity: float = Field(..., description="Maximum volume capacity", alias="VolumeCapacity")
-    fixed_store: bool = Field(..., description="Whether the store is fixed", alias="FixedStore")
+    weight_load: float = Field(
+        ..., description="Current weight load", alias="WeightLoad"
+    )
+    weight_capacity: float = Field(
+        ..., description="Maximum weight capacity", alias="WeightCapacity"
+    )
+    volume_load: float = Field(
+        ..., description="Current volume load", alias="VolumeLoad"
+    )
+    volume_capacity: float = Field(
+        ..., description="Maximum volume capacity", alias="VolumeCapacity"
+    )
+    fixed_store: bool = Field(
+        ..., description="Whether the store is fixed", alias="FixedStore"
+    )
     type: str = Field(
         ...,
         description="Type of storage (e.g. STORE, WAREHOUSE_STORE, FTL_FUEL_STORE)",
         alias="Type",
     )
-    user_name_submitted: str = Field(..., description="Username who submitted the storage", alias="UserNameSubmitted")
-    timestamp: datetime = Field(..., description="Timestamp when the storage was submitted", alias="Timestamp")
+    user_name_submitted: str = Field(
+        ..., description="Username who submitted the storage", alias="UserNameSubmitted"
+    )
+    timestamp: datetime = Field(
+        ..., description="Timestamp when the storage was submitted", alias="Timestamp"
+    )
 
     model_config = ConfigDict(from_attributes=True, populate_by_name=True)
 
@@ -411,8 +595,12 @@ class FIOWarehouse(BaseModel):
     warehouse_id: str = Field(..., description="Warehouse ID", alias="WarehouseId")
     store_id: str = Field(..., description="Store ID", alias="StoreId")
     units: int = Field(..., description="Number of units", alias="Units")
-    weight_capacity: float = Field(..., description="Weight capacity", alias="WeightCapacity")
-    volume_capacity: float = Field(..., description="Volume capacity", alias="VolumeCapacity")
+    weight_capacity: float = Field(
+        ..., description="Weight capacity", alias="WeightCapacity"
+    )
+    volume_capacity: float = Field(
+        ..., description="Volume capacity", alias="VolumeCapacity"
+    )
     next_payment_timestamp_epoch_ms: int = Field(
         ...,
         description="Next payment timestamp in milliseconds",
@@ -420,17 +608,27 @@ class FIOWarehouse(BaseModel):
     )
     fee_amount: float = Field(..., description="Fee amount", alias="FeeAmount")
     fee_currency: str = Field(..., description="Fee currency", alias="FeeCurrency")
-    fee_collector_id: Optional[str] = Field(None, description="Fee collector ID", alias="FeeCollectorId")
-    fee_collector_name: Optional[str] = Field(None, description="Fee collector name", alias="FeeCollectorName")
-    fee_collector_code: Optional[str] = Field(None, description="Fee collector code", alias="FeeCollectorCode")
+    fee_collector_id: Optional[str] = Field(
+        None, description="Fee collector ID", alias="FeeCollectorId"
+    )
+    fee_collector_name: Optional[str] = Field(
+        None, description="Fee collector name", alias="FeeCollectorName"
+    )
+    fee_collector_code: Optional[str] = Field(
+        None, description="Fee collector code", alias="FeeCollectorCode"
+    )
     location_name: str = Field(..., description="Location name", alias="LocationName")
-    location_natural_id: str = Field(..., description="Location natural ID", alias="LocationNaturalId")
+    location_natural_id: str = Field(
+        ..., description="Location natural ID", alias="LocationNaturalId"
+    )
     user_name_submitted: str = Field(
         ...,
         description="Username who submitted the warehouse",
         alias="UserNameSubmitted",
     )
-    timestamp: datetime = Field(..., description="Timestamp when the warehouse was submitted", alias="Timestamp")
+    timestamp: datetime = Field(
+        ..., description="Timestamp when the warehouse was submitted", alias="Timestamp"
+    )
 
     model_config = ConfigDict(from_attributes=True, populate_by_name=True)
 
@@ -450,11 +648,21 @@ class FIOBuildingRequirement(BaseModel):
 
     material_name: str = Field(..., description="Material name", alias="MaterialName")
     material_id: str = Field(..., description="Material ID", alias="MaterialId")
-    material_ticker: str = Field(..., description="Material ticker", alias="MaterialTicker")
-    material_category: str = Field(..., description="Material category", alias="MaterialCategory")
-    material_amount: int = Field(..., description="Material amount", alias="MaterialAmount")
-    material_weight: float = Field(..., description="Material weight", alias="MaterialWeight")
-    material_volume: float = Field(..., description="Material volume", alias="MaterialVolume")
+    material_ticker: str = Field(
+        ..., description="Material ticker", alias="MaterialTicker"
+    )
+    material_category: str = Field(
+        ..., description="Material category", alias="MaterialCategory"
+    )
+    material_amount: int = Field(
+        ..., description="Material amount", alias="MaterialAmount"
+    )
+    material_weight: float = Field(
+        ..., description="Material weight", alias="MaterialWeight"
+    )
+    material_volume: float = Field(
+        ..., description="Material volume", alias="MaterialVolume"
+    )
 
     model_config = ConfigDict(from_attributes=True, populate_by_name=True)
 
@@ -463,9 +671,13 @@ class FIOProductionFee(BaseModel):
     """Production fee from the /planet/allplanets/full endpoint."""
 
     category: str = Field(..., description="Fee category", alias="Category")
-    workforce_level: str = Field(..., description="Workforce level", alias="WorkforceLevel")
+    workforce_level: str = Field(
+        ..., description="Workforce level", alias="WorkforceLevel"
+    )
     fee_amount: int = Field(..., description="Fee amount", alias="FeeAmount")
-    fee_currency: Optional[str] = Field(None, description="Fee currency", alias="FeeCurrency")
+    fee_currency: Optional[str] = Field(
+        None, description="Fee currency", alias="FeeCurrency"
+    )
 
     model_config = ConfigDict(from_attributes=True, populate_by_name=True)
 
@@ -473,9 +685,15 @@ class FIOProductionFee(BaseModel):
 class FIOCOGCProgram(BaseModel):
     """COGC program from the /planet/allplanets/full endpoint."""
 
-    program_type: Optional[str] = Field(None, description="Program type", alias="ProgramType")
-    start_epoch_ms: datetime = Field(..., description="Start time in milliseconds", alias="StartEpochMs")
-    end_epoch_ms: datetime = Field(..., description="End time in milliseconds", alias="EndEpochMs")
+    program_type: Optional[str] = Field(
+        None, description="Program type", alias="ProgramType"
+    )
+    start_epoch_ms: datetime = Field(
+        ..., description="Start time in milliseconds", alias="StartEpochMs"
+    )
+    end_epoch_ms: datetime = Field(
+        ..., description="End time in milliseconds", alias="EndEpochMs"
+    )
 
     model_config = ConfigDict(from_attributes=True, populate_by_name=True)
 
@@ -484,10 +702,14 @@ class FIOCOGCVote(BaseModel):
     """COGC vote from the /planet/allplanets/full endpoint."""
 
     company_name: str = Field(..., description="Company name", alias="CompanyName")
-    company_code: Optional[str] = Field(None, description="Company code", alias="CompanyCode")
+    company_code: Optional[str] = Field(
+        None, description="Company code", alias="CompanyCode"
+    )
     influence: float = Field(..., description="Influence amount", alias="Influence")
     vote_type: str = Field(..., description="Vote type", alias="VoteType")
-    vote_time_epoch_ms: datetime = Field(..., description="Vote time in milliseconds", alias="VoteTimeEpochMs")
+    vote_time_epoch_ms: datetime = Field(
+        ..., description="Vote time in milliseconds", alias="VoteTimeEpochMs"
+    )
 
     model_config = ConfigDict(from_attributes=True, populate_by_name=True)
 
@@ -495,13 +717,21 @@ class FIOCOGCVote(BaseModel):
 class FIOPlanetFull(FIOPlanet):
     """Full planet information from the /planet/allplanets/full endpoint."""
 
-    resources: List[FIOPlanetResource] = Field(..., description="List of planet resources", alias="Resources")
+    resources: List[FIOPlanetResource] = Field(
+        ..., description="List of planet resources", alias="Resources"
+    )
     build_requirements: List[FIOBuildingRequirement] = Field(
         ..., description="List of building requirements", alias="BuildRequirements"
     )
-    production_fees: List[FIOProductionFee] = Field(..., description="List of production fees", alias="ProductionFees")
-    cogc_programs: List[FIOCOGCProgram] = Field(..., description="List of COGC programs", alias="COGCPrograms")
-    cogc_votes: List[FIOCOGCVote] = Field(..., description="List of COGC votes", alias="COGCVotes")
+    production_fees: List[FIOProductionFee] = Field(
+        ..., description="List of production fees", alias="ProductionFees"
+    )
+    cogc_programs: List[FIOCOGCProgram] = Field(
+        ..., description="List of COGC programs", alias="COGCPrograms"
+    )
+    cogc_votes: List[FIOCOGCVote] = Field(
+        ..., description="List of COGC votes", alias="COGCVotes"
+    )
     planet_id: str = Field(..., description="Planet ID", alias="PlanetId")
     namer: Optional[str] = Field(None, description="Planet namer", alias="Namer")
     naming_data_epoch_ms: int = Field(
@@ -509,42 +739,76 @@ class FIOPlanetFull(FIOPlanet):
         description="Naming data timestamp in milliseconds",
         alias="NamingDataEpochMs",
     )
-    nameable: bool = Field(..., description="Whether the planet is nameable", alias="Nameable")
+    nameable: bool = Field(
+        ..., description="Whether the planet is nameable", alias="Nameable"
+    )
     system_id: str = Field(..., description="System ID", alias="SystemId")
     gravity: float = Field(..., description="Planet gravity", alias="Gravity")
-    magnetic_field: float = Field(..., description="Planet magnetic field", alias="MagneticField")
+    magnetic_field: float = Field(
+        ..., description="Planet magnetic field", alias="MagneticField"
+    )
     mass: float = Field(..., description="Planet mass", alias="Mass")
-    mass_earth: float = Field(..., description="Planet mass in Earth masses", alias="MassEarth")
-    orbit_semi_major_axis: int = Field(..., description="Orbit semi-major axis", alias="OrbitSemiMajorAxis")
-    orbit_eccentricity: float = Field(..., description="Orbit eccentricity", alias="OrbitEccentricity")
-    orbit_inclination: float = Field(..., description="Orbit inclination", alias="OrbitInclination")
-    orbit_right_ascension: int = Field(..., description="Orbit right ascension", alias="OrbitRightAscension")
-    orbit_periapsis: int = Field(..., description="Orbit periapsis", alias="OrbitPeriapsis")
+    mass_earth: float = Field(
+        ..., description="Planet mass in Earth masses", alias="MassEarth"
+    )
+    orbit_semi_major_axis: int = Field(
+        ..., description="Orbit semi-major axis", alias="OrbitSemiMajorAxis"
+    )
+    orbit_eccentricity: float = Field(
+        ..., description="Orbit eccentricity", alias="OrbitEccentricity"
+    )
+    orbit_inclination: float = Field(
+        ..., description="Orbit inclination", alias="OrbitInclination"
+    )
+    orbit_right_ascension: int = Field(
+        ..., description="Orbit right ascension", alias="OrbitRightAscension"
+    )
+    orbit_periapsis: int = Field(
+        ..., description="Orbit periapsis", alias="OrbitPeriapsis"
+    )
     orbit_index: int = Field(..., description="Orbit index", alias="OrbitIndex")
     pressure: float = Field(..., description="Planet pressure", alias="Pressure")
     radiation: float = Field(..., description="Planet radiation", alias="Radiation")
     radius: float = Field(..., description="Planet radius", alias="Radius")
     sunlight: float = Field(..., description="Planet sunlight", alias="Sunlight")
-    surface: bool = Field(..., description="Whether the planet has a surface", alias="Surface")
-    temperature: float = Field(..., description="Planet temperature", alias="Temperature")
+    surface: bool = Field(
+        ..., description="Whether the planet has a surface", alias="Surface"
+    )
+    temperature: float = Field(
+        ..., description="Planet temperature", alias="Temperature"
+    )
     fertility: float = Field(..., description="Planet fertility", alias="Fertility")
-    has_local_market: bool = Field(..., description="Whether the planet has a local market", alias="HasLocalMarket")
+    has_local_market: bool = Field(
+        ..., description="Whether the planet has a local market", alias="HasLocalMarket"
+    )
     has_chamber_of_commerce: bool = Field(
         ...,
         description="Whether the planet has a chamber of commerce",
         alias="HasChamberOfCommerce",
     )
-    has_warehouse: bool = Field(..., description="Whether the planet has a warehouse", alias="HasWarehouse")
+    has_warehouse: bool = Field(
+        ..., description="Whether the planet has a warehouse", alias="HasWarehouse"
+    )
     has_administration_center: bool = Field(
         ...,
         description="Whether the planet has an administration center",
         alias="HasAdministrationCenter",
     )
-    has_shipyard: bool = Field(..., description="Whether the planet has a shipyard", alias="HasShipyard")
-    faction_code: Optional[str] = Field(None, description="Faction code", alias="FactionCode")
-    faction_name: Optional[str] = Field(None, description="Faction name", alias="FactionName")
-    governor_id: Optional[str] = Field(None, description="Governor ID", alias="GovernorId")
-    governor_user_name: Optional[str] = Field(None, description="Governor username", alias="GovernorUserName")
+    has_shipyard: bool = Field(
+        ..., description="Whether the planet has a shipyard", alias="HasShipyard"
+    )
+    faction_code: Optional[str] = Field(
+        None, description="Faction code", alias="FactionCode"
+    )
+    faction_name: Optional[str] = Field(
+        None, description="Faction name", alias="FactionName"
+    )
+    governor_id: Optional[str] = Field(
+        None, description="Governor ID", alias="GovernorId"
+    )
+    governor_user_name: Optional[str] = Field(
+        None, description="Governor username", alias="GovernorUserName"
+    )
     governor_corporation_id: Optional[str] = Field(
         None, description="Governor corporation ID", alias="GovernorCorporationId"
     )
@@ -554,19 +818,41 @@ class FIOPlanetFull(FIOPlanet):
     governor_corporation_code: Optional[str] = Field(
         None, description="Governor corporation code", alias="GovernorCorporationCode"
     )
-    currency_name: Optional[str] = Field(None, description="Currency name", alias="CurrencyName")
-    currency_code: Optional[str] = Field(None, description="Currency code", alias="CurrencyCode")
-    collector_id: Optional[str] = Field(None, description="Collector ID", alias="CollectorId")
-    collector_name: Optional[str] = Field(None, description="Collector name", alias="CollectorName")
-    collector_code: Optional[str] = Field(None, description="Collector code", alias="CollectorCode")
-    base_local_market_fee: int = Field(..., description="Base local market fee", alias="BaseLocalMarketFee")
-    local_market_fee_factor: int = Field(..., description="Local market fee factor", alias="LocalMarketFeeFactor")
+    currency_name: Optional[str] = Field(
+        None, description="Currency name", alias="CurrencyName"
+    )
+    currency_code: Optional[str] = Field(
+        None, description="Currency code", alias="CurrencyCode"
+    )
+    collector_id: Optional[str] = Field(
+        None, description="Collector ID", alias="CollectorId"
+    )
+    collector_name: Optional[str] = Field(
+        None, description="Collector name", alias="CollectorName"
+    )
+    collector_code: Optional[str] = Field(
+        None, description="Collector code", alias="CollectorCode"
+    )
+    base_local_market_fee: int = Field(
+        ..., description="Base local market fee", alias="BaseLocalMarketFee"
+    )
+    local_market_fee_factor: int = Field(
+        ..., description="Local market fee factor", alias="LocalMarketFeeFactor"
+    )
     warehouse_fee: int = Field(..., description="Warehouse fee", alias="WarehouseFee")
-    population_id: Optional[str] = Field(None, description="Population ID", alias="PopulationId")
-    cogc_program_status: Optional[str] = Field(None, description="COGC program status", alias="COGCProgramStatus")
+    population_id: Optional[str] = Field(
+        None, description="Population ID", alias="PopulationId"
+    )
+    cogc_program_status: Optional[str] = Field(
+        None, description="COGC program status", alias="COGCProgramStatus"
+    )
     planet_tier: int = Field(..., description="Planet tier", alias="PlanetTier")
-    timestamp: datetime = Field(..., description="Timestamp when the planet was submitted", alias="Timestamp")
-    distance_results: Optional[List[int]] = Field(None, description="Distance results", alias="DistanceResults")
+    timestamp: datetime = Field(
+        ..., description="Timestamp when the planet was submitted", alias="Timestamp"
+    )
+    distance_results: Optional[List[int]] = Field(
+        None, description="Distance results", alias="DistanceResults"
+    )
 
     model_config = ConfigDict(from_attributes=True, populate_by_name=True)
 

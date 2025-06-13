@@ -55,7 +55,9 @@ class Container(containers.DeclarativeContainer):
     building_repository = providers.Factory(BuildingRepository, session=session)
     company_repository = providers.Factory(CompanyRepository, session=session)
     exchange_repository = providers.Factory(ExchangeRepository, session=session)
-    internal_offer_repository = providers.Factory(InternalOfferRepository, session=session)
+    internal_offer_repository = providers.Factory(
+        InternalOfferRepository, session=session
+    )
     item_repository = providers.Factory(ItemRepository, session=session)
     recipe_repository = providers.Factory(RecipeRepository, session=session)
     site_repository = providers.Factory(SiteRepository, session=session)

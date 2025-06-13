@@ -114,7 +114,8 @@ class ExchangeService:
 
         # Get existing exchanges for comparison
         existing_exchanges = {
-            exchange.comex_exchange_id: exchange for exchange in self.exchange_repository.get_all_comex_exchanges()
+            exchange.comex_exchange_id: exchange
+            for exchange in self.exchange_repository.get_all_comex_exchanges()
         }
 
         for fio_exchange in exchanges:

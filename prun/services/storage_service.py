@@ -96,8 +96,16 @@ class StorageService:
             "volume_capacity": storage.volume_capacity,
             "total_weight": total_weight,
             "total_volume": total_volume,
-            "weight_utilization": (total_weight / storage.weight_capacity if storage.weight_capacity > 0 else 0),
-            "volume_utilization": (total_volume / storage.volume_capacity if storage.volume_capacity > 0 else 0),
+            "weight_utilization": (
+                total_weight / storage.weight_capacity
+                if storage.weight_capacity > 0
+                else 0
+            ),
+            "volume_utilization": (
+                total_volume / storage.volume_capacity
+                if storage.volume_capacity > 0
+                else 0
+            ),
         }
 
     def sync_storage(self, character_id: str) -> None:

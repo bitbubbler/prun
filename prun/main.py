@@ -50,7 +50,9 @@ app.add_middleware(
 # Database setup with synchronous engine
 DATABASE_URL = "sqlite:///./prun.db"
 engine = create_engine(DATABASE_URL)
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine, class_=Session)
+SessionLocal = sessionmaker(
+    autocommit=False, autoflush=False, bind=engine, class_=Session
+)
 
 
 # Dependency to get database session
@@ -77,7 +79,9 @@ def get_recipes(session: Session = Depends(get_session)):
 @app.get(
     "/planets",
     response_model=List[Planet],
-    response_model_include={"__all__": {"natural_id", "name", "system_id", "planet_id"}},
+    response_model_include={
+        "__all__": {"natural_id", "name", "system_id", "planet_id"}
+    },
 )
 def get_planets(
     session: Session = Depends(get_session),
@@ -106,11 +110,15 @@ class InternalOfferCreate(BaseModel):
 
 
 @app.post("/internal-offers", response_model=InternalOffer)
-def create_internal_offer(offer: InternalOfferCreate, session: Session = Depends(get_session)):
+def create_internal_offer(
+    offer: InternalOfferCreate, session: Session = Depends(get_session)
+):
     # Verify the item exists
     item = session.exec(select(Item).where(Item.symbol == offer.item_symbol)).first()
     if not item:
-        raise HTTPException(status_code=404, detail=f"Item with symbol {offer.item_symbol} not found")
+        raise HTTPException(
+            status_code=404, detail=f"Item with symbol {offer.item_symbol} not found"
+        )
 
     new_offer = InternalOffer.model_validate(offer)
     session.add(new_offer)
@@ -120,16 +128,24 @@ def create_internal_offer(offer: InternalOfferCreate, session: Session = Depends
 
 
 @app.put("/internal-offers/{offer_id}", response_model=InternalOffer)
-def update_internal_offer(offer_id: int, offer: InternalOfferCreate, session: Session = Depends(get_session)):
+def update_internal_offer(
+    offer_id: int, offer: InternalOfferCreate, session: Session = Depends(get_session)
+):
     # Verify the offer exists
-    db_offer = session.exec(select(InternalOffer).where(InternalOffer.id == offer_id)).first()
+    db_offer = session.exec(
+        select(InternalOffer).where(InternalOffer.id == offer_id)
+    ).first()
     if not db_offer:
-        raise HTTPException(status_code=404, detail=f"Offer with ID {offer_id} not found")
+        raise HTTPException(
+            status_code=404, detail=f"Offer with ID {offer_id} not found"
+        )
 
     # Verify the item exists
     item = session.exec(select(Item).where(Item.symbol == offer.item_symbol)).first()
     if not item:
-        raise HTTPException(status_code=404, detail=f"Item with symbol {offer.item_symbol} not found")
+        raise HTTPException(
+            status_code=404, detail=f"Item with symbol {offer.item_symbol} not found"
+        )
 
     # Update the offer
     db_offer.item_symbol = offer.item_symbol
@@ -145,9 +161,13 @@ def update_internal_offer(offer_id: int, offer: InternalOfferCreate, session: Se
 @app.delete("/internal-offers/{offer_id}", status_code=204)
 def delete_internal_offer(offer_id: int, session: Session = Depends(get_session)):
     # Verify the offer exists
-    db_offer = session.exec(select(InternalOffer).where(InternalOffer.id == offer_id)).first()
+    db_offer = session.exec(
+        select(InternalOffer).where(InternalOffer.id == offer_id)
+    ).first()
     if not db_offer:
-        raise HTTPException(status_code=404, detail=f"Offer with ID {offer_id} not found")
+        raise HTTPException(
+            status_code=404, detail=f"Offer with ID {offer_id} not found"
+        )
 
     # Delete the offer
     session.delete(db_offer)

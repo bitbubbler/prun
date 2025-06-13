@@ -90,13 +90,19 @@ def sync(username: str, password: str, apikey: str | None, all: bool) -> None:
         container.workforce_service().sync_workforce_needs()  # Workforce needs depend on materials
 
     logger.info("Syncing sites...")
-    container.site_service().sync_sites(username)  # Sites depend on planets and buildings
+    container.site_service().sync_sites(
+        username
+    )  # Sites depend on planets and buildings
 
     logger.info("Syncing warehouses...")
-    container.warehouse_service().sync_warehouses(username)  # Warehouses must be synced before storage
+    container.warehouse_service().sync_warehouses(
+        username
+    )  # Warehouses must be synced before storage
 
     logger.info("Syncing storage...")
-    container.storage_service().sync_storage(username)  # Storage depends on materials and warehouses
+    container.storage_service().sync_storage(
+        username
+    )  # Storage depends on materials and warehouses
 
     logger.info("Sync completed successfully")
     logger.info("Cleaning up resources")
@@ -148,7 +154,9 @@ def cogm(
     cogm_price_cache: dict[str, float] = {}
 
     def get_buy_price(item_symbol: str) -> float:
-        buy_price = container.exchange_service().get_buy_price(exchange_code="AI1", item_symbol=item_symbol)
+        buy_price = container.exchange_service().get_buy_price(
+            exchange_code="AI1", item_symbol=item_symbol
+        )
         if not buy_price:
             raise ValueError(f"No exchange ask_price found for {item_symbol}")
         return buy_price
@@ -182,7 +190,11 @@ def cogm(
             raise ValueError("Planet is required")
 
         planet_resource = next(
-            (resource for resource in planet.resources if resource.item.symbol == item_symbol),
+            (
+                resource
+                for resource in planet.resources
+                if resource.item.symbol == item_symbol
+            ),
             None,
         )
 
@@ -297,7 +309,9 @@ def analyze_empire(config_file: str, json: bool) -> None:
         if item_symbol in cogm_price_cache:
             return cogm_price_cache[item_symbol]
 
-        exchange_price = exchange_service.get_buy_price(exchange_code="AI1", item_symbol=item_symbol)
+        exchange_price = exchange_service.get_buy_price(
+            exchange_code="AI1", item_symbol=item_symbol
+        )
 
         if not exchange_price:
             raise ValueError(f"No exchange price found for {item_symbol}")
@@ -413,7 +427,9 @@ def buy_list(config_file: str, exchange_code: str | None, json: bool) -> None:
                         best_internal_seller_stock_link = offer.company.stock_link
 
             # Determine where to buy based on price comparison
-            if best_internal_price and (not exchange_buy_price or best_internal_price < exchange_buy_price):
+            if best_internal_price and (
+                not exchange_buy_price or best_internal_price < exchange_buy_price
+            ):
                 result["buy_from"] = best_internal_seller
                 result["buy_at"] = best_internal_price
                 if best_internal_seller not in companies_linked:
@@ -438,12 +454,18 @@ def buy_list(config_file: str, exchange_code: str | None, json: bool) -> None:
 
     # Display results
     if json:
-        print(json.dumps({"buy_list": buy_list.name, "items": results, "total_cost": total_cost}))
+        print(
+            json.dumps(
+                {"buy_list": buy_list.name, "items": results, "total_cost": total_cost}
+            )
+        )
     else:
         print_buy_list(buy_list.name, results, total_cost, stock_links)
 
 
-def print_buy_list(list_name: str, results: list, total_cost: float, stock_links: list[StockLinkOut]) -> None:
+def print_buy_list(
+    list_name: str, results: list, total_cost: float, stock_links: list[StockLinkOut]
+) -> None:
     """Print buy list in a formatted table."""
     console = Console()
 
@@ -468,7 +490,16 @@ def print_buy_list(list_name: str, results: list, total_cost: float, stock_links
         )
 
     # Add a grand total row
-    table.add_row("", "", "", "", "", "", "[bold]Grand Total:[/bold]", f"[bold]${total_cost:,.2f}[/bold]")
+    table.add_row(
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "[bold]Grand Total:[/bold]",
+        f"[bold]${total_cost:,.2f}[/bold]",
+    )
 
     console.print(table)
 
@@ -523,7 +554,9 @@ def insert_offers(config_file: str, force: bool) -> None:
 
     # Calculate total number of offers across all companies
     total_offers = sum(len(company.offers) for company in offer_config.companies)
-    console.print(f"Loaded {total_offers} offers from {len(offer_config.companies)} companies")
+    console.print(
+        f"Loaded {total_offers} offers from {len(offer_config.companies)} companies"
+    )
 
     # Process offers using the service
     internal_offer_service = container.internal_offer_service()
@@ -554,18 +587,20 @@ def print_recipe_cogm_analysis(
     parameters_table.add_column("Label", min_width=16)
     parameters_table.add_column("Value", justify="right")
     parameters_table.add_column("Extra", justify="right")
+
     # Runtime in hours and minutes
-    if cogm.time_ms:
-        total_minutes = int(cogm.time_ms // 60000)
-        hours = total_minutes // 60
-        minutes = total_minutes % 60
-        runtime_str = f"{hours}h {minutes:02d}m"
-        percent_per_day = (hours + minutes / 60) / 24 * 100
-        percent_per_day_str = f"{percent_per_day:.2f} % / Day"
-    else:
-        runtime_str = "-"
-        percent_per_day_str = "-"
-    efficiency = f"{cogm.expert_efficiency * 100:.2f} %" if cogm.expert_efficiency is not None else "-"
+    total_minutes = int(cogm.time_ms // 60000)
+    hours = total_minutes // 60
+    minutes = total_minutes % 60
+    runtime_str = f"{hours}h {minutes:02d}m"
+    percent_per_day = (hours + minutes / 60) / 24 * 100
+    percent_per_day_str = f"{percent_per_day:.2f} % / Day"
+
+    efficiency = (
+        f"{cogm.expert_efficiency * 100:.2f} %"
+        if cogm.expert_efficiency is not None
+        else "-"
+    )
     parameters_table.add_row("[b]Recipe Runtime[/b]", runtime_str, percent_per_day_str)
     parameters_table.add_row("[b]Efficiency[/b]", efficiency, "")
 
@@ -590,7 +625,9 @@ def print_recipe_cogm_analysis(
             f"{input_cost.price:,.2f}",
             f"{input_cost.total:,.2f}",
         )
-    materials_table.add_row("[b]Input Total[/b]", "", "", f"{cogm.input_costs.total:,.2f} $")
+    materials_table.add_row(
+        "[b]Input Total[/b]", "", "", f"{cogm.input_costs.total:,.2f} $"
+    )
 
     # --- Workforce Section ---
     workforce_table = Table(title="Workforce", expand=False, box=box.SIMPLE_HEAVY)
@@ -598,8 +635,12 @@ def print_recipe_cogm_analysis(
     workforce_table.add_column("Units")
     workforce_table.add_column("$ Total")
     for need in cogm.workforce_cost.needs:
-        workforce_table.add_row(need.workforce_type.title(), str(need.workforce_count), f"{need.total:,.2f}")
-    workforce_table.add_row("[b]Workforce Total[/b]", "", f"{cogm.workforce_cost.total:,.2f} $")
+        workforce_table.add_row(
+            need.workforce_type.title(), str(need.workforce_count), f"{need.total:,.2f}"
+        )
+    workforce_table.add_row(
+        "[b]Workforce Total[/b]", "", f"{cogm.workforce_cost.total:,.2f} $"
+    )
 
     # --- Total Section ---
     total_cost = cogm.total_cost
@@ -615,10 +656,14 @@ def print_recipe_cogm_analysis(
     summary_table.add_column("Units")
     summary_table.add_column("Cost / Split")
     summary_table.add_column("Cost / All Cost")
-    summary_table.add_row(f"[b]{item_symbol}[/b]", "1", f"{total_cost:,.2f}", f"{total_cost:,.2f}")
+    summary_table.add_row(
+        f"[b]{item_symbol}[/b]", "1", f"{total_cost:,.2f}", f"{total_cost:,.2f}"
+    )
 
     # --- Print All Sections ---
-    console.print(Panel(parameters_table, title="Parameters", style="bold", expand=False))
+    console.print(
+        Panel(parameters_table, title="Parameters", style="bold", expand=False)
+    )
     console.print(Panel(cost_table, title="Cost", style="bold", expand=False))
     console.print(materials_table)
     console.print(workforce_table)

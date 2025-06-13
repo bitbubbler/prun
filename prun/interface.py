@@ -68,7 +68,9 @@ class ExchangeRepositoryInterface(ABC):
         pass
 
     @abstractmethod
-    def get_exchange_price(self, exchange_code: str, item_symbol: str) -> Optional[ExchangePrice]:
+    def get_exchange_price(
+        self, exchange_code: str, item_symbol: str
+    ) -> Optional[ExchangePrice]:
         """Get an exchange price by item symbol and exchange code."""
         pass
 
@@ -102,7 +104,9 @@ class RecipeRepositoryInterface(ABC):
         pass
 
     @abstractmethod
-    def get_recipe_with_prices(self, symbol: str) -> tuple[Recipe, List[tuple[RecipeInput, ExchangePrice]]]:
+    def get_recipe_with_prices(
+        self, symbol: str
+    ) -> tuple[Recipe, List[tuple[RecipeInput, ExchangePrice]]]:
         """Get a recipe with current prices for its inputs."""
         pass
 
@@ -146,7 +150,9 @@ class SiteRepositoryInterface(ABC):
         pass
 
     @abstractmethod
-    def create_site_building_material(self, site_building_material: SiteBuildingMaterial) -> SiteBuildingMaterial:
+    def create_site_building_material(
+        self, site_building_material: SiteBuildingMaterial
+    ) -> SiteBuildingMaterial:
         """Create a new site building material."""
         pass
 
@@ -264,7 +270,9 @@ class SystemRepositoryInterface(ABC):
         pass
 
     @abstractmethod
-    def create_planet_building_requirement(self, requirement: PlanetBuildingRequirement) -> None:
+    def create_planet_building_requirement(
+        self, requirement: PlanetBuildingRequirement
+    ) -> None:
         """Create a new planet building requirement."""
         pass
 
@@ -312,7 +320,9 @@ class WorkforceRepositoryInterface(ABC):
     """Interface for workforce-related operations."""
 
     @abstractmethod
-    def get_workforce_needs(self, workforce_type: Optional[str] = None) -> List[WorkforceNeed]:
+    def get_workforce_needs(
+        self, workforce_type: Optional[str] = None
+    ) -> List[WorkforceNeed]:
         """Get workforce needs, optionally filtered by workforce type."""
         pass
 
@@ -340,7 +350,9 @@ class InternalOfferRepositoryInterface(ABC):
         pass
 
     @abstractmethod
-    def get_offer_by_item_and_user(self, item_symbol: str, user_name: str) -> Optional[InternalOffer]:
+    def get_offer_by_item_and_user(
+        self, item_symbol: str, user_name: str
+    ) -> Optional[InternalOffer]:
         """Get an internal offer by item symbol and user name.
 
         Args:
