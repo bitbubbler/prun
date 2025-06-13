@@ -337,7 +337,6 @@ class RecipeService:
             return recipes[0]
 
         except PlanetResourceRequiredError:
-            print("Planet resource required")
             if not planet:
                 raise PlanetRequiredError()
             planet_resource = next(
@@ -415,7 +414,6 @@ class RecipeService:
             return recipes
 
         except PlanetResourceRequiredError:
-            print("Planet resource required")
             if not planet:
                 raise PlanetRequiredError()
             planet_resource = next(
