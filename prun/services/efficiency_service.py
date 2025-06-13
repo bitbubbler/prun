@@ -1,6 +1,6 @@
 import logging
 
-from prun.models import Building, Experts
+from prun.models import Building, COGCProgram, Experts
 
 
 logger = logging.getLogger(__name__)
@@ -88,7 +88,7 @@ class EfficiencyService:
 
     @classmethod
     def get_cogc_efficiency(
-        cls, building: Building, program: str | None = None
+        cls, building: Building, program: COGCProgram | None = None
     ) -> float:
         """
         Returns the efficiency percentage for a given COGC program.
@@ -96,8 +96,8 @@ class EfficiencyService:
         """
         if program is None:
             return 0.0
-        if not cls.is_valid_cogc_program(program):
+        if not cls.is_valid_cogc_program(program.program):
             raise ValueError(f"Invalid program: {program}")
-        if building.expertise.lower() == program:
+        if building.expertise.lower() == program.program:
             return cls.COGC_BONUS
         return 0.0

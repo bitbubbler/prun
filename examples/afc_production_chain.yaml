@@ -13,7 +13,6 @@ planets:
   - name: "ZV-896c"
     experts:
       food_industries: 5
-    cogc_program: "food industries"
     recipes:
       - building_symbol: "HYF"
         recipe_symbol: "HYF:16xH2O-2xNS=>12xALG"
@@ -27,7 +26,6 @@ planets:
   - name: "YK-649b"
     experts:
       food_industries: 5
-    cogc_program: "food industries"
     recipes:
       - building_symbol: "FP"
         recipe_symbol: "FP:1xALG-1xMAI-1xVEG=>10xRAT"
@@ -35,7 +33,6 @@ planets:
   - name: "ZV-896b"
     experts:
       chemistry: 5
-    cogc_program: "chemistry"
     recipes:
       - building_symbol: "FRM"
         recipe_symbol: "FRM:1xDDT-4xH2O=>4xHER"
@@ -43,7 +40,6 @@ planets:
   - name: "ZV-307b"
     experts:
       chemistry: 5
-    cogc_program: "chemistry"
     recipes:
       - building_symbol: "LAB"
         recipe_symbol: "LAB:1xC-1xCL-1xH=>3xDDT"
@@ -51,7 +47,6 @@ planets:
   - name: "LS-300c"
     experts:
       chemistry: 5
-    cogc_program: "chemistry"
     recipes:
       - building_symbol: "CHP"
         recipe_symbol: "CHP:2xH2O-1xLST-2xN=>4xNS"

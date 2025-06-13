@@ -6,7 +6,6 @@ planets:
   - name: "deimos"
     experts:
       metallurgy: 5
-    cogc_program: "metallurgy"
     recipes:
       - building_symbol: "GF"
         recipe_symbol: "GF:1xFLX-1xNA-2xSIO=>12xGL"
@@ -14,7 +13,6 @@ planets:
   - name: "griffonstone"
     experts:
       chemistry: 5
-    cogc_program: "chemistry"
     recipes:
       - building_symbol: "CHP"
         recipe_symbol: "CHP:1xH2O-3xHAL=>1xCL-2xNA"
@@ -23,7 +21,6 @@ planets:
     experts:
       metallurgy: 5
       resource_extraction: 1
-    cogc_program: "metallurgy"
     recipes:
       - building_symbol: "EXT"
         recipe_symbol: "EXT:=>"

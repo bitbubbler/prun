@@ -13,6 +13,7 @@ from prun.errors import (
 )
 from prun.interface import RecipeRepositoryInterface
 from prun.models import (
+    COGCProgram,
     EfficientPlanetExtractionRecipe,
     EfficientRecipe,
     ExchangePrice,
@@ -149,7 +150,7 @@ class RecipeService:
         recipe_symbol: str,
         planet_resource: PlanetResource,
         experts: Experts,
-        cogc_program: Optional[str] = None,
+        cogc_program: COGCProgram | None = None,
     ) -> EfficientPlanetExtractionRecipe:
         """Get an efficient planet extraction recipe by its symbol.
 

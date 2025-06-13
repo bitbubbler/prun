@@ -248,7 +248,9 @@ class CostService:
         planet: Planet,
     ) -> CalculatedPlanetCOGM:
         recipe_service = self.recipe_service
+        planet_service = self.planet_service
 
+        cogc_program = planet_service.get_cogc_program(planet.natural_id)
         planet_resource: PlanetResource | None = None
         recipe_output_cogms: List[CalculatedRecipeOutputCOGM] = []
 
@@ -277,14 +279,14 @@ class CostService:
                         recipe_symbol=recipe.symbol,
                         planet_resource=planet_resource,
                         experts=empire_planet.experts,
-                        cogc_program=empire_planet.cogc_program,
+                        cogc_program=cogc_program,
                     )
                 )
             else:
                 efficient_recipe = recipe_service.get_efficient_recipe(
                     recipe_symbol=recipe.symbol,
                     experts=empire_planet.experts,
-                    cogc_program=empire_planet.cogc_program,
+                    cogc_program=cogc_program,
                 )
 
             recipe_cost = self.calculate_recipe_cost(

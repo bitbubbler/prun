@@ -42,9 +42,6 @@ class EmpirePlanetIn(BaseModel):
         ..., description="List of production recipes in order"
     )
     experts: EmpireExpertsIn
-    cogc_program: Optional[str] = Field(
-        default=None, description="The COGC program to use for the planet"
-    )
 
 
 class EmpireIn(BaseModel):
