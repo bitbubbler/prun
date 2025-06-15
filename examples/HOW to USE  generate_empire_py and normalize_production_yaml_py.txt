@@ -1,0 +1,11 @@
+> - "_Authorise_" from https://doc.fnar.net/ with API key
+> 
+>  - Generate a text file of you production from https://rest.fnar.net/rain/userplanetproduction/Username give it a name and save it the folder prun/examples
+> 
+>  - Generate yaml file from your txt.file with generate_empire.py => `empire_output.yaml` from the folder prun/examples. but update  line 66 with your txt file name
+> 
+>  - Normalize production from your `empire_output.yaml`with `normalize_production_yaml.py` => `normalize_username.yaml`  from the folder prun/examples
+> 
+>  - Modify you `normalize_username.yaml` file by adding a <name: "Username"> on the first line and save it.
+> 
+>  - From the folder prun. tun the cmd: `python -m prun.cli analyze-empire examples/normalize_username.yaml`
