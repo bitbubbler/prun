@@ -18,7 +18,7 @@ uv sync
 Sync all data from the FIO API:
 
 ```bash
-python -m prun.cli sync -u YOUR_USERNAME -p YOUR_PASSWORD
+python -m prun.cli sync -a -u YOUR_USERNAME -p YOUR_PASSWORD
 ```
 
 This command will sync:
