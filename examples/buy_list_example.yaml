@@ -1,29 +1,31 @@
 name: "Origo Buildout + 10 days of consumables"
-description: "Materials needed for origo buildout + 10 days of consumables"
+# description: "Materials needed for origo buildout + 10 days of consumables"
 exchange_code: "AI1"
 planets:
-  - name: "vulcan"
+  - name: "ZV-896d"
     items:
       # construction
-      # BBH: 26
-      # BDE: 26
-      # BSE: 22
-      # BTA: 20
-      HSE: 24
-      LBH: 48
+      BBH: 157
+      BDE: 100
+      BSE: 154
+      BTA: 44
+      INS: 4950
       LDE: 4
-      LSE: 76
+      LSE: 4
       LTA: 4
-      MCG: 1936
+      MCG: 1980
       PSL: 12
-      TRU: 88
+      SEA: 495
+      TRU: 8
       # consumables
-      # DW: 720
-      # EXO: 72
-      # FLX: 401
-      # KOM: 144
-      # # NA: 401
-      # PT: 72
-      # RAT: 864
-      # REP: 29
-      # SIO: 802
+      DW: 1584
+      EXO: 158
+      FLX: 456
+      KOM: 317
+      NA: 456
+      PG: 3417
+      PT: 158
+      RAT: 1901
+      REP: 63
+      SEN: 228
+      SIO: 911

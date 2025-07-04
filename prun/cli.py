@@ -11,7 +11,7 @@ from yaml import YAMLError
 from rich.align import Align
 from rich.text import Text
 from rich import box
-from pydantic import BaseModel
+from pydantic import BaseModel, ValidationError
 
 from prun.config import EmpireIn, EmpirePlanetIn, InternalOfferConfig, BuyListConfig
 from prun.models import Experts
@@ -264,6 +264,55 @@ class StockLinkOut(BaseModel):
     stock_link: str
 
 
+def display_error(
+    console: Console, error: Exception, json_output: bool = False
+) -> None:
+    """Display an error message in a user-friendly format.
+
+    Args:
+        console: Rich console instance
+        error: The exception to display
+        json_output: Whether to output in JSON format
+    """
+    if json_output:
+        print(serialize_exception(error))
+        return
+
+    if isinstance(error, FileNotFoundError):
+        console.print(
+            Panel(
+                f"[red]File Not Found[/red]\n\n{str(error)}",
+                title="Error",
+                border_style="red",
+            )
+        )
+    elif isinstance(error, YAMLError):
+        console.print(
+            Panel(
+                f"[red]YAML Syntax Error[/red]\n\n{str(error)}",
+                title="Error",
+                border_style="red",
+            )
+        )
+    elif isinstance(error, ValueError):
+        # Our enhanced validation errors come as ValueError
+        console.print(
+            Panel(
+                f"[red]Configuration Error[/red]\n\n{str(error)}",
+                title="Error",
+                border_style="red",
+            )
+        )
+    else:
+        console.print(
+            Panel(
+                f"[red]Unexpected Error[/red]\n\n{str(error)}",
+                title="Error",
+                border_style="red",
+            )
+        )
+
+
 @cli.command()
 @click.argument("config_file", type=click.Path(exists=True))
 @click.option(
@@ -283,23 +332,8 @@ def analyze_empire(config_file: str, json: bool) -> None:
     # Load and validate the configuration
     try:
         empire = EmpireIn.from_yaml(config_file)
-    except FileNotFoundError as e:
-        if json:
-            print(serialize_exception(e))
-        else:
-            console.print(f"[red]Error:[/red] {str(e)}")
-        exit(1)
-    except YAMLError as e:
-        if json:
-            print(serialize_exception(e))
-        else:
-            console.print(f"[red]Error: Invalid YAML file:[/red] {str(e)}")
-        exit(1)
-    except ValueError as e:
-        if json:
-            print(serialize_exception(e))
-        else:
-            console.print(f"[red]Error: Invalid configuration:[/red] {str(e)}")
+    except (FileNotFoundError, YAMLError, ValueError) as e:
+        display_error(console, e, json)
         exit(1)
 
     cogm_price_cache: dict[str, float] = {}
@@ -370,23 +404,8 @@ def buy_list(config_file: str, exchange_code: str | None, json: bool) -> None:
     # Load and validate the configuration
     try:
         buy_list = BuyListConfig.from_yaml(config_file)
-    except FileNotFoundError as e:
-        if json:
-            print(serialize_exception(e))
-        else:
-            console.print(f"[red]Error:[/red] {str(e)}")
-        exit(1)
-    except YAMLError as e:
-        if json:
-            print(serialize_exception(e))
-        else:
-            console.print(f"[red]Error: Invalid YAML file:[/red] {str(e)}")
-        exit(1)
-    except ValueError as e:
-        if json:
-            print(serialize_exception(e))
-        else:
-            console.print(f"[red]Error: Invalid configuration:[/red] {str(e)}")
+    except (FileNotFoundError, YAMLError, ValueError) as e:
+        display_error(console, e, json)
         exit(1)
 
     # Use provided exchange_code if any, otherwise use the one from config
@@ -546,14 +565,8 @@ def insert_offers(config_file: str, force: bool) -> None:
     # Load and validate the configuration
     try:
         offer_config = InternalOfferConfig.from_yaml(config_file)
-    except FileNotFoundError as e:
-        console.print(f"[red]Error:[/red] {str(e)}")
-        exit(1)
-    except YAMLError as e:
-        console.print(f"[red]Error: Invalid YAML file:[/red] {str(e)}")
-        exit(1)
-    except ValueError as e:
-        console.print(f"[red]Error: Invalid configuration:[/red] {str(e)}")
+    except (FileNotFoundError, YAMLError, ValueError) as e:
+        display_error(console, e)
         exit(1)
 
     # Calculate total number of offers across all companies
@@ -722,7 +735,9 @@ def print_empire_cogm_analysis(
                     ratio_str = f"[red]{ratio_str}[/red]"
 
                 # Profit margin
-                profit_margin = ((market_price - planet_recipe_output_cogm.total_cost) / market_price) * 100
+                profit_margin = (
+                    (market_price - planet_recipe_output_cogm.total_cost) / market_price
+                ) * 100
                 margin_str = f"{profit_margin:.1f}%"
                 if profit_margin > 0:
                     margin_str = f"[green]{margin_str}[/green]"

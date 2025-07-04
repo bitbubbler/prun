@@ -79,3 +79,30 @@ planets:
 
       - building_symbol: "FP"
         recipe_symbol: "FP:1xCAF-3xDW=>3xCOF"
+
+  - name: "harmonia"
+    experts:
+      agriculture: 5
+    recipes:
+      - building_symbol: "FRM"
+        recipe_symbol: "FRM:4xH2O=>4xGRN"
+
+  - name: "vulcan"
+    experts:
+      metallurgy: 5
+    recipes:
+      - building_symbol: "GF"
+        recipe_symbol: "GF:1xFLX-1xNA-2xSIO=>12xGL"
+
+      - building_symbol: "GF"
+        recipe_symbol: "GF:10xGL-15xPG=>10xRG"
+
+      - building_symbol: "TUB"
+        recipe_symbol: "GF:10xGL=>20xTUB"
+
+  - name: "zv-896d"
+    experts:
+      resource_extraction: 5
+    recipes:
+      - building_symbol: "INC"
+        recipe_symbol: "INC:4xGRN=>4xC"

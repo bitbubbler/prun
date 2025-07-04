@@ -2,19 +2,65 @@ from typing import Dict, List, Optional
 from pathlib import Path
 
 import yaml
-from pydantic import BaseModel, Field, RootModel
+from pydantic import BaseModel, Field, RootModel, ValidationError
+from pydantic.config import ConfigDict
 
 from prun.models import Experts
 
 
-class ProductionMaterialPriceIn(BaseModel):
+class YAMLConfigBase(BaseModel):
+    """Base class for YAML configurations with strict validation."""
+
+    model_config = ConfigDict(extra="forbid")  # Forbid extra attributes
+
+    @classmethod
+    def from_yaml(cls, yaml_path: str | Path) -> "YAMLConfigBase":
+        """Load configuration from a YAML file with strict validation.
+
+        Args:
+            yaml_path: Path to the YAML configuration file
+
+        Returns:
+            The loaded configuration
+
+        Raises:
+            FileNotFoundError: If the YAML file doesn't exist
+            yaml.YAMLError: If the YAML file is invalid
+            ValueError: If the configuration is invalid, with details about the error
+        """
+        yaml_path = Path(yaml_path)
+        if not yaml_path.exists():
+            raise FileNotFoundError(f"Configuration file not found: {yaml_path}")
+
+        try:
+            with open(yaml_path, "r") as f:
+                config_data = yaml.safe_load(f)
+        except yaml.YAMLError as e:
+            raise yaml.YAMLError(f"Invalid YAML syntax in {yaml_path}: {str(e)}")
+
+        try:
+            return cls(**config_data)
+        except ValidationError as e:
+            # Convert Pydantic validation error to more readable format
+            error_messages = []
+            for error in e.errors():
+                location = " -> ".join(str(loc) for loc in error["loc"])
+                message = error["msg"]
+                error_messages.append(f"- {location}: {message}")
+
+            raise ValueError(
+                f"Invalid configuration in {yaml_path}:\n" + "\n".join(error_messages)
+            )
+
+
+class ProductionMaterialPriceIn(YAMLConfigBase):
     """Production configuration for material prices."""
 
     item_symbol: str = Field(..., description="The symbol of the item")
     price: float = Field(..., description="The price of the item")
 
 
-class EmpireProductionRecipeIn(BaseModel):
+class EmpireProductionRecipeIn(YAMLConfigBase):
     """A single step in a production chain."""
 
     building_symbol: str = Field(..., description="The symbol of the building to use")
@@ -31,7 +77,7 @@ class EmpireExpertsIn(Experts):
     pass
 
 
-class EmpirePlanetIn(BaseModel):
+class EmpirePlanetIn(YAMLConfigBase):
     """A single planet configuration."""
 
     name: str = Field(
@@ -44,7 +90,7 @@ class EmpirePlanetIn(BaseModel):
     experts: EmpireExpertsIn
 
 
-class EmpireIn(BaseModel):
+class EmpireIn(YAMLConfigBase):
     """A complete empire configuration."""
 
     name: str = Field(..., description="Name of the empire")
@@ -55,39 +101,15 @@ class EmpireIn(BaseModel):
         default=None, description="Optional material buy prices"
     )
 
-    @classmethod
-    def from_yaml(cls, yaml_path: str | Path) -> "EmpireIn":
-        """Load a empire configuration from a YAML file.
 
-        Args:
-            yaml_path: Path to the YAML configuration file
-
-        Returns:
-            Empire: The loaded empire configuration
-
-        Raises:
-            FileNotFoundError: If the YAML file doesn't exist
-            yaml.YAMLError: If the YAML file is invalid
-            ValueError: If the configuration is invalid
-        """
-        yaml_path = Path(yaml_path)
-        if not yaml_path.exists():
-            raise FileNotFoundError(f"Configuration file not found: {yaml_path}")
-
-        with open(yaml_path, "r") as f:
-            config_data = yaml.safe_load(f)
-
-        return cls(**config_data)
-
-
-class InternalOfferIn(BaseModel):
+class InternalOfferIn(YAMLConfigBase):
     """Configuration for an individual internal offer."""
 
     item_symbol: str = Field(..., description="The symbol of the item")
     price: float = Field(..., description="The price of the item")
 
 
-class CompanyIn(BaseModel):
+class CompanyIn(YAMLConfigBase):
     """Configuration for a company offering items."""
 
     name: str = Field(..., description="Name of the company")
@@ -100,7 +122,7 @@ class CompanyIn(BaseModel):
     )
 
 
-class InternalOfferConfig(BaseModel):
+class InternalOfferConfig(YAMLConfigBase):
     """Configuration for loading internal offers."""
 
     name: str = Field(..., description="Name of the offer collection")
@@ -111,30 +133,6 @@ class InternalOfferConfig(BaseModel):
         ..., description="List of companies with internal offers"
     )
 
-    @classmethod
-    def from_yaml(cls, yaml_path: str | Path) -> "InternalOfferConfig":
-        """Load an internal offer configuration from a YAML file.
-
-        Args:
-            yaml_path: Path to the YAML configuration file
-
-        Returns:
-            InternalOfferConfig: The loaded offer configuration
-
-        Raises:
-            FileNotFoundError: If the YAML file doesn't exist
-            yaml.YAMLError: If the YAML file is invalid
-            ValueError: If the configuration is invalid
-        """
-        yaml_path = Path(yaml_path)
-        if not yaml_path.exists():
-            raise FileNotFoundError(f"Configuration file not found: {yaml_path}")
-
-        with open(yaml_path, "r") as f:
-            config_data = yaml.safe_load(f)
-
-        return cls(**config_data)
-
 
 class BuyListItemsIn(RootModel[Dict[str, int]]):
     """A dictionary of items and their amounts."""
@@ -142,7 +140,7 @@ class BuyListItemsIn(RootModel[Dict[str, int]]):
     root: Dict[str, int]
 
 
-class BuyListPlanetIn(BaseModel):
+class BuyListPlanetIn(YAMLConfigBase):
     """Configuration for a planet in a buy list."""
 
     name: str = Field(
@@ -151,7 +149,7 @@ class BuyListPlanetIn(BaseModel):
     items: BuyListItemsIn = Field(..., description="The items to buy and their amounts")
 
 
-class BuyListConfig(BaseModel):
+class BuyListConfig(YAMLConfigBase):
     """Configuration for a buy list."""
 
     name: str = Field(..., description="Name of the buy list")
@@ -159,27 +157,3 @@ class BuyListConfig(BaseModel):
     planets: List[BuyListPlanetIn] = Field(
         ..., description="List of planets to buy items from"
     )
-
-    @classmethod
-    def from_yaml(cls, yaml_path: str | Path) -> "BuyListConfig":
-        """Load a buy list configuration from a YAML file.
-
-        Args:
-            yaml_path: Path to the YAML configuration file
-
-        Returns:
-            BuyListConfig: The loaded buy list configuration
-
-        Raises:
-            FileNotFoundError: If the YAML file doesn't exist
-            yaml.YAMLError: If the YAML file is invalid
-            ValueError: If the configuration is invalid
-        """
-        yaml_path = Path(yaml_path)
-        if not yaml_path.exists():
-            raise FileNotFoundError(f"Configuration file not found: {yaml_path}")
-
-        with open(yaml_path, "r") as f:
-            config_data = yaml.safe_load(f)
-
-        return cls(**config_data)
