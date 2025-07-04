@@ -106,3 +106,10 @@ planets:
     recipes:
       - building_symbol: "INC"
         recipe_symbol: "INC:4xGRN=>4xC"
+
+  - name: "phobos"
+    experts:
+      electronics: 3
+    recipes:
+      - building_symbol: "ELP"
+        recipe_symbol: "ELP:1xDCL-1xFAN-1xMB-1xTPU=>1xBMF"

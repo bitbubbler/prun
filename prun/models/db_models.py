@@ -76,8 +76,10 @@ class COGCProgram(SQLModel, table=True):
     planet: "Planet" = Relationship(back_populates="cogc_programs")
 
     @property
-    def program(self) -> str:
+    def program(self) -> str | None:
         """Get the program type."""
+        if self.program_type is None:
+            return None
         program = (
             self.program_type.replace("ADVERTISING_", "").replace("_", " ").lower()
         )
