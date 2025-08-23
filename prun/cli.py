@@ -803,6 +803,282 @@ def serialize_exception(exc: Exception) -> str:
     return json.dumps(payload)
 
 
+def print_price_bands(console: Console, price_bands) -> None:
+    """Print price bands analysis in a formatted table."""
+
+    # Header with item and planet info
+    title = f"{price_bands.item_symbol} Input Pricing Analysis"
+    console.print(f"\n[bold blue]{title}[/bold blue]")
+    console.print(
+        f"Recipe: [cyan]{price_bands.recipe_symbol}[/cyan] (Planet: [yellow]{price_bands.planet_name}[/yellow])"
+    )
+
+    # Market data section
+    console.print("\n[bold]Market Data:[/bold]")
+    console.print(
+        f"├─ Current {price_bands.item_symbol} Sell Price: [green]${price_bands.target_selling_price:,.2f}[/green]"
+    )
+    console.print(
+        f"├─ Target Profit Margin: [cyan]{price_bands.target_profit_margin_percent}%[/cyan] ([green]${price_bands.target_profit:,.2f}[/green])"
+    )
+    console.print(f"└─ Target Profit: [green]${price_bands.target_profit:,.2f}[/green]")
+
+    # Production costs section
+    console.print("\n[bold]Production Costs:[/bold]")
+    console.print(f"├─ Workforce: [yellow]${price_bands.workforce_cost:,.2f}[/yellow]")
+    console.print(f"├─ Repair: [yellow]${price_bands.repair_cost:,.2f}[/yellow]")
+    console.print(
+        f"└─ Fixed Costs Total: [yellow]${price_bands.fixed_costs_total:,.2f}[/yellow]"
+    )
+
+    # Available budget
+    console.print(
+        f"\nInput Budget Available: [green]${price_bands.good_budget:,.2f}[/green] (Price - Profit - Fixed Costs)"
+    )
+
+    # Price bands table
+    console.print("\n[bold]Price Bands for Recipe Inputs:[/bold]")
+
+    table = Table(box=box.ROUNDED)
+    table.add_column("Input", style="cyan", no_wrap=True)
+    table.add_column("Quantity", justify="right")
+    table.add_column("Excellent", justify="right", style="bright_green")
+    table.add_column("Good", justify="right", style="green")
+    table.add_column("Acceptable", justify="right", style="yellow")
+    table.add_column("Break Even", justify="right", style="orange3")
+    table.add_column("Current\nAsk Price", justify="right")
+
+    for band in price_bands.input_bands:
+        # Format current price with recommendation color
+        current_price_str = (
+            f"${band.current_ask_price:,.2f}" if band.current_ask_price else "N/A"
+        )
+        if band.recommendation == "EXCELLENT":
+            current_price_str = f"[bright_green]{current_price_str} ✓[/bright_green]"
+        elif band.recommendation == "GOOD":
+            current_price_str = f"[green]{current_price_str} ✓[/green]"
+        elif band.recommendation == "ACCEPTABLE":
+            current_price_str = f"[yellow]{current_price_str} ⚠[/yellow]"
+        elif band.recommendation == "BREAK_EVEN":
+            current_price_str = f"[orange3]{current_price_str} ⚠[/orange3]"
+        else:  # AVOID
+            current_price_str = f"[red]{current_price_str} ✗[/red]"
+
+        table.add_row(
+            band.item_symbol,
+            f"{band.quantity}x",
+            f"≤ ${band.excellent_buy:,.0f}",
+            f"≤ ${band.good_buy:,.0f}",
+            f"≤ ${band.acceptable_buy:,.0f}",
+            f"≤ ${band.break_even:,.0f}",
+            current_price_str,
+        )
+
+    console.print(table)
+
+    # Assessment section
+    profitability_color = {
+        "EXCELLENT": "bright_green",
+        "GOOD": "green",
+        "ACCEPTABLE": "yellow",
+        "BREAK_EVEN": "orange3",
+        "LOSS": "red",
+    }.get(price_bands.current_profitability, "white")
+
+    assessment_icon = {
+        "EXCELLENT": "🟢",
+        "GOOD": "🟢",
+        "ACCEPTABLE": "🟡",
+        "BREAK_EVEN": "🟠",
+        "LOSS": "🔴",
+    }.get(price_bands.current_profitability, "⚪")
+
+    console.print(
+        f"\n[bold]Assessment: [{profitability_color}]{price_bands.current_profitability} PROFITABILITY {assessment_icon}[/{profitability_color}][/bold]"
+    )
+    console.print(
+        f"├─ Total Current Input Cost: [cyan]${price_bands.total_current_input_cost:,.2f}[/cyan]"
+    )
+    console.print(
+        f"├─ Actual Profit: [green]${price_bands.actual_profit:,.2f}[/green] ([cyan]{price_bands.actual_margin_percent:.1f}%[/cyan] margin)"
+    )
+
+    margin_diff = (
+        price_bands.actual_margin_percent - price_bands.target_profit_margin_percent
+    )
+    if margin_diff >= 0:
+        console.print(
+            f"├─ vs Target: [green]+{margin_diff:.1f}% above target margin[/green]"
+        )
+        console.print(
+            "└─ Recommendation: [green]PROCEED[/green] - Great profitability!"
+        )
+    else:
+        console.print(
+            f"├─ vs Target: [yellow]{margin_diff:.1f}% below target margin[/yellow]"
+        )
+        if price_bands.current_profitability in ["EXCELLENT", "GOOD"]:
+            console.print(
+                "└─ Recommendation: [green]PROCEED[/green] - Consider negotiating better input prices"
+            )
+        elif price_bands.current_profitability == "ACCEPTABLE":
+            console.print(
+                "└─ Recommendation: [yellow]CAUTION[/yellow] - Monitor input prices closely"
+            )
+        else:
+            console.print(
+                "└─ Recommendation: [red]REVIEW[/red] - Consider alternative recipes or suppliers"
+            )
+
+
+def print_recipe_comparison(console: Console, comparison) -> None:
+    """Print recipe comparison analysis."""
+
+    title = f"{comparison.item_symbol} Recipe Comparison"
+    console.print(f"\n[bold blue]{title}[/bold blue]")
+    console.print(
+        f"Planet: [yellow]{comparison.planet_name}[/yellow] | Target Margin: [cyan]{comparison.target_profit_margin_percent}%[/cyan]"
+    )
+
+    # Create comparison table
+    table = Table(title="Recipe Profitability Comparison", box=box.ROUNDED)
+    table.add_column("Recipe", style="cyan")
+    table.add_column("Inputs", style="white")
+    table.add_column("Current\nMargin", justify="right")
+    table.add_column("Profit", justify="right")
+    table.add_column("Assessment", justify="center")
+
+    for analysis in sorted(
+        comparison.recipe_analyses, key=lambda x: x.actual_profit, reverse=True
+    ):
+        # Format inputs
+        input_summary = ", ".join(
+            [f"{band.quantity}x{band.item_symbol}" for band in analysis.input_bands]
+        )
+
+        # Color code margin
+        margin_str = f"{analysis.actual_margin_percent:.1f}%"
+        if analysis.current_profitability == "EXCELLENT":
+            margin_str = f"[bright_green]{margin_str}[/bright_green]"
+        elif analysis.current_profitability == "GOOD":
+            margin_str = f"[green]{margin_str}[/green]"
+        elif analysis.current_profitability == "ACCEPTABLE":
+            margin_str = f"[yellow]{margin_str}[/yellow]"
+        else:
+            margin_str = f"[red]{margin_str}[/red]"
+
+        # Format profit
+        profit_str = f"${analysis.actual_profit:,.2f}"
+        if analysis.actual_profit > 0:
+            profit_str = f"[green]{profit_str}[/green]"
+        else:
+            profit_str = f"[red]{profit_str}[/red]"
+
+        # Assessment with icon
+        assessment_icon = {
+            "EXCELLENT": "🟢",
+            "GOOD": "🟢",
+            "ACCEPTABLE": "🟡",
+            "BREAK_EVEN": "🟠",
+            "LOSS": "🔴",
+        }.get(analysis.current_profitability, "⚪")
+
+        recipe_name = analysis.recipe_symbol
+        if analysis.recipe_symbol == comparison.recommended_recipe:
+            recipe_name = f"[bold]{recipe_name} ⭐[/bold]"
+
+        table.add_row(
+            recipe_name,
+            input_summary,
+            margin_str,
+            profit_str,
+            f"{analysis.current_profitability} {assessment_icon}",
+        )
+
+    console.print(table)
+
+    # Recommendation
+    console.print("\n[bold]Recommendation:[/bold]")
+    console.print(f"└─ [green]{comparison.reasoning}[/green]")
+
+
+@cli.command("input-pricing")
+@click.argument("item_symbol", required=True)
+@click.option(
+    "--planet", "-p", required=True, help="Planet name where production occurs"
+)
+@click.option(
+    "--margin",
+    "-m",
+    type=float,
+    required=True,
+    help="Target profit margin percentage (e.g., 25.0 for 25%)",
+)
+@click.option("--recipe", "-r", help="Specific recipe symbol (optional)")
+@click.option("--exchange", default="NC1", help="Exchange to get market prices from")
+@click.option("--compare-recipes", is_flag=True, help="Compare all available recipes")
+@click.option("--json", is_flag=True, help="Output in JSON format")
+def input_pricing(
+    item_symbol: str,
+    planet: str,
+    margin: float,
+    recipe: str | None,
+    exchange: str,
+    compare_recipes: bool,
+    json: bool,
+) -> None:
+    """Calculate input price bands for profitable production.
+
+    Examples:
+        prun input-pricing SI --planet hyalos --margin 25
+        prun input-pricing SI --planet hyalos --margin 25 --recipe "SME:1xAL-3xSIO=>1xSI"
+        prun input-pricing SI --planet hyalos --margin 25 --compare-recipes
+    """
+    console = Console()
+    input_pricing_service = container.input_pricing_service()
+
+    try:
+        if compare_recipes:
+            # Compare all recipes for this item
+            comparison = input_pricing_service.compare_all_recipes(
+                item_symbol=item_symbol,
+                planet_name=planet,
+                profit_margin_percent=margin,
+                exchange_code=exchange,
+            )
+
+            if json:
+                print(comparison.model_dump_json(indent=2))
+                return
+
+            print_recipe_comparison(console, comparison)
+        else:
+            # Calculate price bands for specific recipe or best available
+            price_bands = input_pricing_service.calculate_price_bands(
+                item_symbol=item_symbol,
+                planet_name=planet,
+                profit_margin_percent=margin,
+                recipe_symbol=recipe,
+                exchange_code=exchange,
+            )
+
+            if json:
+                print(price_bands.model_dump_json(indent=2))
+                return
+
+            print_price_bands(console, price_bands)
+
+    except Exception as e:
+        if json:
+            error_response = {
+                "error": str(e),
+                "type": type(e).__name__,
+            }
+            print(json.dumps(error_response, indent=2))
+        else:
+            console.print(f"[red]Error: {e}[/red]")
+
+
 @cli.command()
 @click.argument("item_pattern", required=True)
 @click.option("-p", "planet_pattern", required=False)

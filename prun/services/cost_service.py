@@ -255,23 +255,34 @@ class CostService:
         recipe_output_cogms: List[CalculatedRecipeOutputCOGM] = []
 
         # calculate cogm for each recipe
-        for production_recipe in empire_planet.recipes:
-            planet_resource = next(
-                (
-                    resource
-                    for resource in planet.resources
-                    if resource.item.symbol == production_recipe.item_symbol
-                ),
-                None,
-            )
-            recipe = recipe_service.find_recipe(
-                item_symbol=production_recipe.item_symbol,
-                recipe_symbol=production_recipe.recipe_symbol,
-                planet=planet,
-            )
+        for recipe_symbol in empire_planet.recipes:
+            if (
+                recipe_symbol.startswith("EXT:=>")
+                or recipe_symbol.startswith("RIG:=>")
+                or recipe_symbol.startswith("COL:=>")
+            ):
+                item_symbol = recipe_symbol.split("=>")[1]
+                planet_resource = next(
+                    (
+                        resource
+                        for resource in planet.resources
+                        if resource.item.symbol == item_symbol
+                    ),
+                    None,
+                )
+                recipe = recipe_service.get_planet_extraction_recipe(
+                    recipe_symbol=recipe_symbol,
+                    planet_resource=planet_resource,
+                )
+            else:
+                recipe = recipe_service.find_recipe(
+                    item_symbol=None,
+                    recipe_symbol=recipe_symbol,
+                    planet=planet,
+                )
 
             if not recipe:
-                raise RecipeNotFoundError(production_recipe.recipe_symbol)
+                raise RecipeNotFoundError(recipe_symbol)
 
             if recipe.is_resource_extraction_recipe:
                 efficient_recipe = (

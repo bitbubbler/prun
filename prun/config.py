@@ -84,8 +84,8 @@ class EmpirePlanetIn(YAMLConfigBase):
         ...,
         description="The name of the planet (can be a natural ID, passed to find_planet)",
     )
-    recipes: List[EmpireProductionRecipeIn] = Field(
-        ..., description="List of production recipes in order"
+    recipes: List[str] = Field(
+        description="List of production recipes in order. Each recipe is a string of the form 'building_symbol:recipe_symbol' or 'building_symbol:recipe_symbol=>item_symbol'"
     )
     experts: EmpireExpertsIn
 

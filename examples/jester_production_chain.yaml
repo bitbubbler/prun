@@ -2,114 +2,97 @@ name: "CorporateJester"
 material_buy_prices:
   FLX: 120
   PG: 30
+  CU: 1800
 planets:
   - name: "deimos"
     experts:
       metallurgy: 5
     recipes:
-      - building_symbol: "GF"
-        recipe_symbol: "GF:1xFLX-1xNA-2xSIO=>12xGL"
+      - "GF:1xFLX-1xNA-2xSIO=>12xGL"
+      - "GF:10xGL-10xNCS=>10xNG"
+      - "GF:10xGL-15xPG=>10xRG"
 
   - name: "griffonstone"
     experts:
       chemistry: 5
     recipes:
-      - building_symbol: "CHP"
-        recipe_symbol: "CHP:1xH2O-3xHAL=>1xCL-2xNA"
-
-  - name: "hyalos"
-    experts:
-      metallurgy: 5
-      resource_extraction: 1
-    recipes:
-      - building_symbol: "EXT"
-        recipe_symbol: "EXT:=>"
-        item_symbol: "SIO"
-
-      # - building_symbol: "GF"
-      #   recipe_symbol: "GF:1xNA-2xSIO=>10xGL"
-      - building_symbol: "GF"
-        recipe_symbol: "GF:1xFLX-1xNA-2xSIO=>12xGL"
-
-      - building_symbol: "GF"
-        recipe_symbol: "GF:10xGL-15xPG=>10xRG"
-
-      # - building_symbol: "GF"
-      #   recipe_symbol: "GF:10xGL-15xPG-1xSEN=>10xRG"
-
-      - building_symbol: "GF"
-        recipe_symbol: "GF:10xGL-10xNCS=>10xNG"
-
-      # - building_symbol: "LIT"
-      #   recipe_symbol: "GF:16xNE-8xRG=>1xLIT"
-
-      - building_symbol: "TUB"
-        recipe_symbol: "GF:10xGL=>20xTUB"
-
-      - building_symbol: "GCH"
-        recipe_symbol: "GF:1xGV-20xRG=>1xGCH"
-
-      - building_symbol: "GNZ"
-        recipe_symbol: "GF:1xGCH-20xRG-1xTI=>1xGNZ"
-
-      - building_symbol: "GEN"
-        recipe_symbol: "GF:4xGNZ-4xLFP-1xMFK-50xNG-10xTHF=>1xGEN"
+      - "CHP:1xH2O-3xHAL=>1xCL-2xNA"
 
   - name: "origo"
     experts:
       manufacturing: 5
       resource_extraction: 1
     recipes:
-      - building_symbol: "EXT"
-        recipe_symbol: "EXT:=>"
-        item_symbol: "MGS"
-
-      - building_symbol: "BMP"
-        recipe_symbol: "BMP:1xMGS=>6xMG"
+      - "EXT:=>MGS"
+      - "BMP:1xMGS=>6xMG"
 
   - name: "norwick"
     experts:
       food_industries: 5
     recipes:
-      - building_symbol: "FER"
-        recipe_symbol: "FER:1xAMM-4xDW-1xHER=>6xKOM"
-
-      - building_symbol: "FP"
-        recipe_symbol: "FP:1xMAI-1xMUS-1xVEG=>10xRAT"
-
-      - building_symbol: "FP"
-        recipe_symbol: "FP:1xCAF-3xDW=>3xCOF"
+      - "FER:1xAMM-4xDW-1xHER=>6xKOM"
+      - "FP:1xMAI-1xMUS-1xVEG=>10xRAT"
+      - "FP:1xCAF-3xDW=>3xCOF"
 
   - name: "harmonia"
     experts:
       agriculture: 5
     recipes:
-      - building_symbol: "FRM"
-        recipe_symbol: "FRM:4xH2O=>4xGRN"
+      - "FRM:4xH2O=>4xGRN"
 
   - name: "vulcan"
     experts:
       metallurgy: 5
     recipes:
-      - building_symbol: "GF"
-        recipe_symbol: "GF:1xFLX-1xNA-2xSIO=>12xGL"
-
-      - building_symbol: "GF"
-        recipe_symbol: "GF:10xGL-15xPG=>10xRG"
-
-      - building_symbol: "TUB"
-        recipe_symbol: "GF:10xGL=>20xTUB"
+      - "GF:1xFLX-1xNA-2xSIO=>12xGL"
+      - "GF:10xGL-15xPG=>10xRG"
+      - "GF:10xGL=>20xTUB"
 
   - name: "zv-896d"
     experts:
       resource_extraction: 5
     recipes:
-      - building_symbol: "INC"
-        recipe_symbol: "INC:4xGRN=>4xC"
+      - "INC:4xGRN=>4xC"
 
   - name: "phobos"
     experts:
       electronics: 3
     recipes:
-      - building_symbol: "ELP"
-        recipe_symbol: "ELP:1xDCL-1xFAN-1xMB-1xTPU=>1xBMF"
+      - "ELP:1xDCL-1xFAN-1xMB-1xTPU=>1xBMF"
+      - "SD:=>1xSAL"
+      - "SD:=>1xLD"
+
+  - name: "KI-840c"
+    experts:
+      chemistry: 3
+    recipes:
+      - "CHP:1xCU-1xMG-1xS=>1xIND"
+
+  - name: "hephaestus"
+    experts:
+      metallurgy: 3
+    recipes:
+      - "WPL:1xRCO=>1xCOT"
+      - "PPF:40xPG=>1xPSL"
+
+  - name: "hyalos"
+    experts:
+      metallurgy: 5
+      resource_extraction: 1
+    recipes:
+      - "SME:1xC-1xFLX-1xO-3xSIO=>1xSI"
+      - "SME:1xAL-3xSIO=>1xSI"
+
+  - name: "wu-070c"
+    experts:
+      metallurgy: 5
+      resource_extraction: 1
+    recipes:
+      - "SME:1xC-1xFLX-1xO-3xSIO=>1xSI"
+      - "SME:1xAL-3xSIO=>1xSI"
+
+  - name: "wu-070e"
+    experts:
+      metallurgy: 3
+    recipes:
+      - "EXT:=>SIO"

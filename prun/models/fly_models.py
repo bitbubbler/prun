@@ -13,7 +13,6 @@ from .db_models import (
     Recipe,
     RecipeInput,
     RecipeOutput,
-    Storage,
     StorageItem,
 )
 
@@ -461,3 +460,128 @@ class WorkforceFulfillment(BaseModel):
     technician: TechnicianFulfillment
     engineer: EngineerFulfillment
     scientist: ScientistFulfillment
+
+
+class MaterialPrice(BaseModel):
+    """Model for material prices."""
+
+    symbol: str
+    price: float
+
+
+class ROICalculation(BaseModel):
+    """Model for ROI calculations."""
+
+    item_symbol: str
+    building_symbol: str
+    planet_name: str
+    investment: float
+    daily_profit: float
+    payback_period: float
+
+
+class BuildingCostDetails(BaseModel):
+    """Model for detailed building costs."""
+
+    material: MaterialPrice
+    quantity: float
+    total_cost: float
+
+
+class PlanetBuildingCostDetails(BaseModel):
+    """Model for detailed planet building costs."""
+
+    base_costs: list[BuildingCostDetails]
+    planetary_costs: list[BuildingCostDetails]
+    total_cost: float
+
+
+class InvestmentDetails(BaseModel):
+    """Model for investment details."""
+
+    building_costs: PlanetBuildingCostDetails
+    total_investment: float
+
+
+class ReturnDetails(BaseModel):
+    """Model for return details."""
+
+    cogm: float
+    sell_price: float
+    profit_per_unit: float
+    daily_profit: float
+
+
+class DetailedROICalculation(BaseModel):
+    """Model for detailed ROI calculations."""
+
+    investment: InvestmentDetails
+    return_: ReturnDetails
+    payback_period: float
+
+
+class InputPriceBand(BaseModel):
+    """Price band for a single recipe input."""
+
+    item_symbol: str = Field(description="The symbol of the input item")
+    quantity: float = Field(description="Quantity needed for recipe")
+    excellent_buy: float = Field(description="Maximum profit scenario price")
+    good_buy: float = Field(description="Target profit scenario price")
+    acceptable_buy: float = Field(description="Minimum profit scenario price")
+    break_even: float = Field(description="Zero profit scenario price")
+    loss_threshold: float = Field(description="Maximum price before loss")
+    current_ask_price: float | None = Field(
+        default=None, description="Current market ask price"
+    )
+    recommendation: str = Field(
+        description="Recommendation: EXCELLENT, GOOD, ACCEPTABLE, AVOID, etc."
+    )
+
+
+class RecipePriceBands(BaseModel):
+    """Complete price band analysis for a recipe."""
+
+    recipe_symbol: str = Field(description="Recipe symbol")
+    item_symbol: str = Field(description="Output item symbol")
+    planet_name: str = Field(description="Planet name")
+    target_selling_price: float = Field(description="Target selling price")
+    target_profit_margin_percent: float = Field(
+        description="Target profit margin percentage"
+    )
+    target_profit: float = Field(description="Target profit amount")
+
+    # Fixed costs breakdown
+    workforce_cost: float = Field(description="Workforce cost per recipe run")
+    repair_cost: float = Field(description="Repair cost per recipe run")
+    fixed_costs_total: float = Field(description="Total fixed costs")
+
+    # Budget allocations for each tier
+    excellent_budget: float = Field(description="Budget for excellent profitability")
+    good_budget: float = Field(description="Budget for good profitability")
+    acceptable_budget: float = Field(description="Budget for acceptable profitability")
+    break_even_budget: float = Field(description="Budget for break even")
+
+    # Price bands for each input
+    input_bands: list[InputPriceBand] = Field(description="Price bands for each input")
+
+    # Overall assessment
+    current_profitability: str = Field(description="Current profitability tier")
+    total_current_input_cost: float = Field(description="Total current input cost")
+    actual_profit: float = Field(description="Actual profit with current prices")
+    actual_margin_percent: float = Field(description="Actual margin percentage")
+
+
+class RecipeComparison(BaseModel):
+    """Comparison of multiple recipes for the same output."""
+
+    item_symbol: str = Field(description="Output item symbol")
+    planet_name: str = Field(description="Planet name")
+    target_profit_margin_percent: float = Field(
+        description="Target profit margin percentage"
+    )
+
+    recipe_analyses: list[RecipePriceBands] = Field(
+        description="Analysis for each recipe"
+    )
+    recommended_recipe: str = Field(description="Recommended recipe symbol")
+    reasoning: str = Field(description="Reasoning for recommendation")

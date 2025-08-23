@@ -6,55 +6,43 @@ planets:
     experts:
       resource_extraction: 1
     recipes:
-      - building_symbol: "RIG"
-        recipe_symbol: "RIG:=>"
-        item_symbol: "H2O"
+      - "RIG:=>H2O"
 
   - name: "ZV-896c"
     experts:
       food_industries: 5
     recipes:
-      - building_symbol: "HYF"
-        recipe_symbol: "HYF:16xH2O-2xNS=>12xALG"
+      - "HYF:16xH2O-2xNS=>12xALG"
 
-      - building_symbol: "HYF"
-        recipe_symbol: "HYF:20xH2O-2xNS=>12xMAI"
+      - "HYF:20xH2O-2xNS=>12xMAI"
 
-      - building_symbol: "HYF"
-        recipe_symbol: "HYF:16xH2O-1xNS=>6xVEG"
+      - "HYF:16xH2O-1xNS=>6xVEG"
 
   - name: "YK-649b"
     experts:
       food_industries: 5
     recipes:
-      - building_symbol: "FP"
-        recipe_symbol: "FP:1xALG-1xMAI-1xVEG=>10xRAT"
-      - building_symbol: "FP"
-        recipe_symbol: "FP:10xH2O-1xPG=>10xDW"
+      - "FP:1xALG-1xMAI-1xVEG=>10xRAT"
+      - "FP:10xH2O-1xPG=>10xDW"
 
-      - building_symbol: "FP"
-        recipe_symbol: "FP:1xHER-2xRAT=>2xFIM"
+      - "FP:1xHER-2xRAT=>2xFIM"
 
-      - building_symbol: "FP"
-        recipe_symbol: "FP:2xFIM-1xMTP=>2xMEA"
+      - "FP:2xFIM-1xMTP=>2xMEA"
 
   - name: "ZV-896b"
     experts:
       chemistry: 5
     recipes:
-      - building_symbol: "FRM"
-        recipe_symbol: "FRM:1xDDT-4xH2O=>4xHER"
+      - "FRM:1xDDT-4xH2O=>4xHER"
 
   - name: "ZV-307b"
     experts:
       chemistry: 5
     recipes:
-      - building_symbol: "LAB"
-        recipe_symbol: "LAB:1xC-1xCL-1xH=>3xDDT"
+      - "LAB:1xC-1xCL-1xH=>3xDDT"
 
   - name: "LS-300c"
     experts:
       chemistry: 5
     recipes:
-      - building_symbol: "CHP"
-        recipe_symbol: "CHP:2xH2O-1xLST-2xN=>4xNS"
+      - "CHP:2xH2O-1xLST-2xN=>4xNS"

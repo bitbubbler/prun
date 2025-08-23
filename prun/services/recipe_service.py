@@ -139,6 +139,13 @@ class RecipeService:
         Raises:
             RecipeNotFoundError: If the recipe is not found
         """
+        if (
+            recipe_symbol.startswith("EXT:=>")
+            or recipe_symbol.startswith("RIG:=>")
+            or recipe_symbol.startswith("COL:=>")
+        ):
+            recipe_symbol = recipe_symbol[: recipe_symbol.index("=>") + 2]
+
         recipe = self.recipe_repository.get_recipe(recipe_symbol)
 
         if not recipe:

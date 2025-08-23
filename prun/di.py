@@ -22,6 +22,7 @@ from prun.services.building_service import BuildingService
 from prun.services.cost_service import CostService
 from prun.services.efficiency_service import EfficiencyService
 from prun.services.exchange_service import ExchangeService
+from prun.services.input_pricing_service import InputPricingService
 from prun.services.item_service import ItemService
 from prun.services.planet_service import PlanetService
 from prun.services.recipe_service import RecipeService
@@ -134,6 +135,13 @@ class Container(containers.DeclarativeContainer):
         planet_service=planet_service,
         recipe_service=recipe_service,
         workforce_service=workforce_service,
+    )
+    input_pricing_service = providers.Factory(
+        InputPricingService,
+        cost_service=cost_service,
+        exchange_service=exchange_service,
+        recipe_service=recipe_service,
+        planet_service=planet_service,
     )
 
 
