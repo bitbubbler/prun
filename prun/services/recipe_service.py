@@ -209,58 +209,6 @@ class RecipeService:
         """
         return self.recipe_repository.get_recipe_with_prices(symbol)
 
-    def sync_recipes(self) -> None:
-        """Sync recipes from the FIO API to the database.
-
-        Args:
-            fio_client: FIO API client
-
-        Raises:
-            Exception: If there's an error syncing recipes
-        """
-        try:
-            recipes = self.fio_client.get_recipes()
-            for fio_recipe in recipes:
-                # Check if recipe already exists
-                if not self.recipe_repository.get_recipe(
-                    fio_recipe.standard_recipe_name
-                ):
-                    recipe = Recipe.model_validate(
-                        {
-                            "symbol": fio_recipe.standard_recipe_name,
-                            "building_symbol": fio_recipe.building_ticker,
-                            "time_ms": fio_recipe.time_ms,
-                        }
-                    )
-
-                    recipe.inputs = [
-                        RecipeInput.model_validate(
-                            {
-                                "recipe_symbol": recipe.symbol,
-                                "item_symbol": input.ticker,
-                                "quantity": float(input.amount),
-                            }
-                        )
-                        for input in fio_recipe.inputs
-                    ]
-
-                    recipe.outputs = [
-                        RecipeOutput.model_validate(
-                            {
-                                "recipe_symbol": recipe.symbol,
-                                "item_symbol": output.ticker,
-                                "quantity": float(output.amount),
-                            }
-                        )
-                        for output in fio_recipe.outputs
-                    ]
-
-                    # Create recipe with its inputs and output
-                    self.recipe_repository.create_recipe(recipe)
-        except Exception as e:
-            logger.error(f"Error syncing recipes: {str(e)}")
-            raise
-
     def recipe_from_resource(
         self, planet_resource: PlanetResource
     ) -> PlanetExtractionRecipe:

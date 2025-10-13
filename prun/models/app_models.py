@@ -81,219 +81,219 @@ class Experts(BaseModel):
         return getattr(self, expertise.lower())
 
 
-class EfficientRecipe(BaseModel):
-    """Model for efficient recipes in Prosperous Universe. (not a database table)"""
+# class EfficientRecipe(BaseModel):
+#     """Model for efficient recipes in Prosperous Universe. (not a database table)"""
 
-    symbol: str
-    building_symbol: str
-    time_ms: int
-    inputs: list[RecipeInput]
-    outputs: list[RecipeOutput]
-    building: Building
-    efficiency: float
+#     symbol: str
+#     building_symbol: str
+#     time_ms: int
+#     inputs: list[RecipeInput]
+#     outputs: list[RecipeOutput]
+#     building: Building
+#     efficiency: float
 
-    is_resource_extraction_recipe: bool = False
+#     is_resource_extraction_recipe: bool = False
 
-    @classmethod
-    def efficient_recipe_from(
-        cls, recipe: Recipe, efficiency: float
-    ) -> "EfficientRecipe":
-        """Create an efficient recipe from a normal recipe."""
+#     @classmethod
+#     def efficient_recipe_from(
+#         cls, recipe: Recipe, efficiency: float
+#     ) -> "EfficientRecipe":
+#         """Create an efficient recipe from a normal recipe."""
 
-        # Calculate the new time_ms based on expert_efficiency
-        # Efficiency reduces time, so we multiply by (1 - efficiency_factor)
-        # Ensure time_ms is an integer
-        effective_time_ms = int(recipe.time_ms * (1.0 - efficiency))
+#         # Calculate the new time_ms based on expert_efficiency
+#         # Efficiency reduces time, so we multiply by (1 - efficiency_factor)
+#         # Ensure time_ms is an integer
+#         effective_time_ms = int(recipe.time_ms * (1.0 - efficiency))
 
-        efficient_recipe = cls(
-            symbol=recipe.symbol,
-            building_symbol=recipe.building_symbol,
-            time_ms=effective_time_ms,
-            inputs=recipe.inputs,
-            outputs=recipe.outputs,
-            building=recipe.building,
-            efficiency=efficiency,
-        )
+#         efficient_recipe = cls(
+#             symbol=recipe.symbol,
+#             building_symbol=recipe.building_symbol,
+#             time_ms=effective_time_ms,
+#             inputs=recipe.inputs,
+#             outputs=recipe.outputs,
+#             building=recipe.building,
+#             efficiency=efficiency,
+#         )
 
-        return efficient_recipe
+#         return efficient_recipe
 
-    @property
-    def hours_decimal(self) -> float:
-        """Get the recipe time_ms in hours, as a float."""
-        return self.time_ms / 3600000.0
+#     @property
+#     def hours_decimal(self) -> float:
+#         """Get the recipe time_ms in hours, as a float."""
+#         return self.time_ms / 3600000.0
 
-    @property
-    def percent_of_day(self) -> float:
-        """Get the recipe time_ms as a percentage of a day (31.2 hours / 24 hours). with 2 decimal places."""
-        return round(self.hours_decimal / 24, 2)
-
-
-class PlanetExtractionRecipe(BaseModel):
-    """Model for extraction recipes in Prosperous Universe. (not a database table)"""
-
-    symbol: str
-    building_symbol: str
-    time_ms: int
-    inputs: list[RecipeInput]
-    outputs: list[RecipeOutput]
-    building: Building
-
-    is_resource_extraction_recipe: bool = True
-
-    @classmethod
-    def extraction_recipe_from(
-        cls, recipe: Recipe, planet_resource: PlanetResource
-    ) -> "PlanetExtractionRecipe":
-        """Create an extraction recipe from a normal recipe."""
-
-        if not recipe.is_resource_extraction_recipe:
-            raise ValueError("Recipe is not a resource extraction recipe")
-
-        daily_extraction = (
-            planet_resource.factor * 100 * 0.7
-            if recipe.building_symbol in ["RIG", "EXT"]
-            else planet_resource.factor * 100 * 0.6
-        )
-
-        fractional_units_per_run = daily_extraction / (24 / recipe.hours_decimal)
-
-        remainder_units_per_run = (
-            math.ceil(fractional_units_per_run) - fractional_units_per_run
-        )
-
-        extraction_units_per_run = math.ceil(fractional_units_per_run)
-
-        extraction_time_hours_decimal = recipe.hours_decimal + (
-            recipe.hours_decimal * (remainder_units_per_run / fractional_units_per_run)
-        )
-
-        return cls(
-            symbol=recipe.symbol,
-            building_symbol=recipe.building_symbol,
-            time_ms=int(extraction_time_hours_decimal * 3600000),
-            inputs=[],
-            outputs=[
-                RecipeOutput(
-                    item_symbol=planet_resource.item.symbol,
-                    quantity=extraction_units_per_run,
-                )
-            ],
-            building=recipe.building,
-        )
-
-    @property
-    def hours_decimal(self) -> float:
-        """Get the recipe time_ms in hours, as a float."""
-        return self.time_ms / 3600000.0
+#     @property
+#     def percent_of_day(self) -> float:
+#         """Get the recipe time_ms as a percentage of a day (31.2 hours / 24 hours). with 2 decimal places."""
+#         return round(self.hours_decimal / 24, 2)
 
 
-class EfficientPlanetExtractionRecipe(PlanetExtractionRecipe, EfficientRecipe):
-    """Model for efficient extraction recipes in Prosperous Universe. (not a database table)"""
+# class PlanetExtractionRecipe(BaseModel):
+#     """Model for extraction recipes in Prosperous Universe. (not a database table)"""
 
-    @classmethod
-    def efficient_recipe_from(
-        cls, recipe: PlanetExtractionRecipe, efficiency: float
-    ) -> "EfficientPlanetExtractionRecipe":
-        return super().efficient_recipe_from(recipe, efficiency)
+#     symbol: str
+#     building_symbol: str
+#     time_ms: int
+#     inputs: list[RecipeInput]
+#     outputs: list[RecipeOutput]
+#     building: Building
 
-    @classmethod
-    def extraction_recipe_from(
-        cls, recipe: EfficientRecipe, planet_resource: PlanetResource
-    ) -> "EfficientPlanetExtractionRecipe":
-        raise NotImplementedError(
-            "Use PlanetExtractionRecipe.extraction_recipe_from to get a"
-            "PlanetExtractionRecipe, then use EfficientPlanetExtractionRecipe.efficient_recipe_from "
-            "to get an EfficientPlanetExtractionRecipe"
-        )
+#     is_resource_extraction_recipe: bool = True
 
+#     @classmethod
+#     def extraction_recipe_from(
+#         cls, recipe: Recipe, planet_resource: PlanetResource
+#     ) -> "PlanetExtractionRecipe":
+#         """Create an extraction recipe from a normal recipe."""
 
-class PlanetBuilding(BaseModel):
-    """Model for buildings on a planet."""
+#         if not recipe.is_resource_extraction_recipe:
+#             raise ValueError("Recipe is not a resource extraction recipe")
 
-    building: Building
-    planet: Planet
-    building_costs: list[BuildingCost]
+#         daily_extraction = (
+#             planet_resource.factor * 100 * 0.7
+#             if recipe.building_symbol in ["RIG", "EXT"]
+#             else planet_resource.factor * 100 * 0.6
+#         )
 
-    @classmethod
-    def planet_building_from(
-        cls, building: Building, planet: Planet
-    ) -> "PlanetBuilding":
-        """Create a building from a planet."""
-        building_costs = building.building_costs.copy()
-        if planet.surface:
-            building_costs.append(
-                BuildingCost(
-                    item_symbol="MCG",
-                    amount=building.area_cost * 4,
-                )
-            )
-        else:
-            building_costs.append(
-                BuildingCost(
-                    item_symbol="AEF",
-                    amount=building.area_cost / 3,
-                )
-            )
-        if planet.pressure < 0.25:
-            building_costs.append(
-                BuildingCost(item_symbol="SEA", amount=building.area_cost)
-            )
-        elif planet.pressure > 2:
-            building_costs.append(BuildingCost(item_symbol="HSE", amount=1))
-        if planet.gravity < 0.25:
-            building_costs.append(BuildingCost(item_symbol="MGC", amount=1))
-        elif planet.gravity > 2.5:
-            building_costs.append(BuildingCost(item_symbol="BL", amount=1))
-        if planet.temperature < -25:
-            building_costs.append(
-                BuildingCost(item_symbol="INS", amount=building.area_cost * 10)
-            )
-        elif planet.temperature > 75:
-            building_costs.append(BuildingCost(item_symbol="TSH", amount=1))
-        return cls(
-            building=building,
-            planet=planet,
-            building_costs=building_costs,
-        )
+#         fractional_units_per_run = daily_extraction / (24 / recipe.hours_decimal)
+
+#         remainder_units_per_run = (
+#             math.ceil(fractional_units_per_run) - fractional_units_per_run
+#         )
+
+#         extraction_units_per_run = math.ceil(fractional_units_per_run)
+
+#         extraction_time_hours_decimal = recipe.hours_decimal + (
+#             recipe.hours_decimal * (remainder_units_per_run / fractional_units_per_run)
+#         )
+
+#         return cls(
+#             symbol=recipe.symbol,
+#             building_symbol=recipe.building_symbol,
+#             time_ms=int(extraction_time_hours_decimal * 3600000),
+#             inputs=[],
+#             outputs=[
+#                 RecipeOutput(
+#                     item_symbol=planet_resource.item.symbol,
+#                     quantity=extraction_units_per_run,
+#                 )
+#             ],
+#             building=recipe.building,
+#         )
+
+#     @property
+#     def hours_decimal(self) -> float:
+#         """Get the recipe time_ms in hours, as a float."""
+#         return self.time_ms / 3600000.0
 
 
-class EmpirePlanetBuilding(PlanetBuilding):
-    """Model for buildings on a planet, in an empire."""
+# class EfficientPlanetExtractionRecipe(PlanetExtractionRecipe, EfficientRecipe):
+#     """Model for efficient extraction recipes in Prosperous Universe. (not a database table)"""
 
-    count: int
-    """The count of this type of building on the planet."""
+#     @classmethod
+#     def efficient_recipe_from(
+#         cls, recipe: PlanetExtractionRecipe, efficiency: float
+#     ) -> "EfficientPlanetExtractionRecipe":
+#         return super().efficient_recipe_from(recipe, efficiency)
 
-    production_queue: list["QueueItem"] = []
-    """The production queue for this building."""
-
-
-class EmpirePlanetStorage(BaseModel):
-    """Model for a storage facility on a planet in an empire."""
-
-    planet: Planet
-    """The planet that this storage facility belongs to."""
-
-    weight_capacity: int
-    """The weight capacity of this storage facility."""
-
-    volume_capacity: int
-    """The volume capacity of this storage facility."""
-
-    stored_items: list[StorageItem]
-    """The items stored in this storage facility."""
+#     @classmethod
+#     def extraction_recipe_from(
+#         cls, recipe: EfficientRecipe, planet_resource: PlanetResource
+#     ) -> "EfficientPlanetExtractionRecipe":
+#         raise NotImplementedError(
+#             "Use PlanetExtractionRecipe.extraction_recipe_from to get a"
+#             "PlanetExtractionRecipe, then use EfficientPlanetExtractionRecipe.efficient_recipe_from "
+#             "to get an EfficientPlanetExtractionRecipe"
+#         )
 
 
-class EmpirePlanet(BaseModel):
-    """Model for a planet in an empire."""
+# class PlanetBuilding(BaseModel):
+#     """Model for buildings on a planet."""
 
-    buildings: list[EmpirePlanetBuilding]
-    """The buildings on the planet."""
+#     building: Building
+#     planet: Planet
+#     building_costs: list[BuildingCost]
 
-    site_storage: EmpirePlanetStorage | None = None
-    """The base storage facility on the planet."""
+#     @classmethod
+#     def planet_building_from(
+#         cls, building: Building, planet: Planet
+#     ) -> "PlanetBuilding":
+#         """Create a building from a planet."""
+#         building_costs = building.building_costs.copy()
+#         if planet.surface:
+#             building_costs.append(
+#                 BuildingCost(
+#                     item_symbol="MCG",
+#                     amount=building.area_cost * 4,
+#                 )
+#             )
+#         else:
+#             building_costs.append(
+#                 BuildingCost(
+#                     item_symbol="AEF",
+#                     amount=building.area_cost / 3,
+#                 )
+#             )
+#         if planet.pressure < 0.25:
+#             building_costs.append(
+#                 BuildingCost(item_symbol="SEA", amount=building.area_cost)
+#             )
+#         elif planet.pressure > 2:
+#             building_costs.append(BuildingCost(item_symbol="HSE", amount=1))
+#         if planet.gravity < 0.25:
+#             building_costs.append(BuildingCost(item_symbol="MGC", amount=1))
+#         elif planet.gravity > 2.5:
+#             building_costs.append(BuildingCost(item_symbol="BL", amount=1))
+#         if planet.temperature < -25:
+#             building_costs.append(
+#                 BuildingCost(item_symbol="INS", amount=building.area_cost * 10)
+#             )
+#         elif planet.temperature > 75:
+#             building_costs.append(BuildingCost(item_symbol="TSH", amount=1))
+#         return cls(
+#             building=building,
+#             planet=planet,
+#             building_costs=building_costs,
+#         )
 
-    warehouse_storage: EmpirePlanetStorage | None = None
-    """The warehouse storage facility on the planet."""
+
+# class EmpirePlanetBuilding(PlanetBuilding):
+#     """Model for buildings on a planet, in an empire."""
+
+#     count: int
+#     """The count of this type of building on the planet."""
+
+#     production_queue: list["QueueItem"] = []
+#     """The production queue for this building."""
+
+
+# class EmpirePlanetStorage(BaseModel):
+#     """Model for a storage facility on a planet in an empire."""
+
+#     planet: Planet
+#     """The planet that this storage facility belongs to."""
+
+#     weight_capacity: int
+#     """The weight capacity of this storage facility."""
+
+#     volume_capacity: int
+#     """The volume capacity of this storage facility."""
+
+#     stored_items: list[StorageItem]
+#     """The items stored in this storage facility."""
+
+
+# class EmpirePlanet(BaseModel):
+#     """Model for a planet in an empire."""
+
+#     buildings: list[EmpirePlanetBuilding]
+#     """The buildings on the planet."""
+
+#     site_storage: EmpirePlanetStorage | None = None
+#     """The base storage facility on the planet."""
+
+#     warehouse_storage: EmpirePlanetStorage | None = None
+#     """The warehouse storage facility on the planet."""
 
 
 class QueueItem(BaseModel):
@@ -347,52 +347,6 @@ class QueueItem(BaseModel):
         """Whether this queue item uses quantity-based scheduling."""
         return self.quantity is not None
 
-
-TransactionType = Literal["buy", "sell", "produce", "consume", "shipping"]
-
-
-class Transaction(BaseModel):
-    """Base class for a transaction in the ."""
-
-    timestamp: datetime
-    item_symbol: str
-    amount: float
-    transaction_type: TransactionType
-
-
-class BuyTransaction(Transaction):
-    transaction_type: TransactionType = "buy"
-    exchange: Exchange
-    price_per_unit: float
-    total_price: float
-
-
-class SellTransaction(Transaction):
-    transaction_type: TransactionType = "sell"
-    exchange: Exchange
-    price_per_unit: float
-    total_price: float
-
-
-class ProduceTransaction(Transaction):
-    transaction_type: TransactionType = "produce"
-    building: str
-    planet: Planet
-    recipe: Recipe
-
-
-class ConsumeTransaction(Transaction):
-    transaction_type: TransactionType = "consume"
-    building: str
-    planet: Planet
-    recipe: Recipe
-
-
-class ShippingTransaction(Transaction):
-    transaction_type: TransactionType = "shipping"
-    origin: Planet | Exchange
-    destination: Planet | Exchange
-    total_price: float
 
 
 class PioneerFulfillment(BaseModel):

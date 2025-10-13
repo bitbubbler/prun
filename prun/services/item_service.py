@@ -36,24 +36,6 @@ class ItemService:
         """
         return self.item_repository.get_item(symbol)
 
-    def sync_materials(self) -> None:
-        """Sync materials from the FIO API to the database."""
-        materials = self.fio_client.get_all_materials()
-        for fio_material in materials:
-            # Check if item already exists
-            if not self.item_repository.get_item(fio_material.ticker):
-                item = Item.model_validate(
-                    {
-                        "material_id": fio_material.material_id,
-                        "symbol": fio_material.ticker,
-                        "name": fio_material.name,
-                        "category": fio_material.category,
-                        "weight": float(fio_material.weight),
-                        "volume": float(fio_material.volume),
-                    }
-                )
-                self.item_repository.create_item(item)
-
     def find_item(self, pattern: str) -> Optional[Item]:
         """Find an item by symbol.
 

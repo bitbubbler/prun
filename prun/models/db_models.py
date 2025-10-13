@@ -251,6 +251,7 @@ class Planet(SQLModel, table=True):
     production_fees: list["PlanetProductionFee"] = Relationship(back_populates="planet")
     cogc_programs: list["COGCProgram"] = Relationship(back_populates="planet")
     cogc_votes: list["COGCVote"] = Relationship(back_populates="planet")
+    local_market_ads: list["LocalMarketAd"] = Relationship(back_populates="planet")
 
 
 class PlanetBuildingRequirement(SQLModel, table=True):
@@ -567,6 +568,10 @@ class Company(SQLModel, table=True):
     # Relationships
     internal_offers: list["InternalOffer"] = Relationship(back_populates="company")
 
+    @staticmethod
+    def get_or_create(name: str, user_name: str) -> "Company":
+        """Get or create a company by name and user name."""
+
 
 class InternalOffer(SQLModel, table=True):
     """Database model for internal offers from other players."""
@@ -592,11 +597,7 @@ class LocalMarketAd(SQLModel, table=True):
     ad_type: str = Field(index=True)  # 'buy', 'sell', 'shipping'
     contract_natural_id: int = Field(index=True)
     planet_id: str = Field(index=True)
-    planet_natural_id: str = Field(index=True)
-    planet_name: str
     creator_company_id: str = Field(index=True)
-    creator_company_name: str
-    creator_company_code: str
     delivery_time: int
     creation_time_epoch_ms: datetime
     expiry_time_epoch_ms: datetime
@@ -604,23 +605,17 @@ class LocalMarketAd(SQLModel, table=True):
 
     # Material fields (for buy/sell ads)
     material_id: Optional[str] = Field(default=None, index=True)
-    material_name: Optional[str] = None
-    material_ticker: Optional[str] = None
-    material_category: Optional[str] = None
-    material_weight: Optional[float] = None
-    material_volume: Optional[float] = None
     material_amount: Optional[int] = None
     price: Optional[float] = None
     price_currency: Optional[str] = None
 
     # Shipping fields (for shipping ads)
     origin_planet_id: Optional[str] = Field(default=None, index=True)
-    origin_planet_natural_id: Optional[str] = None
-    origin_planet_name: Optional[str] = None
     destination_planet_id: Optional[str] = Field(default=None, index=True)
-    destination_planet_natural_id: Optional[str] = None
-    destination_planet_name: Optional[str] = None
+
     cargo_weight: Optional[float] = None
     cargo_volume: Optional[float] = None
     payout_price: Optional[int] = None
     payout_currency: Optional[str] = None
+
+    planet: "Planet" = Relationship(back_populates="local_market_ads")

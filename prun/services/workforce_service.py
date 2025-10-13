@@ -108,28 +108,6 @@ class WorkforceService:
             )
         # ... existing code ...
 
-    def sync_workforce_needs(self) -> None:
-        """Sync workforce needs from the FIO API to the database.
-
-        Args:
-            fio_client: FIO API client
-        """
-        fio_workforce_needs = self.fio_client.get_workforce_needs()
-        # Delete existing workforce needs
-        self.workforce_repository.delete_workforce_needs()
-
-        # Create new workforce needs
-        for fio_workforce_need in fio_workforce_needs:
-            for fio_need in fio_workforce_need.needs:
-                workforce_need = WorkforceNeed.model_validate(
-                    {
-                        "workforce_type": fio_workforce_need.workforce_type,
-                        "item_symbol": fio_need.material_ticker,
-                        "amount_per_100_workers_per_day": fio_need.amount,
-                    }
-                )
-                self.workforce_repository.create_workforce_need(workforce_need)
-
     def workforce_days(self, time_ms: int) -> float:
         """Calculate workforce cost for given time.
 

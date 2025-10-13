@@ -25,44 +25,6 @@ class SystemService:
         self.fio_client = fio_client
         self.system_repository = system_repository
 
-    def sync_systems(self) -> None:
-        """Sync systems from the FIO API to the database.
-
-        Args:
-            fio_client: FIO API client
-        """
-        systems = self.fio_client.get_systems()
-        for fio_system in systems:
-            # Check if system already exists
-            if not self.system_repository.get_system(fio_system.system_id):
-                # Create system with connections
-                system = System.model_validate(
-                    {
-                        "system_id": fio_system.system_id,
-                        "name": fio_system.name,
-                        "natural_id": fio_system.natural_id,
-                        "type": fio_system.type,
-                        "position_x": float(fio_system.position_x),
-                        "position_y": float(fio_system.position_y),
-                        "position_z": float(fio_system.position_z),
-                        "sector_id": fio_system.sector_id,
-                        "sub_sector_id": fio_system.sub_sector_id,
-                    }
-                )
-
-                system.connections = [
-                    SystemConnection.model_validate(
-                        {
-                            "connecting_id": conn.connecting_id,
-                            "system_connection_id": conn.system_connection_id,
-                            "system_id": system.system_id,
-                        }
-                    )
-                    for conn in fio_system.connections
-                ]
-
-                self.system_repository.create_system(system)
-
     def get_system(self, system_id: str) -> Optional[System]:
         """Get a system by ID.
 
